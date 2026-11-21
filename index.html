@@ -2,16 +2,18 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoilStack by Han | Input Data Susunan Piramid</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (versi dipin agar stabil; CDN ini tidak mengirim CORS sehingga tidak bisa diberi SRI) -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <!-- Font Awesome untuk Ikon -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
     <!-- HTML5-QRCode untuk Scan QR via Kamera / Foto HP -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+        integrity="sha384-c9d8RFSL+u3exBOJ4Yp3HUJXS4znl9f+z66d1y54ig+ea249SpqR+w1wyvXz/lk+"
+        crossorigin="anonymous"></script>
     <script>
         if (window.tailwind) {
             tailwind.config = {
@@ -95,10 +97,6 @@
                     <span class="hidden sm:inline">Impor / Gabung</span>
                     <span class="sm:hidden">Impor</span>
                 </button>
-                <button type="button" onclick="downloadStandaloneApp()" title="Simpan aplikasi ke HP agar bisa dibuka offline" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-amber-300 border border-slate-600 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
-                    <i class="fa-solid fa-download"></i>
-                    <span class="hidden sm:inline">Simpan App</span>
-                </button>
                 <button type="button" onclick="openExportModal()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-file-export"></i>
                     <span class="hidden sm:inline">Ekspor / Rekap</span>
@@ -125,7 +123,7 @@
                         <i class="fa-solid fa-pen text-[11px]"></i>
                     </button>
                     <button type="button" id="delete-location-btn" onclick="confirmDeleteCurrentLocation()" title="Hapus lokasi ini"
-                        class="hidden bg-red-950/70 hover:bg-red-800 text-red-300 border border-red-800/60 px-2 py-1 rounded-lg transition">
+                        class="bg-red-950/70 hover:bg-red-800 text-red-300 border border-red-800/60 px-2 py-1 rounded-lg transition">
                         <i class="fa-solid fa-trash-can text-[11px]"></i>
                     </button>
                 </div>
@@ -160,14 +158,14 @@
                     <span class="text-slate-400 font-medium">Total Layer:</span>
                     <div class="flex items-center bg-slate-900 rounded-lg border border-slate-600 overflow-hidden">
                         <button type="button" onclick="changeLayerCount(-1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">-</button>
-                        <span id="total-layers-display" class="px-3 py-1 font-mono font-bold text-amber-400">5</span>
+                        <span id="total-layers-display" class="px-3 py-1 font-mono font-bold text-amber-400">2</span>
                         <button type="button" onclick="changeLayerCount(1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">+</button>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2 ml-auto sm:ml-0">
                     <span class="text-slate-400">Terisi:</span>
-                    <span id="progress-badge" class="bg-slate-700 text-amber-300 font-mono font-bold px-2.5 py-0.5 rounded-full">0 / 30</span>
+                    <span id="progress-badge" class="bg-slate-700 text-amber-300 font-mono font-bold px-2.5 py-0.5 rounded-full">0 / 12</span>
                 </div>
             </div>
         </div>
@@ -395,7 +393,7 @@
         <!-- ========================================================= -->
         <!-- VIEW 1B: MODE NON-PIRAMID (KOIL SAMPING / LEPASAN 1-N)    -->
         <!-- ========================================================= -->
-        <section id="view-nonpyramid" class="hidden flex-col md:grid md:grid-cols-12 gap-5 items-start">
+        <section id="view-nonpyramid" class="hidden md:grid md:grid-cols-12 gap-5 items-start">
             <div class="w-full md:col-span-6 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col gap-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
@@ -424,6 +422,10 @@
                                 <span>Scan / Tempel QR Label</span>
                             </label>
                             <div class="flex items-center gap-1.5">
+                                <label class="inline-flex items-center gap-1 text-[10px] text-slate-300 cursor-pointer select-none mr-1" title="Simpan otomatis salinan foto label QR ke perangkat jika QR berhasil terbaca">
+                                    <input type="checkbox" id="np-save-photo-to-gallery" checked class="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-600">
+                                    <span>Simpan Foto</span>
+                                </label>
                                 <input type="file" id="np-qr-photo-input" accept="image/*" capture="environment" class="hidden" onchange="handleQrPhotoUpload(event, 'np')">
                                 <button type="button" onclick="document.getElementById('np-qr-photo-input').click()" class="text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
                                     <i class="fa-solid fa-camera"></i>
@@ -549,7 +551,7 @@
         <!-- ========================================================= -->
         <!-- VIEW 2: MODE TINJAU PER LAYER (TAMPAK DEPAN PER BARIS)    -->
         <!-- ========================================================= -->
-        <section id="view-layer" class="hidden flex-col gap-4">
+        <section id="view-layer" class="hidden gap-4">
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div>
@@ -678,39 +680,6 @@
     </div>
     <div id="qr-file-reader-hidden" class="hidden"></div>
 
-    <!-- Modal Simpan Aplikasi Offline -->
-    <div id="save-app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-900">Simpan Aplikasi ke HP</h3>
-                        <p class="text-xs text-slate-500">Buka file HTML di Chrome HP agar bisa offline</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeSaveAppModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
-                Jika unduhan otomatis diblokir oleh jendela preview, ketuk <b>Salin Kode HTML</b> di bawah lalu simpan sebagai file <code class="bg-slate-100 px-1.5 py-0.5 rounded font-mono">index.html</code> di HP atau GitHub Pages Anda.
-            </p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <button type="button" onclick="copyStandaloneHtml()" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-2 transition">
-                    <i class="fa-regular fa-copy"></i>
-                    <span>Salin Kode HTML</span>
-                </button>
-                <a id="direct-html-download-link" download="index.html" href="#" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
-                    <i class="fa-solid fa-download"></i>
-                    <span>Coba Unduh Langsung</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Tambah / Ubah Nama Lokasi -->
     <div id="location-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4">
@@ -735,19 +704,31 @@
                         onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveLocationModal(); }"
                         class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-mono text-sm font-bold text-slate-900 uppercase focus:outline-none focus:border-amber-500">
                 </div>
-                <div id="location-pattern-row">
-                    <label for="new-location-pattern" class="block text-xs font-bold text-slate-700 mb-1">Pola Susunan Awal:</label>
-                    <select id="new-location-pattern" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500">
-                        <option value="3-2-1">3-2-1 (6 Coil)</option>
-                        <option value="4-3-2-1">4-3-2-1 (10 Coil)</option>
-                        <option value="5-4-3-2-1">5-4-3-2-1 (15 Coil)</option>
-                        <option value="2-1">2-1 (3 Coil)</option>
-                    </select>
+                <div id="location-pattern-row" class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="new-location-pattern" class="block text-xs font-bold text-slate-700 mb-1">Pola Susunan:</label>
+                        <select id="new-location-pattern" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500">
+                            <option value="3-2-1">3-2-1 (6 Coil)</option>
+                            <option value="4-3-2-1">4-3-2-1 (10 Coil)</option>
+                            <option value="5-4-3-2-1">5-4-3-2-1 (15 Coil)</option>
+                            <option value="2-1">2-1 (3 Coil)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-location-layers" class="block text-xs font-bold text-slate-700 mb-1">Total Layer:</label>
+                        <input type="number" id="new-location-layers" min="1" max="50" value="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500">
+                    </div>
                 </div>
             </div>
-            <div class="flex gap-2 justify-end pt-1">
-                <button type="button" onclick="closeLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Batal</button>
-                <button type="button" onclick="saveLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400">Simpan Lokasi</button>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                <button type="button" onclick="confirmDeleteAllLocations()" id="modal-delete-all-btn" class="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline flex items-center gap-1 transition">
+                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                    <span>Hapus Semua Lokasi</span>
+                </button>
+                <div class="flex gap-2 ml-auto">
+                    <button type="button" onclick="closeLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Batal</button>
+                    <button type="button" onclick="saveLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400">Simpan Lokasi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -771,7 +752,8 @@
             </div>
             <div class="flex flex-col gap-2">
                 <label for="custom-pattern-input" class="text-xs font-bold text-slate-700">Pola Baris (pisahkan dengan tanda strip `-`):</label>
-                <input type="text" id="custom-pattern-input" placeholder="Contoh: 4-3-2-1 atau 5-4-3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-mono text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500">
+                <input type="text" id="custom-pattern-input" placeholder="Contoh: 4-3-2-1 atau 5-4-3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-mono text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); applyCustomPattern(); }">
                 <p class="text-[11px] text-slate-500 leading-relaxed">
                     Contoh: <code class="bg-slate-100 px-1 rounded">3-2-1</code> artinya 3 coil di baris paling bawah, 2 di tengah, dan 1 di puncak atas.
                 </p>
@@ -906,9 +888,98 @@
         }
 
         function getAutoSequenceNumber(posId) {
-            const posObj = POSITIONS.find(p => p.id === posId);
-            const seqInLayer = posObj ? posObj.seq : 1;
-            return seqInLayer.toString();
+            const currentKey = `${posId}_${appState.selectedLayer}`;
+            return getNextCoilNomorInLocation(appState, currentKey);
+        }
+
+        function getNextNonPyramidNomor(excludeIndex) {
+            return getNextNpNomorInLocation(appState, excludeIndex);
+        }
+
+        function getNextCoilNomorInLocation(loc, excludeKey) {
+            const used = new Set();
+            Object.entries((loc && loc.coils) || {}).forEach(([key, rec]) => {
+                if (key === excludeKey || !rec) return;
+                const n = parseInt(String(rec.nomor || '').replace(/[^\d]/g, ''), 10);
+                if (!isNaN(n) && n > 0) used.add(n);
+            });
+            let n = 1;
+            while (used.has(n)) n++;
+            return n.toString();
+        }
+
+        function getNextNpNomorInLocation(loc, excludeIndex) {
+            const used = new Set();
+            ((loc && loc.nonPyramidCoils) || []).forEach((rec, idx) => {
+                if (idx === excludeIndex || !rec) return;
+                const n = parseInt(String(rec.nomor || '').replace(/[^\d]/g, ''), 10);
+                if (!isNaN(n) && n > 0) used.add(n);
+            });
+            let n = 1;
+            while (used.has(n)) n++;
+            return n.toString();
+        }
+
+        function findDuplicateCoil(id, opts = {}) {
+            const target = String(id || '').toUpperCase();
+            if (!target) return null;
+            // 1. Cek di lokasi aktif (piramid)
+            for (const [key, item] of Object.entries(appState.coils || {})) {
+                if (key === opts.pyramidKey || !item) continue;
+                if (String(item.id || '').toUpperCase() === target) {
+                    return { type: 'pyramid', key, item, locName: appState.bayName };
+                }
+            }
+            // 2. Cek di lokasi aktif (non-piramid)
+            const np = appState.nonPyramidCoils || [];
+            for (let i = 0; i < np.length; i++) {
+                if (i === opts.nonPyramidIndex || !np[i]) continue;
+                if (String(np[i].id || '').toUpperCase() === target) {
+                    return { type: 'nonpyramid', index: i, item: np[i], locName: appState.bayName };
+                }
+            }
+            // 3. Cek di lokasi lain (Cross-location check)
+            for (const loc of Object.values(appState.locations || {})) {
+                if (!loc || loc.id === appState.activeLocationId) continue;
+                for (const [key, item] of Object.entries(loc.coils || {})) {
+                    if (!item) continue;
+                    if (String(item.id || '').toUpperCase() === target) {
+                        return { type: 'other_pyramid', locName: loc.name, key, item };
+                    }
+                }
+                for (let i = 0; i < (loc.nonPyramidCoils || []).length; i++) {
+                    const item = loc.nonPyramidCoils[i];
+                    if (!item) continue;
+                    if (String(item.id || '').toUpperCase() === target) {
+                        return { type: 'other_nonpyramid', locName: loc.name, index: i, item };
+                    }
+                }
+            }
+            return null;
+        }
+
+        function describeDuplicate(dup) {
+            if (!dup) return '';
+            if (dup.type === 'pyramid') {
+                const parts = dup.key.split('_');
+                const layer = parts[parts.length - 1];
+                const posId = parts.slice(0, -1).join('_');
+                const pos = POSITIONS.find(p => p.id === posId);
+                return `${pos ? pos.shortLabel : posId} • Layer ${layer}`;
+            }
+            if (dup.type === 'nonpyramid') {
+                return `Non-Piramid #${dup.item.nomor || (dup.index + 1)}`;
+            }
+            if (dup.type === 'other_pyramid') {
+                const parts = dup.key.split('_');
+                const layer = parts[parts.length - 1];
+                const posId = parts.slice(0, -1).join('_');
+                return `Lokasi "${dup.locName}" (${posId} • Layer ${layer})`;
+            }
+            if (dup.type === 'other_nonpyramid') {
+                return `Lokasi "${dup.locName}" (Non-Piramid #${dup.item.nomor || (dup.index + 1)})`;
+            }
+            return '';
         }
 
         const STORAGE_KEY = 'coilstack_321_data_v1';
@@ -930,7 +1001,7 @@
                 picName: overrides.picName !== undefined ? overrides.picName : '',
                 shift: overrides.shift || detectCurrentShiftByTime(),
                 stackPattern: overrides.stackPattern || '3-2-1',
-                totalLayers: overrides.totalLayers || 5,
+                totalLayers: overrides.totalLayers !== undefined ? overrides.totalLayers : (appState ? appState.totalLayers : 2),
                 activePosition: overrides.activePosition || 'ATAS',
                 selectedLayer: overrides.selectedLayer || 1,
                 crawlDirection: overrides.crawlDirection || 'asc',
@@ -944,7 +1015,7 @@
             picName: '',
             shift: detectCurrentShiftByTime(),
             stackPattern: '3-2-1',
-            totalLayers: 5,
+            totalLayers: 2,
             activePosition: 'ATAS',
             selectedLayer: 1,
             crawlDirection: 'asc',
@@ -961,6 +1032,7 @@
         let html5QrScanner = null;
         let activeQrTarget = 'pyramid';
         let awaitingExternalCopyTarget = null;
+        let saveStateTimer = null;
 
         // ==========================================
         // HELPER UI & MODAL
@@ -1011,14 +1083,17 @@
             el.classList.remove('flex');
         }
 
-        function showConfirmModal(title, message, onConfirm) {
+        function showConfirmModal(title, message, onConfirm, onCancel) {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-message').textContent = message;
             const cancelBtn = document.getElementById('modal-cancel');
             const confirmBtn = document.getElementById('modal-confirm');
 
             const cleanup = () => hideModalEl('confirm-modal');
-            cancelBtn.onclick = cleanup;
+            cancelBtn.onclick = () => {
+                cleanup();
+                if (typeof onCancel === 'function') onCancel();
+            };
             confirmBtn.onclick = () => {
                 cleanup();
                 if (typeof onConfirm === 'function') onConfirm();
@@ -1050,8 +1125,10 @@
             if (!loc) return;
             appState.activeLocationId = locId;
             appState.bayName = loc.name || 'BAY-A01';
+            appState.picName = loc.picName || '';
+            appState.shift = loc.shift || detectCurrentShiftByTime();
             appState.stackPattern = buildPositionsFromPattern(loc.stackPattern || '3-2-1');
-            appState.totalLayers = loc.totalLayers || 5;
+            appState.totalLayers = loc.totalLayers || 2;
             appState.activePosition = POSITIONS.some(p => p.id === loc.activePosition) ? loc.activePosition : POSITIONS[0].id;
             appState.selectedLayer = Math.min(Math.max(loc.selectedLayer || 1, 1), appState.totalLayers);
             appState.crawlDirection = loc.crawlDirection || 'asc';
@@ -1060,12 +1137,24 @@
         }
 
         function saveState() {
+            if (saveStateTimer) {
+                clearTimeout(saveStateTimer);
+                saveStateTimer = null;
+            }
             syncActiveStateToLocation();
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
             } catch (e) {
                 console.warn('Gagal menyimpan ke localStorage:', e);
             }
+        }
+
+        function scheduleSaveState(delay = 400) {
+            if (saveStateTimer) clearTimeout(saveStateTimer);
+            saveStateTimer = setTimeout(() => {
+                saveStateTimer = null;
+                saveState();
+            }, delay);
         }
 
         function renderLocationSelector() {
@@ -1085,8 +1174,12 @@
             });
 
             if (delBtn) {
-                if (locs.length > 1) delBtn.classList.remove('hidden');
-                else delBtn.classList.add('hidden');
+                delBtn.classList.remove('hidden');
+                if (locs.length > 1) {
+                    delBtn.title = `Hapus lokasi ${appState.bayName}`;
+                } else {
+                    delBtn.title = `Hapus lokasi ${appState.bayName} & mulai dari nol`;
+                }
             }
         }
 
@@ -1094,7 +1187,7 @@
             if (!appState.locations[newLocId] || newLocId === appState.activeLocationId) return;
             syncActiveStateToLocation();
             loadLocationIntoActiveState(newLocId);
-            editingNonPyramidIndex = -1;
+            resetNonPyramidForm();
             saveState();
             renderAll();
             showToast(`Pindah ke lokasi ${appState.bayName}`, 'info');
@@ -1116,16 +1209,24 @@
             const shiftSel = document.getElementById('shift-select');
             if (picInp) appState.picName = picInp.value;
             if (shiftSel) appState.shift = shiftSel.value;
-            saveState();
+            scheduleSaveState();
         }
 
         function openNewLocationModal() {
             locationModalMode = 'new';
-            document.getElementById('location-modal-title').textContent = 'Tambah Lokasi Baru';
-            document.getElementById('location-modal-subtitle').textContent = 'Data lokasi sebelumnya tetap tersimpan aman';
+            const locCount = Object.keys(appState.locations || {}).length;
+            document.getElementById('location-modal-title').textContent = locCount === 0 ? 'Buat Lokasi Baru' : 'Tambah Lokasi Baru';
+            document.getElementById('location-modal-subtitle').textContent = locCount === 0 ? 'Tentukan nama lokasi / bay untuk mulai input data' : 'Data lokasi sebelumnya tetap tersimpan aman';
             document.getElementById('location-name-input').value = '';
             document.getElementById('new-location-pattern').value = appState.stackPattern || '3-2-1';
+            const layersInp = document.getElementById('new-location-layers');
+            if (layersInp) layersInp.value = appState.totalLayers || 2;
             document.getElementById('location-pattern-row').classList.remove('hidden');
+            const delAllBtn = document.getElementById('modal-delete-all-btn');
+            if (delAllBtn) {
+                if (locCount > 1) delAllBtn.classList.remove('hidden');
+                else delAllBtn.classList.add('hidden');
+            }
             showModalEl('location-modal');
             setTimeout(() => document.getElementById('location-name-input').focus(), 50);
         }
@@ -1136,12 +1237,25 @@
             document.getElementById('location-modal-subtitle').textContent = `Mengubah nama lokasi aktif (${appState.bayName})`;
             document.getElementById('location-name-input').value = appState.bayName || '';
             document.getElementById('location-pattern-row').classList.add('hidden');
+            const delAllBtn = document.getElementById('modal-delete-all-btn');
+            if (delAllBtn) delAllBtn.classList.add('hidden');
             showModalEl('location-modal');
             setTimeout(() => document.getElementById('location-name-input').focus(), 50);
         }
 
         function closeLocationModal() {
             hideModalEl('location-modal');
+            if (!appState.locations || Object.keys(appState.locations).length === 0) {
+                const defId = 'loc_' + Date.now();
+                const defLoc = createLocationRecord(defId, 'BAY-01', {
+                    stackPattern: appState.stackPattern || '3-2-1',
+                    totalLayers: appState.totalLayers || 2
+                });
+                appState.locations = { [defId]: defLoc };
+                loadLocationIntoActiveState(defId);
+                saveState();
+                renderAll();
+            }
         }
 
         function saveLocationModal() {
@@ -1152,6 +1266,17 @@
             }
 
             if (locationModalMode === 'rename') {
+                if (rawName === (appState.bayName || '').toUpperCase()) {
+                    closeLocationModal();
+                    return;
+                }
+                const duplicateLoc = Object.values(appState.locations).find(
+                    l => l.id !== appState.activeLocationId && (l.name || '').toUpperCase() === rawName
+                );
+                if (duplicateLoc) {
+                    showToast(`Nama "${rawName}" sudah dipakai lokasi lain!`, 'error');
+                    return;
+                }
                 appState.bayName = rawName;
                 syncActiveStateToLocation();
                 saveState();
@@ -1171,24 +1296,45 @@
             syncActiveStateToLocation();
             const newId = 'loc_' + Date.now();
             const chosenPattern = document.getElementById('new-location-pattern').value || '3-2-1';
+            const chosenLayers = parseInt(document.getElementById('new-location-layers')?.value, 10) || appState.totalLayers || 2;
             appState.locations[newId] = createLocationRecord(newId, rawName, {
                 picName: appState.picName,
                 shift: appState.shift,
                 stackPattern: chosenPattern,
-                totalLayers: appState.totalLayers
+                totalLayers: Math.min(Math.max(chosenLayers, 1), 50)
             });
 
             loadLocationIntoActiveState(newId);
+            resetNonPyramidForm();
             saveState();
             closeLocationModal();
             renderAll();
             showToast(`Lokasi baru "${rawName}" dibuat!`);
         }
 
+        function resetToCleanLocation() {
+            appState.locations = {};
+            appState.coils = {};
+            appState.nonPyramidCoils = [];
+            appState.activeLocationId = '';
+            appState.bayName = '';
+            appState.picName = '';
+            appState.selectedLayer = 1;
+            resetNonPyramidForm();
+            openNewLocationModal();
+            showToast('Lokasi dikosongkan. Silakan buat lokasi baru.', 'info');
+        }
+
         function confirmDeleteCurrentLocation() {
-            const locKeys = Object.keys(appState.locations);
+            const locKeys = Object.keys(appState.locations || {});
             if (locKeys.length <= 1) {
-                showToast('Minimal harus ada 1 lokasi aktif.', 'error');
+                showConfirmModal(
+                    'Hapus Lokasi & Mulai Dari Nol?',
+                    `Lokasi "${appState.bayName}" dan seluruh data coil di dalamnya akan dihapus. Anda dapat langsung menginput nama lokasi baru dari nol tanpa placeholder.`,
+                    () => {
+                        resetToCleanLocation();
+                    }
+                );
                 return;
             }
             showConfirmModal(
@@ -1198,9 +1344,22 @@
                     delete appState.locations[appState.activeLocationId];
                     const nextId = Object.keys(appState.locations)[0];
                     loadLocationIntoActiveState(nextId);
+                    resetNonPyramidForm();
                     saveState();
                     renderAll();
-                    showToast('Lokasi berhasil dihapus', 'info');
+                    showToast(`Lokasi dihapus. Beralih ke ${appState.bayName}`, 'info');
+                }
+            );
+        }
+
+        function confirmDeleteAllLocations() {
+            closeLocationModal();
+            const count = Object.keys(appState.locations || {}).length;
+            showConfirmModal(
+                'Hapus SEMUA Lokasi?',
+                `PERINGATAN: Seluruh ${count} lokasi dan semua data coil di dalamnya akan dihapus total untuk mulai dari nol.`,
+                () => {
+                    resetToCleanLocation();
                 }
             );
         }
@@ -1243,7 +1402,7 @@
                 syncPatternDropdownUI();
                 return;
             }
-            applyPatternString(val);
+            requestPatternChange(val);
         }
 
         function closeCustomPatternModal() {
@@ -1258,7 +1417,26 @@
                 return;
             }
             closeCustomPatternModal();
-            applyPatternString(parts.join('-'));
+            requestPatternChange(parts.join('-'));
+        }
+
+        function requestPatternChange(patternStr) {
+            const normalized = generatePositionsList(patternStr).normalizedPattern;
+            if (normalized === (appState.stackPattern || '3-2-1')) {
+                syncPatternDropdownUI();
+                return;
+            }
+            const filledPyramid = Object.values(appState.coils || {}).filter(c => c && c.id).length;
+            if (filledPyramid === 0) {
+                applyPatternString(normalized);
+                return;
+            }
+            showConfirmModal(
+                'Ubah Susunan Piramid?',
+                `Susunan akan diubah menjadi ${normalized}. ${filledPyramid} data coil pada posisi yang tidak tersedia di susunan baru tetap tersimpan, tetapi tidak akan tampil sampai susunan lama dipilih kembali.`,
+                () => applyPatternString(normalized),
+                () => syncPatternDropdownUI()
+            );
         }
 
         function applyPatternString(patternStr) {
@@ -1273,12 +1451,35 @@
         }
 
         function changeLayerCount(delta) {
-            const next = Math.min(Math.max((appState.totalLayers || 5) + delta, 1), 50);
-            if (next === appState.totalLayers) return;
-            appState.totalLayers = next;
-            if (appState.selectedLayer > next) appState.selectedLayer = next;
-            saveState();
-            renderAll();
+            const current = appState.totalLayers || 5;
+            const next = Math.min(Math.max(current + delta, 1), 50);
+            if (next === current) return;
+
+            const doChange = () => {
+                appState.totalLayers = next;
+                if (appState.selectedLayer > next) appState.selectedLayer = next;
+                saveState();
+                renderAll();
+            };
+
+            if (delta < 0) {
+                let filled = 0;
+                for (let l = next + 1; l <= current; l++) {
+                    POSITIONS.forEach(pos => {
+                        const item = appState.coils[`${pos.id}_${l}`];
+                        if (item && item.id) filled++;
+                    });
+                }
+                if (filled > 0) {
+                    showConfirmModal(
+                        'Kurangi Total Layer?',
+                        `Layer ${next + 1} sampai ${current} berisi ${filled} data coil. Data tidak dihapus, tetapi tidak akan tampil sampai total layer dinaikkan kembali.`,
+                        doChange
+                    );
+                    return;
+                }
+            }
+            doChange();
         }
 
         function toggleCrawlDirection() {
@@ -1346,7 +1547,7 @@
                     const item = appState.coils[`${posId}_${l}`];
                     if (!item || !item.id) return l;
                 }
-                return 1;
+                return appState.totalLayers;
             }
         }
 
@@ -1519,14 +1720,36 @@
                 return;
             }
 
+            const weightVal = document.getElementById('coil-weight-input').value.trim();
+            if (weightVal && isNaN(parseFloat(weightVal.replace(',', '.')))) {
+                showToast('Berat harus berupa angka!', 'error');
+                document.getElementById('coil-weight-input').focus();
+                return;
+            }
+
+            const key = `${appState.activePosition}_${appState.selectedLayer}`;
+            const dup = findDuplicateCoil(idVal, { pyramidKey: key });
+            if (dup) {
+                showConfirmModal(
+                    'No. Coil Duplikat',
+                    `No. Coil ${idVal} sudah terdaftar di ${describeDuplicate(dup)}. Tetap simpan di slot ini?`,
+                    () => performQuickSave(idVal, key)
+                );
+                return;
+            }
+            performQuickSave(idVal, key);
+        }
+
+        function performQuickSave(idVal, key) {
             const nomorVal = document.getElementById('coil-nomor-input').value.trim().toUpperCase() || getAutoSequenceNumber(appState.activePosition);
             const weightUnit = document.getElementById('coil-weight-unit').value || 'kg';
             appState.defaultWeightUnit = weightUnit;
 
-            const key = `${appState.activePosition}_${appState.selectedLayer}`;
             const existing = appState.coils[key] || {};
-            const activeShift = appState.shift || detectCurrentShiftByTime();
-            const activePic = (appState.picName || '').trim();
+            const activePic = (document.getElementById('pic-name-input')?.value || appState.picName || '').trim();
+            const activeShift = document.getElementById('shift-select')?.value || appState.shift || detectCurrentShiftByTime();
+            appState.picName = activePic;
+            appState.shift = activeShift;
 
             appState.coils[key] = {
                 nomor: nomorVal,
@@ -1539,7 +1762,7 @@
                 supplier: document.getElementById('coil-supplier-input').value.trim(),
                 picName: activePic || existing.picName || '',
                 shift: activeShift,
-                updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                updatedAt: new Date().toLocaleString('id-ID')
             };
 
             const savedLayer = appState.selectedLayer;
@@ -1601,8 +1824,10 @@
                         item.supplier ? escapeHTML(item.supplier) : ''
                     ].filter(Boolean).join(' • ');
 
-                    const picShiftBadge = (item.picName || item.shift)
-                        ? `<span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-semibold">${escapeHTML([item.picName, item.shift].filter(Boolean).join(' • '))}</span>`
+                    const itemPic = item.picName || appState.picName || '';
+                    const itemShift = item.shift || appState.shift || '';
+                    const picShiftBadge = (itemPic || itemShift)
+                        ? `<span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-semibold">${escapeHTML([itemPic, itemShift].filter(Boolean).join(' • '))}</span>`
                         : '';
 
                     card.innerHTML = `
@@ -1635,16 +1860,26 @@
         }
 
         function deleteLayerItem(posId, layerNum) {
-            delete appState.coils[`${posId}_${layerNum}`];
-            saveState();
-            renderAll();
-            showToast(`Data Layer ${layerNum} dihapus`, 'info');
+            const item = appState.coils[`${posId}_${layerNum}`];
+            const coilId = item && item.id ? ` (${item.id})` : '';
+            showConfirmModal(
+                'Hapus Data Coil?',
+                `Data coil di Layer ${layerNum}${coilId} akan dihapus permanen.`,
+                () => {
+                    delete appState.coils[`${posId}_${layerNum}`];
+                    saveState();
+                    renderAll();
+                    showToast(`Data Layer ${layerNum} dihapus`, 'info');
+                }
+            );
         }
 
         function editLayerItem(posId, layerNum) {
             appState.activePosition = posId;
             appState.selectedLayer = layerNum;
             switchMode('crawl');
+            const targetEl = document.getElementById('quick-input-form') || document.getElementById('view-crawl');
+            if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         // ==========================================
@@ -1652,10 +1887,10 @@
         // ==========================================
         function prepareNonPyramidFormDefaults() {
             if (editingNonPyramidIndex >= 0) return;
-            const nextNo = (appState.nonPyramidCoils || []).length + 1;
+            const nextNo = getNextNonPyramidNomor(-1);
             const nomorInput = document.getElementById('np-nomor-input');
             const unitSelect = document.getElementById('np-weight-unit');
-            if (nomorInput) nomorInput.value = nextNo.toString();
+            if (nomorInput) nomorInput.value = nextNo;
             if (unitSelect) unitSelect.value = appState.defaultWeightUnit || 'kg';
         }
 
@@ -1684,14 +1919,24 @@
                 return;
             }
 
+            const weightVal = document.getElementById('np-weight-input').value.trim();
+            if (weightVal && isNaN(parseFloat(weightVal.replace(',', '.')))) {
+                showToast('Berat harus berupa angka!', 'error');
+                document.getElementById('np-weight-input').focus();
+                return;
+            }
+
+            const editingIdx = editingNonPyramidIndex;
             const weightUnit = document.getElementById('np-weight-unit').value || 'kg';
             appState.defaultWeightUnit = weightUnit;
-            const prevNp = (editingNonPyramidIndex >= 0) ? (appState.nonPyramidCoils[editingNonPyramidIndex] || {}) : {};
-            const activeShift = appState.shift || detectCurrentShiftByTime();
-            const activePic = (appState.picName || '').trim();
+            const prevNp = (editingIdx >= 0) ? (appState.nonPyramidCoils[editingIdx] || {}) : {};
+            const activePic = (document.getElementById('pic-name-input')?.value || appState.picName || '').trim();
+            const activeShift = document.getElementById('shift-select')?.value || appState.shift || detectCurrentShiftByTime();
+            appState.picName = activePic;
+            appState.shift = activeShift;
 
             const record = {
-                nomor: document.getElementById('np-nomor-input').value.trim().toUpperCase() || ((appState.nonPyramidCoils.length + 1).toString()),
+                nomor: document.getElementById('np-nomor-input').value.trim().toUpperCase() || getNextNonPyramidNomor(editingIdx),
                 id: idVal,
                 diameter: document.getElementById('np-diameter-input').value.trim(),
                 grade: document.getElementById('np-grade-input').value.trim().toUpperCase(),
@@ -1701,12 +1946,25 @@
                 supplier: document.getElementById('np-supplier-input').value.trim(),
                 picName: activePic || prevNp.picName || '',
                 shift: activeShift,
-                updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                updatedAt: new Date().toLocaleString('id-ID')
             };
 
+            const dup = findDuplicateCoil(idVal, { nonPyramidIndex: editingIdx >= 0 ? editingIdx : undefined });
+            if (dup) {
+                showConfirmModal(
+                    'No. Coil Duplikat',
+                    `No. Coil ${idVal} sudah terdaftar di ${describeDuplicate(dup)}. Tetap simpan sebagai koil non-piramid?`,
+                    () => commitNonPyramidRecord(record, editingIdx, idVal)
+                );
+                return;
+            }
+            commitNonPyramidRecord(record, editingIdx, idVal);
+        }
+
+        function commitNonPyramidRecord(record, editingIdx, idVal) {
             if (!Array.isArray(appState.nonPyramidCoils)) appState.nonPyramidCoils = [];
-            if (editingNonPyramidIndex >= 0) {
-                appState.nonPyramidCoils[editingNonPyramidIndex] = record;
+            if (editingIdx >= 0 && editingIdx < appState.nonPyramidCoils.length) {
+                appState.nonPyramidCoils[editingIdx] = record;
                 showToast(`Koil Non-Piramid #${record.nomor} diperbarui!`);
             } else {
                 appState.nonPyramidCoils.push(record);
@@ -1735,15 +1993,25 @@
             document.getElementById('np-weight-unit').value = item.weightUnit || 'kg';
             document.getElementById('np-heat-input').value = item.heatNumber || '';
             document.getElementById('np-supplier-input').value = item.supplier || '';
+            const formEl = document.getElementById('nonpyramid-form');
+            if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('np-id-input').focus();
         }
 
         function deleteNonPyramidItem(idx) {
-            appState.nonPyramidCoils.splice(idx, 1);
-            if (editingNonPyramidIndex === idx) resetNonPyramidForm();
-            saveState();
-            renderAll();
-            showToast('Koil Non-Piramid dihapus', 'info');
+            const item = (appState.nonPyramidCoils || [])[idx];
+            const coilId = item && item.id ? ` (${item.id})` : '';
+            showConfirmModal(
+                'Hapus Koil Non-Piramid?',
+                `Koil #${item?.nomor || idx + 1}${coilId} akan dihapus permanen.`,
+                () => {
+                    appState.nonPyramidCoils.splice(idx, 1);
+                    if (editingNonPyramidIndex === idx) resetNonPyramidForm();
+                    saveState();
+                    renderAll();
+                    showToast('Koil Non-Piramid dihapus', 'info');
+                }
+            );
         }
 
         function renderNonPyramidList() {
@@ -1771,8 +2039,10 @@
                     item.supplier ? escapeHTML(item.supplier) : ''
                 ].filter(Boolean).join(' • ');
 
-                const picShiftBadge = (item.picName || item.shift)
-                    ? `<span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-semibold">${escapeHTML([item.picName, item.shift].filter(Boolean).join(' • '))}</span>`
+                const itemPic = item.picName || appState.picName || '';
+                const itemShift = item.shift || appState.shift || '';
+                const picShiftBadge = (itemPic || itemShift)
+                    ? `<span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-semibold">${escapeHTML([itemPic, itemShift].filter(Boolean).join(' • '))}</span>`
                     : '';
 
                 const card = document.createElement('div');
@@ -1881,8 +2151,8 @@
                         <td class="p-2.5 text-slate-600">${escapeHTML(item.heatNumber || '-')}</td>
                         <td class="p-2.5 text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</td>
                         <td class="p-2.5 font-sans text-slate-600">${escapeHTML(item.supplier || '-')}</td>
-                        <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || '-')}</td>
-                        <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || '-')}</td>
+                        <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || appState.picName || '-')}</td>
+                        <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || appState.shift || '-')}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -1903,8 +2173,8 @@
                     <td class="p-2.5 text-slate-600">${escapeHTML(item.heatNumber || '-')}</td>
                     <td class="p-2.5 text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</td>
                     <td class="p-2.5 font-sans text-slate-600">${escapeHTML(item.supplier || '-')}</td>
-                    <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || '-')}</td>
-                    <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || '-')}</td>
+                    <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || appState.picName || '-')}</td>
+                    <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || appState.shift || '-')}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1963,7 +2233,54 @@
             };
         }
 
+        function isMasterSteelUrl(text) {
+            try {
+                const u = new URL(String(text || '').trim());
+                if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+                const host = u.hostname.toLowerCase();
+                return host === 'themastersteel.co.id' || host.endsWith('.themastersteel.co.id');
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function normalizeDecimalString(raw) {
+            let s = String(raw || '').trim();
+            if (s.includes(',') && s.includes('.')) s = s.replace(/,/g, '');
+            else s = s.replace(',', '.');
+            return s;
+        }
+
+        function parseWeightAndUnit(raw) {
+            const text = String(raw || '').trim();
+            const m = text.match(/([\d.,]+)\s*(kg|mts?|tons?|tonnes?)?/i);
+            if (!m) return { value: '', unit: 'kg' };
+            const rawNum = m[1];
+            const unitRaw = (m[2] || '').toLowerCase();
+            const unit = /^(mt|mts|ton|tons|tonne|tonnes)$/.test(unitRaw) ? 'mt' : 'kg';
+            let num;
+            if (rawNum.includes(',') && rawNum.includes('.')) {
+                num = rawNum.replace(/,/g, '');
+            } else if (rawNum.includes(',')) {
+                const segs = rawNum.split(',');
+                if (segs.length === 2 && (unit === 'mt' || segs[1].length !== 3)) {
+                    num = `${segs[0]}.${segs[1]}`;
+                } else {
+                    num = rawNum.replace(/,/g, '');
+                }
+            } else {
+                num = rawNum;
+            }
+            num = num.replace(/[^\d.]/g, '');
+            const f = parseFloat(num);
+            return { value: isNaN(f) ? '' : String(f), unit };
+        }
+
         function showQrLinkHelper(url, target = 'pyramid') {
+            if (!isMasterSteelUrl(url)) {
+                hideQrLinkHelper(target);
+                return;
+            }
             const ids = getTargetFieldIds(target);
             const box = document.getElementById(ids.helperBox);
             const anchor = document.getElementById(ids.helperAnchor);
@@ -2004,24 +2321,24 @@
 
         function handleQrRawInput(val, target = 'pyramid') {
             const trimmed = (val || '').trim();
-            if (/^https?:\/\/.*themastersteel\.co\.id/i.test(trimmed)) {
+            if (isMasterSteelUrl(trimmed) && !trimmed.includes('\n')) {
                 showQrLinkHelper(trimmed, target);
                 return;
             }
-            if (trimmed.includes('\n') || trimmed.split('-').length >= 6) {
+            if (trimmed.includes('\n') || trimmed.split('-').length >= 5) {
                 parseAndFillQrString(trimmed, false, target);
             }
         }
 
         function handleCoilIdSmartScan(val, target = 'pyramid') {
             const trimmed = (val || '').trim();
-            if (/^https?:\/\/.*themastersteel\.co\.id/i.test(trimmed)) {
+            if (isMasterSteelUrl(trimmed) && !trimmed.includes('\n')) {
                 document.getElementById(getTargetFieldIds(target).id).value = '';
                 showQrLinkHelper(trimmed, target);
                 showToast('Link Master Steel terdeteksi! Klik "1. Buka Link" lalu tempel hasilnya.', 'info');
                 return;
             }
-            if (trimmed.includes('\n') || trimmed.split('-').length >= 6) {
+            if (trimmed.includes('\n') || trimmed.split('-').length >= 5) {
                 parseAndFillQrString(trimmed, false, target);
             }
         }
@@ -2036,7 +2353,7 @@
             const ids = getTargetFieldIds(target);
 
             // 1. Cek jika hanya berupa URL Master Steel
-            if (/^https?:\/\/.*themastersteel\.co\.id\S*$/i.test(text) && !text.includes('\n')) {
+            if (isMasterSteelUrl(text) && !text.includes('\n')) {
                 showQrLinkHelper(text, target);
                 if (showFeedback) showToast('Buka link Master Steel, salin teks halaman, lalu klik Paste.', 'info');
                 return true;
@@ -2050,7 +2367,8 @@
                 };
 
                 const sizeRaw = extractField(/Size\s*:\s*([^\r\n]+)/i).replace(/[∅Øø]/g, '').trim();
-                const diameterClean = sizeRaw ? String(parseFloat(sizeRaw.replace(',', '.')) || sizeRaw) : '';
+                const sizeFloat = parseFloat(normalizeDecimalString(sizeRaw));
+                const diameterClean = sizeRaw ? (isNaN(sizeFloat) ? sizeRaw : String(sizeFloat)) : '';
                 const grade = extractField(/Grade\s*:\s*([^\r\n]+)/i).toUpperCase();
                 const heatNo = extractField(/Heat\s*No\.?\s*:\s*([^\r\n]+)/i).toUpperCase();
                 const codeNo = extractField(/Code\s*No\.?\s*:\s*([^\r\n]+)/i).toUpperCase();
@@ -2059,11 +2377,10 @@
                 let weightNum = '';
                 let weightUnit = 'kg';
                 if (weightRaw) {
-                    const wMatch = weightRaw.match(/([\d.,]+)\s*(kg|mt|ton)?/i);
-                    if (wMatch) {
-                        weightNum = wMatch[1].replace(/,/g, '');
-                        const u = (wMatch[2] || '').toLowerCase();
-                        weightUnit = (u === 'mt' || u === 'ton') ? 'mt' : 'kg';
+                    const parsedWeight = parseWeightAndUnit(weightRaw);
+                    if (parsedWeight.value) {
+                        weightNum = parsedWeight.value;
+                        weightUnit = parsedWeight.unit;
                     }
                 }
 
@@ -2088,8 +2405,8 @@
                 const grade = parts[1].toUpperCase();
                 const heatNo = parts[2].toUpperCase();
                 const coilNo = parts[3].toUpperCase();
-                const weightRaw = parts[4].replace(',', '.');
-                const diameterRaw = parts[5].replace(',', '.');
+                const weightRaw = normalizeDecimalString(parts[4]);
+                const diameterRaw = normalizeDecimalString(parts[5]);
 
                 const wFloat = parseFloat(weightRaw);
                 const weightUnit = (!isNaN(wFloat) && wFloat < 50) ? 'mt' : 'kg';
@@ -2134,15 +2451,26 @@
         // ==========================================
         // SCANNER QR KAMERA & FOTO FILE
         // ==========================================
-        function saveVerifiedQrPhoto(file, decodedText) {
+        function getCoilHintFromDecoded(decodedText) {
+            const text = String(decodedText || '');
+            const codeMatch = text.match(/Code\s*No\.?\s*:\s*([^\r\n]+)/i);
+            if (codeMatch) return codeMatch[1].trim();
+            const parts = text.split('-');
+            if (parts.length >= 4 && parts[3].trim()) return parts[3].trim();
+            return text.slice(0, 18);
+        }
+
+        function saveVerifiedQrPhoto(file, decodedText, target = 'pyramid') {
             try {
-                const saveChk = document.getElementById('save-photo-to-gallery');
+                const chkId = target === 'np' ? 'np-save-photo-to-gallery' : 'save-photo-to-gallery';
+                const saveChk = document.getElementById(chkId);
                 if (saveChk && !saveChk.checked) return;
 
                 const cleanLoc = (appState.bayName || 'BAY').replace(/[^a-zA-Z0-9_-]/g, '');
-                const coilHint = (decodedText || '').split('-')[3] || 'COIL';
+                const coilHint = getCoilHintFromDecoded(decodedText) || 'COIL';
                 const cleanCoil = coilHint.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 18);
-                const fileName = `QR_${cleanLoc}_L${appState.selectedLayer}_${appState.activePosition}_${cleanCoil}.jpg`;
+                const posTag = target === 'np' ? 'NONPIRAMID' : appState.activePosition;
+                const fileName = `QR_${cleanLoc}_L${appState.selectedLayer}_${posTag}_${cleanCoil}.jpg`;
 
                 const url = URL.createObjectURL(file);
                 const a = document.createElement('a');
@@ -2175,7 +2503,7 @@
                     document.getElementById(ids.qrRaw).value = decodedText;
                     parseAndFillQrString(decodedText, true, target);
                     // Simpan foto hanya setelah QR berhasil terbaca!
-                    saveVerifiedQrPhoto(file, decodedText);
+                    saveVerifiedQrPhoto(file, decodedText, target);
                 })
                 .catch(() => {
                     showToast('QR tidak terbaca pada foto. Foto tidak disimpan, silakan foto lebih dekat & jelas.', 'error');
@@ -2266,8 +2594,8 @@
                 locPositions.forEach(pos => {
                     const item = (loc.coils || {})[`${pos.id}_${l}`];
                     if (item && (item.id || item.nomor)) {
-                        const itemPic = item.picName || '';
-                        const itemShift = item.shift || '';
+                        const itemPic = item.picName || loc.picName || appState.picName || '';
+                        const itemShift = item.shift || loc.shift || appState.shift || '';
                         const details = [
                             item.nomor ? `No:${item.nomor}` : '',
                             `Coil:${item.id}`,
@@ -2290,8 +2618,8 @@
             if (npItems.length > 0) {
                 lines.push(`\n*NON-PIRAMID (SAMPING):*`);
                 npItems.forEach((item, idx) => {
-                    const itemPic = item.picName || '';
-                    const itemShift = item.shift || '';
+                    const itemPic = item.picName || loc.picName || appState.picName || '';
+                    const itemShift = item.shift || loc.shift || appState.shift || '';
                     const details = [
                         `No:${item.nomor || (idx + 1)}`,
                         `Coil:${item.id}`,
@@ -2324,21 +2652,44 @@
             document.getElementById('export-text-preview').value = allLines.join('\n');
         }
 
-        function copyReportText() {
-            const textarea = document.getElementById('export-text-preview');
-            textarea.select();
-            textarea.setSelectionRange(0, 99999);
+        async function copyTextToClipboard(text) {
             try {
-                document.execCommand('copy');
-                showToast('Teks laporan disalin! Siap ditempel ke WhatsApp.');
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
             } catch (e) {
+                // Lanjut ke fallback
+            }
+            try {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                temp.style.position = 'fixed';
+                temp.style.opacity = '0';
+                document.body.appendChild(temp);
+                temp.select();
+                temp.setSelectionRange(0, text.length);
+                const ok = document.execCommand('copy');
+                temp.remove();
+                return ok;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function copyReportText() {
+            const text = document.getElementById('export-text-preview').value;
+            const ok = await copyTextToClipboard(text);
+            if (ok) {
+                showToast('Teks laporan disalin! Siap ditempel ke WhatsApp.');
+            } else {
                 showToast('Gagal menyalin otomatis, silakan salin manual dari kotak teks.', 'error');
             }
         }
 
         function csvEscape(val) {
             const s = val === null || val === undefined ? '' : String(val);
-            if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+            if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
                 return `"${s.replace(/"/g, '""')}"`;
             }
             return s;
@@ -2361,10 +2712,12 @@
                     locPositions.forEach(pos => {
                         const item = (loc.coils || {})[`${pos.id}_${l}`] || {};
                         const hasItem = !!(item.id || item.nomor);
+                        const rowPic = hasItem ? (item.picName || loc.picName || appState.picName || '') : '';
+                        const rowShift = hasItem ? (item.shift || loc.shift || appState.shift || '') : '';
                         csvRows.push([
                             csvEscape(loc.name),
-                            csvEscape(hasItem ? (item.picName || '') : ''),
-                            csvEscape(hasItem ? (item.shift || '') : ''),
+                            csvEscape(rowPic),
+                            csvEscape(rowShift),
                             csvEscape(loc.stackPattern || '3-2-1'),
                             l,
                             csvEscape(pos.shortLabel),
@@ -2382,10 +2735,12 @@
                 }
 
                 (loc.nonPyramidCoils || []).forEach((item, idx) => {
+                    const rowPic = item.picName || loc.picName || appState.picName || '';
+                    const rowShift = item.shift || loc.shift || appState.shift || '';
                     csvRows.push([
                         csvEscape(loc.name),
-                        csvEscape(item.picName || ''),
-                        csvEscape(item.shift || ''),
+                        csvEscape(rowPic),
+                        csvEscape(rowShift),
                         csvEscape('NON-PIRAMID'),
                         csvEscape('Non-Piramid'),
                         csvEscape('Samping'),
@@ -2456,6 +2811,13 @@
             event.target.value = '';
         }
 
+        function isDefaultVirginLocation(loc) {
+            if (!loc) return false;
+            const hasPyramid = Object.values(loc.coils || {}).some(c => c && c.id);
+            const hasNp = (loc.nonPyramidCoils || []).some(c => c && c.id);
+            return !hasPyramid && !hasNp && !loc.picName && (loc.name === 'BAY-A01' || loc.name === 'BAY-01');
+        }
+
         function getOrCreateLocationByName(rawLocName, patternHint, tracker) {
             const cleanName = (rawLocName || '').trim().toUpperCase();
             if (!cleanName) {
@@ -2466,38 +2828,69 @@
                 if (patternHint && patternHint !== 'NON-PIRAMID' && !existing.stackPattern) {
                     existing.stackPattern = patternHint;
                 }
+                tracker.touchedLocIds.add(existing.id);
                 return existing;
             }
+
+            // Jika hanya ada 1 lokasi bawaan yang masih kosong (mis. BAY-A01), bersihkan agar tidak tertinggal sebagai placeholder
+            const locKeys = Object.keys(appState.locations || {});
+            if (locKeys.length === 1 && isDefaultVirginLocation(appState.locations[locKeys[0]]) && cleanName !== appState.locations[locKeys[0]].name) {
+                delete appState.locations[locKeys[0]];
+            }
+
             const newId = 'loc_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
             const validPattern = (patternHint && patternHint !== 'NON-PIRAMID') ? patternHint : '3-2-1';
-            const created = createLocationRecord(newId, cleanName, { stackPattern: validPattern });
+            const created = createLocationRecord(newId, cleanName, { stackPattern: validPattern, totalLayers: 1 });
             appState.locations[newId] = created;
             tracker.createdLocCount++;
+            tracker.touchedLocIds.add(newId);
             return created;
         }
 
-        function parseCsvLine(line, delimiter = ',') {
-            const result = [];
+        function parseCsvRows(text, delimiter = ',') {
+            const rows = [];
+            let row = [];
             let cur = '';
             let inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                const ch = line[i];
-                if (ch === '"') {
-                    if (inQuotes && line[i + 1] === '"') {
-                        cur += '"';
-                        i++;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (text[i + 1] === '"') {
+                            cur += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
                     } else {
-                        inQuotes = !inQuotes;
+                        cur += ch;
                     }
-                } else if (ch === delimiter && !inQuotes) {
-                    result.push(cur);
+                } else if (ch === '"') {
+                    inQuotes = true;
+                } else if (ch === delimiter) {
+                    row.push(cur);
                     cur = '';
+                } else if (ch === '\n') {
+                    row.push(cur);
+                    rows.push(row);
+                    row = [];
+                    cur = '';
+                } else if (ch === '\r') {
+                    if (text[i + 1] !== '\n') {
+                        row.push(cur);
+                        rows.push(row);
+                        row = [];
+                        cur = '';
+                    }
                 } else {
                     cur += ch;
                 }
             }
-            result.push(cur);
-            return result;
+            if (cur !== '' || (row.length > 0 && row.some(c => String(c).trim() !== ''))) {
+                row.push(cur);
+                rows.push(row);
+            }
+            return rows;
         }
 
         function detectCsvDelimiter(headerLine) {
@@ -2510,17 +2903,22 @@
         }
 
         function importFromCsvText(rawCsv, overwrite) {
-            let lines = rawCsv.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim());
+            let text = String(rawCsv || '').replace(/^\uFEFF/, '');
             const tracker = { importedCount: 0, skippedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
-            if (lines.length < 2) return tracker;
+            const locMaxLayers = {};
 
-            if (/^sep\s*=\s*[,;\t]/i.test(lines[0].trim())) {
-                lines.shift();
+            const firstPhysicalLine = text.split(/\r?\n/)[0] || '';
+            if (/^sep\s*=\s*[,;\t]/i.test(firstPhysicalLine.trim())) {
+                const nl = text.indexOf('\n');
+                text = nl >= 0 ? text.slice(nl + 1) : '';
             }
-            if (lines.length < 2) return tracker;
 
-            const delimiter = detectCsvDelimiter(lines[0]);
-            const headers = parseCsvLine(lines[0], delimiter).map(h => h.trim().toLowerCase().replace(/[\s/.-]+/g, '_'));
+            const headerLine = text.split(/\r?\n/)[0] || '';
+            const delimiter = detectCsvDelimiter(headerLine);
+            const rows = parseCsvRows(text, delimiter).filter(r => r.some(c => String(c).trim() !== ''));
+            if (rows.length < 2) return tracker;
+
+            const headers = rows[0].map(h => h.trim().toLowerCase().replace(/[\s/.-]+/g, '_'));
             const findCol = (...names) => headers.findIndex(h => names.includes(h));
 
             const idxLoc = findCol('lokasi', 'bay', 'location', 'lokasi_bay', 'nama_lokasi');
@@ -2539,8 +2937,8 @@
             const idxSupp = findCol('supplier', 'nama_supplier');
             const idxTime = findCol('waktu_update', 'waktu', 'updated_at');
 
-            for (let r = 1; r < lines.length; r++) {
-                const cols = parseCsvLine(lines[r], delimiter);
+            for (let r = 1; r < rows.length; r++) {
+                const cols = rows[r];
                 const id = idxCoil >= 0 ? (cols[idxCoil] || '').trim().toUpperCase() : '';
                 const nomor = idxNomor >= 0 ? (cols[idxNomor] || '').trim().toUpperCase() : '';
                 if (!id && !nomor) continue;
@@ -2564,14 +2962,14 @@
                 const unitRaw = idxUnit >= 0 ? (cols[idxUnit] || '').trim().toLowerCase() : '';
                 const weightUnit = (unitRaw === 'mt' || unitRaw === 'ton') ? 'mt' : 'kg';
                 const supplier = idxSupp >= 0 ? (cols[idxSupp] || '').trim() : '';
-                const updatedAt = (idxTime >= 0 && cols[idxTime]) ? cols[idxTime].trim() : new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const updatedAt = (idxTime >= 0 && cols[idxTime]) ? cols[idxTime].trim() : new Date().toLocaleString('id-ID');
 
                 const isNonPyramid = /non[\s-]*piramid/i.test(layerRaw) || /^samping$/i.test(posLabelRaw);
                 if (isNonPyramid) {
                     if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
                     const dupIdx = targetLoc.nonPyramidCoils.findIndex(c => c.id && c.id === id);
                     const itemObj = {
-                        nomor: nomor || (targetLoc.nonPyramidCoils.length + 1).toString(),
+                        nomor: nomor || getNextNpNomorInLocation(targetLoc, dupIdx),
                         id: id || nomor,
                         diameter,
                         grade,
@@ -2601,7 +2999,7 @@
 
                 const layerNum = parseInt(layerRaw.replace(/[^\d]/g, ''), 10);
                 if (isNaN(layerNum) || layerNum < 1) continue;
-                if (layerNum > (targetLoc.totalLayers || 5)) targetLoc.totalLayers = layerNum;
+                locMaxLayers[targetLoc.id] = Math.max(locMaxLayers[targetLoc.id] || 0, layerNum);
 
                 const locPositions = generatePositionsList(targetLoc.stackPattern || '3-2-1').positions;
                 const posObj = locPositions.find(p =>
@@ -2619,7 +3017,7 @@
                 }
 
                 targetLoc.coils[key] = {
-                    nomor: nomor || posObj.seq.toString(),
+                    nomor: nomor || getNextCoilNomorInLocation(targetLoc, key),
                     id: id || nomor,
                     diameter,
                     grade,
@@ -2634,6 +3032,13 @@
                 tracker.importedCount++;
                 tracker.touchedLocIds.add(targetLoc.id);
             }
+
+            tracker.touchedLocIds.forEach(locId => {
+                const loc = appState.locations[locId];
+                if (loc && locMaxLayers[locId] && locMaxLayers[locId] > 0) {
+                    loc.totalLayers = locMaxLayers[locId];
+                }
+            });
 
             return tracker;
         }
@@ -2669,11 +3074,16 @@
             // Parsing format teks laporan WhatsApp
             const lines = rawText.split(/\r?\n/);
             let targetLoc = appState.locations[appState.activeLocationId];
+            if (!targetLoc) {
+                targetLoc = getOrCreateLocationByName(appState.bayName || 'BAY-A01', null, tracker);
+            }
             let blockPicName = '';
             let blockShift = '';
             let currentLayer = null;
             let isNonPyramidSection = false;
             const tracker = { importedCount: 0, skippedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
+            const locMaxLayers = {};
+            const locExplicitLayers = new Set();
 
             lines.forEach(line => {
                 const trimmed = line.trim();
@@ -2689,9 +3099,17 @@
                     return;
                 }
 
-                const susunanMatch = trimmed.match(/^Susunan\s*:\s*([\d-]+)/i);
-                if (susunanMatch && targetLoc) {
-                    targetLoc.stackPattern = generatePositionsList(susunanMatch[1]).normalizedPattern;
+                const susunanMatch = trimmed.match(/Susunan\s*:\s*([\d-]+)/i);
+                const totalLayerMatch = trimmed.match(/Total\s*Layer\s*:\s*(\d+)/i);
+                if ((susunanMatch || totalLayerMatch) && targetLoc) {
+                    if (susunanMatch) targetLoc.stackPattern = generatePositionsList(susunanMatch[1]).normalizedPattern;
+                    if (totalLayerMatch) {
+                        const parsedL = parseInt(totalLayerMatch[1], 10);
+                        if (parsedL > 0) {
+                            targetLoc.totalLayers = parsedL;
+                            locExplicitLayers.add(targetLoc.id);
+                        }
+                    }
                     return;
                 }
 
@@ -2717,8 +3135,8 @@
                 if (layerMatch) {
                     currentLayer = parseInt(layerMatch[1], 10);
                     isNonPyramidSection = false;
-                    if (targetLoc && currentLayer > (targetLoc.totalLayers || 5)) {
-                        targetLoc.totalLayers = currentLayer;
+                    if (targetLoc && currentLayer > 0) {
+                        locMaxLayers[targetLoc.id] = Math.max(locMaxLayers[targetLoc.id] || 0, currentLayer);
                     }
                     return;
                 }
@@ -2768,7 +3186,7 @@
                         if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
                         const duplicateIdx = targetLoc.nonPyramidCoils.findIndex(c => c.id && c.id === id);
                         const newItem = {
-                            nomor: nomor || (targetLoc.nonPyramidCoils.length + 1).toString(),
+                            nomor: nomor || getNextNpNomorInLocation(targetLoc, duplicateIdx),
                             id: id || nomor,
                             diameter,
                             grade,
@@ -2778,7 +3196,7 @@
                             supplier,
                             picName: itemPic,
                             shift: itemShift,
-                            updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                            updatedAt: new Date().toLocaleString('id-ID')
                         };
                         if (duplicateIdx !== -1) {
                             if (overwrite) {
@@ -2812,7 +3230,7 @@
                     }
 
                     targetLoc.coils[key] = {
-                        nomor: nomor || posObj.seq.toString(),
+                        nomor: nomor || getNextCoilNomorInLocation(targetLoc, key),
                         id: id || nomor,
                         diameter,
                         grade,
@@ -2822,10 +3240,17 @@
                         supplier,
                         picName: itemPic,
                         shift: itemShift,
-                        updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                        updatedAt: new Date().toLocaleString('id-ID')
                     };
                     tracker.importedCount++;
                     tracker.touchedLocIds.add(targetLoc.id);
+                }
+            });
+
+            tracker.touchedLocIds.forEach(locId => {
+                const loc = appState.locations[locId];
+                if (loc && !locExplicitLayers.has(locId) && locMaxLayers[locId] && locMaxLayers[locId] > 0) {
+                    loc.totalLayers = locMaxLayers[locId];
                 }
             });
 
@@ -2840,53 +3265,6 @@
         }
 
         // ==========================================
-        // SIMPAN APLIKASI MANDIRI (OFFLINE HTML)
-        // ==========================================
-        function getCleanStandaloneHtml() {
-            const cloneDoc = document.documentElement.cloneNode(true);
-            // Pastikan semua modal dalam kondisi tertutup di salinan HTML
-            ['confirm-modal', 'export-modal', 'qr-scanner-modal', 'save-app-modal', 'location-modal', 'custom-pattern-modal', 'import-sync-modal'].forEach(id => {
-                const m = cloneDoc.querySelector(`#${id}`);
-                if (m) {
-                    m.classList.add('hidden');
-                    m.classList.remove('flex');
-                }
-            });
-            return '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
-        }
-
-        function downloadStandaloneApp() {
-            const htmlStr = getCleanStandaloneHtml();
-            const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.getElementById('direct-html-download-link');
-            if (link) link.href = url;
-            showModalEl('save-app-modal');
-        }
-
-        function closeSaveAppModal() {
-            hideModalEl('save-app-modal');
-        }
-
-        function copyStandaloneHtml() {
-            const htmlStr = getCleanStandaloneHtml();
-            const temp = document.createElement('textarea');
-            temp.value = htmlStr;
-            temp.style.position = 'fixed';
-            temp.style.opacity = '0';
-            document.body.appendChild(temp);
-            temp.select();
-            temp.setSelectionRange(0, htmlStr.length);
-            try {
-                document.execCommand('copy');
-                showToast('Kode HTML lengkap berhasil disalin ke clipboard!');
-            } catch (e) {
-                showToast('Gagal menyalin otomatis, silakan salin dari tab editor kode.', 'error');
-            }
-            temp.remove();
-        }
-
-        // ==========================================
         // RENDER UTAMA & INISIALISASI
         // ==========================================
         function updateGlobalProgress() {
@@ -2898,8 +3276,11 @@
                     if (item && item.id) filled++;
                 });
             }
+            const npCount = (appState.nonPyramidCoils || []).length;
             const badge = document.getElementById('progress-badge');
-            if (badge) badge.textContent = `${filled} / ${totalSlots}`;
+            if (badge) badge.textContent = npCount > 0
+                ? `${filled} / ${totalSlots} (+${npCount} NP)`
+                : `${filled} / ${totalSlots}`;
 
             const layerDisp = document.getElementById('total-layers-display');
             if (layerDisp) layerDisp.textContent = appState.totalLayers;
@@ -2928,6 +3309,24 @@
                     const parsed = JSON.parse(raw);
                     if (parsed && typeof parsed === 'object') {
                         appState = { ...appState, ...parsed };
+                        // BUG-03 fix: migrate old single-location schema (coils at top level, no locations)
+                        if (appState.coils && Object.keys(appState.coils).length > 0 &&
+                            (!appState.locations || Object.keys(appState.locations).length === 0)) {
+                            const migratedLoc = createLocationRecord('loc_1', appState.bayName || 'BAY-A01', {
+                                picName: appState.picName || '',
+                                shift: appState.shift || detectCurrentShiftByTime(),
+                                stackPattern: appState.stackPattern || '3-2-1',
+                                totalLayers: appState.totalLayers || 2,
+                                activePosition: appState.activePosition || 'ATAS',
+                                selectedLayer: appState.selectedLayer || 1,
+                                crawlDirection: appState.crawlDirection || 'asc',
+                                coils: appState.coils || {},
+                                nonPyramidCoils: appState.nonPyramidCoils || []
+                            });
+                            appState.locations = { loc_1: migratedLoc };
+                            appState.activeLocationId = 'loc_1';
+                            console.info('CoilStack: Migrasi data format lama berhasil.');
+                        }
                     }
                 }
             } catch (e) {
@@ -2939,7 +3338,7 @@
                     picName: appState.picName || '',
                     shift: appState.shift || detectCurrentShiftByTime(),
                     stackPattern: appState.stackPattern || '3-2-1',
-                    totalLayers: appState.totalLayers || 5,
+                    totalLayers: appState.totalLayers || 2,
                     activePosition: appState.activePosition || 'ATAS',
                     selectedLayer: appState.selectedLayer || 1,
                     crawlDirection: appState.crawlDirection || 'asc',
@@ -2952,11 +3351,6 @@
 
             if (!appState.locations[appState.activeLocationId]) {
                 appState.activeLocationId = Object.keys(appState.locations)[0];
-            }
-
-            // Sesuaikan shift otomatis berdasarkan jam aktif saat dibuka (kecuali Non-Shift)
-            if (appState.shift !== 'Non-Shift') {
-                appState.shift = detectCurrentShiftByTime();
             }
 
             loadLocationIntoActiveState(appState.activeLocationId);
