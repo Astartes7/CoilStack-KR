@@ -10,30 +10,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <!-- Font Awesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- HTML5-QRCode untuk Scan QR via Kamera HP -->
+    <!-- HTML5-QRCode untuk Scan QR via Kamera / Foto HP -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        industrial: {
-                            900: '#0f172a',
-                            800: '#1e293b',
-                            700: '#334155',
-                            accent: '#f59e0b',
+        if (window.tailwind) {
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                            mono: ['JetBrains Mono', 'monospace'],
+                        },
+                        colors: {
+                            industrial: {
+                                900: '#0f172a',
+                                800: '#1e293b',
+                                700: '#334155',
+                                accent: '#f59e0b',
+                            }
                         }
                     }
                 }
-            }
+            };
         }
     </script>
     <style>
-        /* Custom scrollbar untuk tampilan mobile yang bersih */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -45,7 +46,6 @@
             background: #cbd5e1;
             border-radius: 9999px;
         }
-        /* Animasi pulse halus untuk slot aktif */
         @keyframes pulse-border {
             0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
             50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
@@ -71,8 +71,8 @@
             </div>
             <p id="modal-message" class="text-sm text-slate-600 mb-6 leading-relaxed">Apakah Anda yakin?</p>
             <div class="flex gap-3 justify-end">
-                <button id="modal-cancel" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Batal</button>
-                <button id="modal-confirm" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow-sm">Ya, Lanjutkan</button>
+                <button type="button" id="modal-cancel" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Batal</button>
+                <button type="button" id="modal-confirm" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow-sm">Ya, Lanjutkan</button>
             </div>
         </div>
     </div>
@@ -90,16 +90,16 @@
                 </div>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2">
-                <button onclick="openImportSyncModal()" title="Impor & gabungkan rekapan teks dari rekan lain" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                <button type="button" onclick="openImportSyncModal()" title="Impor & gabungkan rekapan CSV atau WhatsApp" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-file-import"></i>
                     <span class="hidden sm:inline">Impor / Gabung</span>
                     <span class="sm:hidden">Impor</span>
                 </button>
-                <button onclick="downloadStandaloneApp()" title="Simpan aplikasi ke HP agar bisa dibuka offline tanpa deploy" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-amber-300 border border-slate-600 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                <button type="button" onclick="downloadStandaloneApp()" title="Simpan aplikasi ke HP agar bisa dibuka offline" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-amber-300 border border-slate-600 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-download"></i>
                     <span class="hidden sm:inline">Simpan App</span>
                 </button>
-                <button onclick="openExportModal()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                <button type="button" onclick="openExportModal()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-file-export"></i>
                     <span class="hidden sm:inline">Ekspor / Rekap</span>
                     <span class="sm:hidden">Rekap</span>
@@ -107,7 +107,7 @@
             </div>
         </div>
 
-        <!-- Bar Informasi Lot, Pola Susunan & Jumlah Layer -->
+        <!-- Bar Informasi Lokasi, PIC/Shift, Pola Susunan & Total Layer -->
         <div class="bg-slate-800 border-t border-slate-700/80 px-4 py-2.5">
             <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -129,6 +129,21 @@
                         <i class="fa-solid fa-trash-can text-[11px]"></i>
                     </button>
                 </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-slate-400 font-medium">PIC / Tim:</span>
+                    <input type="text" id="pic-name-input" placeholder="Nama PIC / Tim..." oninput="onPicShiftChange()"
+                        class="bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-white font-semibold w-[125px] sm:w-[150px] placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                    <span class="text-slate-400 font-medium ml-1">Shift:</span>
+                    <select id="shift-select" onchange="onPicShiftChange()"
+                        class="bg-slate-900/90 border border-slate-600 rounded-lg px-2 py-1 text-sky-300 font-mono font-bold focus:outline-none focus:border-amber-400">
+                        <option value="Shift 1">Shift 1 (07:30-15:30)</option>
+                        <option value="Shift 2">Shift 2 (15:30-23:30)</option>
+                        <option value="Shift 3">Shift 3 (23:30-07:30)</option>
+                        <option value="Non-Shift">Non-Shift</option>
+                    </select>
+                </div>
+
                 <div class="flex items-center gap-2">
                     <span class="text-slate-400 font-medium">Susunan:</span>
                     <select id="stack-pattern-select" onchange="onStackPatternChange(this.value)"
@@ -140,14 +155,16 @@
                         <option value="CUSTOM">Custom...</option>
                     </select>
                 </div>
+
                 <div class="flex items-center gap-2">
                     <span class="text-slate-400 font-medium">Total Layer:</span>
                     <div class="flex items-center bg-slate-900 rounded-lg border border-slate-600 overflow-hidden">
-                        <button onclick="changeLayerCount(-1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">-</button>
+                        <button type="button" onclick="changeLayerCount(-1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">-</button>
                         <span id="total-layers-display" class="px-3 py-1 font-mono font-bold text-amber-400">5</span>
-                        <button onclick="changeLayerCount(1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">+</button>
+                        <button type="button" onclick="changeLayerCount(1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">+</button>
                     </div>
                 </div>
+
                 <div class="flex items-center gap-2 ml-auto sm:ml-0">
                     <span class="text-slate-400">Terisi:</span>
                     <span id="progress-badge" class="bg-slate-700 text-amber-300 font-mono font-bold px-2.5 py-0.5 rounded-full">0 / 30</span>
@@ -161,15 +178,15 @@
 
         <!-- Mode Switcher Tabs -->
         <div class="grid grid-cols-3 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
-            <button id="tab-crawl" onclick="switchMode('crawl')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm">
+            <button type="button" id="tab-crawl" onclick="switchMode('crawl')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm">
                 <i class="fa-solid fa-person-crawling text-amber-500"></i>
                 <span>Piramid (Merangkak)</span>
             </button>
-            <button id="tab-nonpyramid" onclick="switchMode('nonpyramid')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+            <button type="button" id="tab-nonpyramid" onclick="switchMode('nonpyramid')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
                 <i class="fa-solid fa-cubes-stacked text-sky-500"></i>
                 <span>Non-Piramid (<span id="nonpyramid-tab-count">0</span>)</span>
             </button>
-            <button id="tab-layer" onclick="switchMode('layer')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+            <button type="button" id="tab-layer" onclick="switchMode('layer')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
                 <i class="fa-solid fa-layer-group text-slate-400"></i>
                 <span>Lihat Per Layer</span>
             </button>
@@ -180,7 +197,7 @@
         <!-- ========================================================= -->
         <section id="view-crawl" class="flex flex-col md:grid md:grid-cols-12 gap-5 items-start">
             
-            <!-- Kolom Kiri: Visual Piramid 3-2-1 Interaktif -->
+            <!-- Kolom Kiri: Visual Piramid Interaktif -->
             <div class="w-full md:col-span-5 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
                 <div class="flex items-center justify-between mb-3">
                     <div>
@@ -190,15 +207,15 @@
                     <span class="text-[11px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-md border border-slate-200">Tampak Depan</span>
                 </div>
 
-                <!-- Diagram Piramid Dinamis (Custom / 3-2-1 / 4-3-2-1 / dll) -->
+                <!-- Diagram Piramid Dinamis -->
                 <div id="dynamic-pyramid-grid" class="bg-slate-50 rounded-2xl p-3 sm:p-4 border border-slate-200/80 flex flex-col items-center justify-center gap-2.5 my-2 select-none overflow-x-auto">
-                    <!-- Dirender dinamis oleh JS sesuai susunan piramid -->
+                    <!-- Dirender dinamis oleh JS -->
                 </div>
 
                 <!-- Quick Navigation Posisi Selanjutnya -->
                 <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                     <span class="text-xs text-slate-500">Pindah posisi cepat:</span>
-                    <button onclick="nextPosition()" class="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition">
+                    <button type="button" onclick="nextPosition()" class="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition">
                         <span>Posisi Berikutnya</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
@@ -210,7 +227,7 @@
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
                     <div>
                         <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600 block">Posisi Aktif</span>
-                        <h2 id="active-pos-title" class="text-lg sm:text-xl font-extrabold text-slate-900">BARIS 1 - POSISI 1</h2>
+                        <h2 id="active-pos-title" class="text-lg sm:text-xl font-extrabold text-slate-900">ATAS (PUNCAK)</h2>
                     </div>
                     <div class="text-right flex flex-col items-end">
                         <span class="text-[11px] text-slate-500 block">Urutan Input (Ketuk untuk ubah)</span>
@@ -222,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- Form Input Cepat (Auto-Focus ke Layer Kosong Berikutnya) -->
+                <!-- Form Input Cepat -->
                 <form id="quick-input-form" onsubmit="handleQuickSubmit(event)" class="bg-slate-900 text-white p-4 rounded-2xl shadow-inner flex flex-col gap-3">
                     <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
                         <div class="flex items-center gap-2">
@@ -250,17 +267,16 @@
                                 <span>Scan / Tempel QR Label</span>
                             </label>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <label class="inline-flex items-center gap-1 text-[10px] text-slate-300 cursor-pointer select-none mr-1" title="Simpan otomatis salinan foto label QR ke perangkat/galeri">
+                                <label class="inline-flex items-center gap-1 text-[10px] text-slate-300 cursor-pointer select-none mr-1" title="Simpan otomatis salinan foto label QR ke perangkat jika QR berhasil terbaca">
                                     <input type="checkbox" id="save-photo-to-gallery" checked class="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-600">
                                     <span>Simpan Foto</span>
                                 </label>
-                                <!-- Input file tersembunyi untuk foto QR via kamera bawaan HP (Anti-blokir iframe) -->
-                                <input type="file" id="qr-photo-input" accept="image/*" capture="environment" class="hidden" onchange="handleQrPhotoUpload(event)">
+                                <input type="file" id="qr-photo-input" accept="image/*" capture="environment" class="hidden" onchange="handleQrPhotoUpload(event, 'pyramid')">
                                 <button type="button" onclick="document.getElementById('qr-photo-input').click()" class="text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
                                     <i class="fa-solid fa-camera"></i>
                                     <span>Foto QR</span>
                                 </button>
-                                <button type="button" onclick="openQrScannerModal()" class="text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
+                                <button type="button" onclick="openQrScannerModal('pyramid')" class="text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
                                     <i class="fa-solid fa-video"></i>
                                     <span>Live Scan</span>
                                 </button>
@@ -268,13 +284,13 @@
                         </div>
                         <div class="flex gap-1.5">
                             <textarea id="qr-raw-input" rows="1" placeholder="Tempel / scan QR (Shagang / Master Steel)..." autocomplete="off"
-                                oninput="handleQrRawInput(this.value)"
-                                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); parseAndFillQrString(this.value, true); }"
+                                oninput="handleQrRawInput(this.value, 'pyramid')"
+                                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); parseAndFillQrString(this.value, true, 'pyramid'); }"
                                 class="w-full bg-slate-900 border border-slate-600 focus:border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-emerald-300 placeholder-slate-500 focus:outline-none resize-none overflow-hidden"></textarea>
-                            <button type="button" onclick="pasteFromClipboardToQr()" title="Tempel dari clipboard HP" class="bg-slate-700 hover:bg-slate-600 text-amber-300 text-xs font-bold px-2.5 rounded-lg shrink-0 transition">
+                            <button type="button" onclick="pasteFromClipboardToQr('pyramid')" title="Tempel dari clipboard HP" class="bg-slate-700 hover:bg-slate-600 text-amber-300 text-xs font-bold px-2.5 rounded-lg shrink-0 transition">
                                 Tempel
                             </button>
-                            <button type="button" onclick="parseAndFillQrString(document.getElementById('qr-raw-input').value, true)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 rounded-lg shrink-0 transition">
+                            <button type="button" onclick="parseAndFillQrString(document.getElementById('qr-raw-input').value, true, 'pyramid')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 rounded-lg shrink-0 transition">
                                 Isi
                             </button>
                         </div>
@@ -301,7 +317,7 @@
                         </div>
                     </div>
 
-                    <!-- Baris 1: Nomor & No. Coil (Utama) -->
+                    <!-- Baris 1: Nomor & No. Coil -->
                     <div class="grid grid-cols-12 gap-2">
                         <div class="col-span-4">
                             <label for="coil-nomor-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Nomor Urut</label>
@@ -311,7 +327,7 @@
                         <div class="col-span-8">
                             <label for="coil-id-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">No. Coil *</label>
                             <input type="text" id="coil-id-input" placeholder="Ketik / Scan No. Coil..." autocomplete="off"
-                                oninput="handleCoilIdSmartScan(this.value)"
+                                oninput="handleCoilIdSmartScan(this.value, 'pyramid')"
                                 class="w-full bg-slate-800 border-2 border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                     </div>
@@ -370,7 +386,7 @@
                         <span class="text-[11px] text-slate-400">Ketuk item untuk edit</span>
                     </div>
                     <div id="position-layer-list" class="flex flex-col gap-2 max-h-[380px] overflow-y-auto pr-1">
-                        <!-- Daftar kartu layer akan dirender di sini -->
+                        <!-- Daftar kartu layer dirender di sini -->
                     </div>
                 </div>
             </div>
@@ -380,7 +396,6 @@
         <!-- VIEW 1B: MODE NON-PIRAMID (KOIL SAMPING / LEPASAN 1-N)    -->
         <!-- ========================================================= -->
         <section id="view-nonpyramid" class="hidden flex-col md:grid md:grid-cols-12 gap-5 items-start">
-            <!-- Form Input Non-Piramid -->
             <div class="w-full md:col-span-6 bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col gap-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
@@ -464,7 +479,7 @@
                         <div class="col-span-8">
                             <label for="np-id-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">No. Coil *</label>
                             <input type="text" id="np-id-input" placeholder="Ketik / Scan No. Coil..." autocomplete="off"
-                                oninput="if(this.value.trim().split('-').length>=6) parseAndFillQrString(this.value, false, 'np')"
+                                oninput="handleCoilIdSmartScan(this.value, 'np')"
                                 class="w-full bg-slate-800 border-2 border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                     </div>
@@ -532,7 +547,7 @@
         </section>
 
         <!-- ========================================================= -->
-        <!-- VIEW 2: MODE TINJAU PER LAYER (TAMPAK DEPAN PER BARIS 321) -->
+        <!-- VIEW 2: MODE TINJAU PER LAYER (TAMPAK DEPAN PER BARIS)    -->
         <!-- ========================================================= -->
         <section id="view-layer" class="hidden flex-col gap-4">
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
@@ -559,7 +574,7 @@
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 overflow-hidden">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-bold text-slate-900">Daftar Lengkap Coil (<span id="overview-bay-name">BAY-A01</span>)</h3>
-                    <button onclick="confirmResetAll()" class="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">
+                    <button type="button" onclick="confirmResetAll()" class="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">
                         <i class="fa-solid fa-trash-can mr-1"></i> Reset Lokasi Ini
                     </button>
                 </div>
@@ -576,6 +591,8 @@
                                 <th class="p-2.5 font-bold">Heat Number</th>
                                 <th class="p-2.5 font-bold">Berat</th>
                                 <th class="p-2.5 font-bold">Supplier</th>
+                                <th class="p-2.5 font-bold">Tim / PIC</th>
+                                <th class="p-2.5 font-bold">Shift</th>
                             </tr>
                         </thead>
                         <tbody id="matrix-table-body" class="divide-y divide-slate-100 font-mono">
@@ -679,14 +696,14 @@
                 </button>
             </div>
             <p class="text-xs text-slate-600 leading-relaxed">
-                Jika unduhan otomatis diblokir oleh jendela preview, ketuk <b>Salin Kode HTML</b> di bawah lalu simpan sebagai file <code class="bg-slate-100 px-1.5 py-0.5 rounded font-mono">CoilStack.html</code> di HP Anda.
+                Jika unduhan otomatis diblokir oleh jendela preview, ketuk <b>Salin Kode HTML</b> di bawah lalu simpan sebagai file <code class="bg-slate-100 px-1.5 py-0.5 rounded font-mono">index.html</code> di HP atau GitHub Pages Anda.
             </p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <button type="button" onclick="copyStandaloneHtml()" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-2 transition">
                     <i class="fa-regular fa-copy"></i>
                     <span>Salin Kode HTML</span>
                 </button>
-                <a id="direct-html-download-link" download="CoilStack-by-Han.html" href="#" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
+                <a id="direct-html-download-link" download="index.html" href="#" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition">
                     <i class="fa-solid fa-download"></i>
                     <span>Coba Unduh Langsung</span>
                 </a>
@@ -829,7 +846,6 @@
         // ==========================================
         // KONFIGURASI & GENERATOR SUSUNAN DINAMIS
         // ==========================================
-        // Pola disimpan dari bawah ke atas, contoh: [3, 2, 1] -> Bawah 3, Tengah 2, Atas 1
         let POSITIONS = [];
 
         function generatePositionsList(patternStr) {
@@ -843,11 +859,9 @@
             const generated = [];
             let seqCounter = 1;
 
-            // Iterasi dari puncak atas (rowIdx = totalRows - 1) turun ke baris bawah (rowIdx = 0)
-            // agar penomoran urut #1 selalu mulai dari paling atas kiri ke bawah kanan
             for (let rIdx = totalRows - 1; rIdx >= 0; rIdx--) {
                 const countInRow = validPattern[rIdx];
-                const visualRowFromTop = totalRows - rIdx; // 1 = Puncak
+                const visualRowFromTop = totalRows - rIdx;
 
                 for (let cIdx = 0; cIdx < countInRow; cIdx++) {
                     const isLegacy321 = validPattern.join('-') === '3-2-1';
@@ -855,7 +869,6 @@
                     let label = `BARIS ${rIdx + 1} - POSISI ${cIdx + 1}`;
                     let shortLabel = `B${rIdx + 1}-P${cIdx + 1}`;
 
-                    // Pertahankan ID & label klasik untuk 3-2-1 agar kompatibel dengan data lama
                     if (isLegacy321) {
                         if (rIdx === 2 && cIdx === 0) { id = 'ATAS'; label = 'ATAS (Puncak)'; shortLabel = 'Atas'; }
                         else if (rIdx === 1 && cIdx === 0) { id = 'TENGAH_KIRI'; label = 'TENGAH KIRI'; shortLabel = 'Tengah Kiri'; }
@@ -892,7 +905,7 @@
             return res.normalizedPattern;
         }
 
-        function getAutoSequenceNumber(posId, layerNum) {
+        function getAutoSequenceNumber(posId) {
             const posObj = POSITIONS.find(p => p.id === posId);
             const seqInLayer = posObj ? posObj.seq : 1;
             return seqInLayer.toString();
@@ -900,10 +913,22 @@
 
         const STORAGE_KEY = 'coilstack_321_data_v1';
 
+        function detectCurrentShiftByTime(dateObj = new Date()) {
+            const totalMinutes = dateObj.getHours() * 60 + dateObj.getMinutes();
+            // Shift 1: 07:30 (450) - 15:30 (930)
+            if (totalMinutes >= 450 && totalMinutes < 930) return 'Shift 1';
+            // Shift 2: 15:30 (930) - 23:30 (1410)
+            if (totalMinutes >= 930 && totalMinutes < 1410) return 'Shift 2';
+            // Shift 3: 23:30 (1410) - 07:30 (450)
+            return 'Shift 3';
+        }
+
         function createLocationRecord(id, name, overrides = {}) {
             return {
                 id,
                 name: name || 'BAY-A01',
+                picName: overrides.picName !== undefined ? overrides.picName : '',
+                shift: overrides.shift || detectCurrentShiftByTime(),
                 stackPattern: overrides.stackPattern || '3-2-1',
                 totalLayers: overrides.totalLayers || 5,
                 activePosition: overrides.activePosition || 'ATAS',
@@ -916,27 +941,100 @@
 
         let appState = {
             bayName: 'BAY-A01',
+            picName: '',
+            shift: detectCurrentShiftByTime(),
             stackPattern: '3-2-1',
             totalLayers: 5,
             activePosition: 'ATAS',
             selectedLayer: 1,
-            crawlDirection: 'asc', // 'asc' (Layer 1 -> N) | 'desc' (Layer N -> 1)
-            currentMode: 'crawl', // 'crawl' | 'nonpyramid' | 'layer'
+            crawlDirection: 'asc',
             defaultWeightUnit: 'kg',
-            activeLocationId: 'loc_1',
-            locations: {},
-            // Struktur data coils piramid: { "ATAS_1": { ... }, ... }
             coils: {},
-            // Struktur data koil non-piramid (samping): [ { nomor, id, diameter, grade, heatNumber, weight, weightUnit, supplier, updatedAt } ]
-            nonPyramidCoils: []
+            nonPyramidCoils: [],
+            activeLocationId: 'loc_1',
+            locations: {}
         };
 
-        // Menyinkronkan state lokasi aktif ke dalam kamus appState.locations
-        function syncActiveLocationToStore() {
+        let currentMode = 'crawl';
+        let editingNonPyramidIndex = -1;
+        let locationModalMode = 'new';
+        let html5QrScanner = null;
+        let activeQrTarget = 'pyramid';
+        let awaitingExternalCopyTarget = null;
+
+        // ==========================================
+        // HELPER UI & MODAL
+        // ==========================================
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const bgClass = type === 'error'
+                ? 'bg-red-600 text-white border-red-700'
+                : (type === 'info' ? 'bg-slate-800 text-amber-300 border-slate-700' : 'bg-emerald-600 text-white border-emerald-700');
+            const iconClass = type === 'error'
+                ? 'fa-circle-exclamation'
+                : (type === 'info' ? 'fa-circle-info' : 'fa-circle-check');
+
+            toast.className = `${bgClass} border px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-semibold flex items-center gap-2.5 pointer-events-auto transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass} shrink-0"></i><span>${escapeHTML(message)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-6px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function showModalEl(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+
+        function hideModalEl(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            const cancelBtn = document.getElementById('modal-cancel');
+            const confirmBtn = document.getElementById('modal-confirm');
+
+            const cleanup = () => hideModalEl('confirm-modal');
+            cancelBtn.onclick = cleanup;
+            confirmBtn.onclick = () => {
+                cleanup();
+                if (typeof onConfirm === 'function') onConfirm();
+            };
+            showModalEl('confirm-modal');
+        }
+
+        // ==========================================
+        // STATE PERSISTENCE & MULTI-LOKASI
+        // ==========================================
+        function syncActiveStateToLocation() {
             if (!appState.locations) appState.locations = {};
-            const locId = appState.activeLocationId || 'loc_1';
-            appState.activeLocationId = locId;
-            appState.locations[locId] = createLocationRecord(locId, appState.bayName, {
+            const id = appState.activeLocationId || 'loc_1';
+            appState.locations[id] = createLocationRecord(id, appState.bayName, {
+                picName: appState.picName,
+                shift: appState.shift,
                 stackPattern: appState.stackPattern,
                 totalLayers: appState.totalLayers,
                 activePosition: appState.activePosition,
@@ -950,8 +1048,8 @@
         function loadLocationIntoActiveState(locId) {
             const loc = appState.locations[locId];
             if (!loc) return;
-            appState.activeLocationId = loc.id;
-            appState.bayName = loc.name;
+            appState.activeLocationId = locId;
+            appState.bayName = loc.name || 'BAY-A01';
             appState.stackPattern = buildPositionsFromPattern(loc.stackPattern || '3-2-1');
             appState.totalLayers = loc.totalLayers || 5;
             appState.activePosition = POSITIONS.some(p => p.id === loc.activePosition) ? loc.activePosition : POSITIONS[0].id;
@@ -961,279 +1059,240 @@
             appState.nonPyramidCoils = Array.isArray(loc.nonPyramidCoils) ? loc.nonPyramidCoils : [];
         }
 
+        function saveState() {
+            syncActiveStateToLocation();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.warn('Gagal menyimpan ke localStorage:', e);
+            }
+        }
+
         function renderLocationSelector() {
             const sel = document.getElementById('location-select');
             const delBtn = document.getElementById('delete-location-btn');
-            const overviewBay = document.getElementById('overview-bay-name');
             if (!sel) return;
-
-            const locList = Object.values(appState.locations || {});
             sel.innerHTML = '';
-            locList.forEach(loc => {
-                const filledCount = Object.values(loc.coils || {}).filter(c => c && c.id).length + (loc.nonPyramidCoils || []).length;
+
+            const locs = Object.values(appState.locations || {});
+            locs.forEach(loc => {
+                const count = Object.values(loc.coils || {}).filter(c => c && c.id).length + (loc.nonPyramidCoils || []).length;
                 const opt = document.createElement('option');
                 opt.value = loc.id;
-                opt.textContent = `${loc.name} (${filledCount})`;
+                opt.textContent = `${loc.name} (${count})`;
+                if (loc.id === appState.activeLocationId) opt.selected = true;
                 sel.appendChild(opt);
             });
-            sel.value = appState.activeLocationId;
 
             if (delBtn) {
-                if (locList.length > 1) delBtn.classList.remove('hidden');
+                if (locs.length > 1) delBtn.classList.remove('hidden');
                 else delBtn.classList.add('hidden');
             }
-            if (overviewBay) {
-                overviewBay.textContent = appState.bayName;
-            }
         }
 
-        // ==========================================
-        // INISIALISASI & PENYIMPANAN LOKAL
-        // ==========================================
-        function initApp() {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    appState = { ...appState, ...parsed };
-                    if (!Array.isArray(appState.nonPyramidCoils)) {
-                        appState.nonPyramidCoils = [];
-                    }
-                }
-            } catch (e) {
-                console.error("Gagal memuat data lokal:", e);
-            }
-
-            // Migrasi otomatis jika data lama belum memiliki struktur multi-lokasi
-            if (!appState.locations || Object.keys(appState.locations).length === 0) {
-                const initialId = 'loc_1';
-                appState.activeLocationId = initialId;
-                appState.locations = {
-                    [initialId]: createLocationRecord(initialId, appState.bayName || 'BAY-A01', {
-                        stackPattern: appState.stackPattern || '3-2-1',
-                        totalLayers: appState.totalLayers || 5,
-                        activePosition: appState.activePosition || 'ATAS',
-                        selectedLayer: appState.selectedLayer || 1,
-                        crawlDirection: appState.crawlDirection || 'asc',
-                        coils: appState.coils || {},
-                        nonPyramidCoils: appState.nonPyramidCoils || []
-                    })
-                };
-            }
-
-            if (!appState.locations[appState.activeLocationId]) {
-                appState.activeLocationId = Object.keys(appState.locations)[0];
-            }
-
-            loadLocationIntoActiveState(appState.activeLocationId);
-            renderLocationSelector();
-            syncPatternUI();
-            updateLayerCountUI();
-            resetNonPyramidForm();
-            selectPosition(appState.activePosition, false);
-            renderAll();
-        }
-
-        function syncPatternUI() {
-            const pat = appState.stackPattern || '3-2-1';
-            document.getElementById('header-pattern-badge').textContent = pat.replace(/-/g, '');
-            document.getElementById('overview-pattern-label').textContent = pat;
-
-            const sel = document.getElementById('stack-pattern-select');
-            const presetValues = ['3-2-1', '4-3-2-1', '5-4-3-2-1', '2-1'];
-            if (presetValues.includes(pat)) {
-                sel.value = pat;
-            } else {
-                // Tambahkan atau perbarui opsi custom aktif
-                let customOpt = sel.querySelector('option[data-custom-active="true"]');
-                if (!customOpt) {
-                    customOpt = document.createElement('option');
-                    customOpt.dataset.customActive = "true";
-                    sel.insertBefore(customOpt, sel.querySelector('option[value="CUSTOM"]'));
-                }
-                customOpt.value = pat;
-                customOpt.textContent = `${pat} (${POSITIONS.length} Coil)`;
-                sel.value = pat;
-            }
-        }
-
-        function onStackPatternChange(val) {
-            if (val === 'CUSTOM') {
-                document.getElementById('custom-pattern-input').value = appState.stackPattern;
-                const modal = document.getElementById('custom-pattern-modal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                syncPatternUI();
-                return;
-            }
-            applyNewPattern(val);
-        }
-
-        function closeCustomPatternModal() {
-            const modal = document.getElementById('custom-pattern-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function applyCustomPattern() {
-            const raw = document.getElementById('custom-pattern-input').value.trim();
-            const nums = raw.split('-').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n) && n > 0 && n <= 12);
-            if (nums.length === 0) {
-                showToast("Format tidak valid. Gunakan angka dipisah '-', contoh: 4-3-2-1", "warning");
-                return;
-            }
-            closeCustomPatternModal();
-            applyNewPattern(nums.join('-'));
-        }
-
-        function applyNewPattern(patternStr) {
-            appState.stackPattern = buildPositionsFromPattern(patternStr);
-            if (!POSITIONS.some(p => p.id === appState.activePosition)) {
-                appState.activePosition = POSITIONS[0].id;
-            }
-            syncPatternUI();
+        function switchLocation(newLocId) {
+            if (!appState.locations[newLocId] || newLocId === appState.activeLocationId) return;
+            syncActiveStateToLocation();
+            loadLocationIntoActiveState(newLocId);
+            editingNonPyramidIndex = -1;
             saveState();
-            selectPosition(appState.activePosition, false);
             renderAll();
-            showToast(`Susunan piramid diubah menjadi ${appState.stackPattern} (${POSITIONS.length} coil/layer)`, "success");
+            showToast(`Pindah ke lokasi ${appState.bayName}`, 'info');
         }
 
-        function saveState() {
-            try {
-                syncActiveLocationToStore();
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-                renderLocationSelector();
-            } catch (e) {
-                showToast("Gagal menyimpan ke memori browser.", "error");
+        function syncPicShiftUI() {
+            const picInp = document.getElementById('pic-name-input');
+            const shiftSel = document.getElementById('shift-select');
+            if (picInp && picInp.value !== (appState.picName || '')) {
+                picInp.value = appState.picName || '';
+            }
+            if (shiftSel) {
+                shiftSel.value = appState.shift || detectCurrentShiftByTime();
             }
         }
 
-        // ==========================================
-        // MANAJEMEN MULTI-LOKASI (TAMBAH / PINDAH / RENAME)
-        // ==========================================
-        let locationModalMode = 'create'; // 'create' | 'rename'
-
-        function switchLocation(locId) {
-            if (!appState.locations[locId] || locId === appState.activeLocationId) return;
-            syncActiveLocationToStore();
-            loadLocationIntoActiveState(locId);
+        function onPicShiftChange() {
+            const picInp = document.getElementById('pic-name-input');
+            const shiftSel = document.getElementById('shift-select');
+            if (picInp) appState.picName = picInp.value;
+            if (shiftSel) appState.shift = shiftSel.value;
             saveState();
-            syncPatternUI();
-            updateLayerCountUI();
-            resetNonPyramidForm();
-            selectPosition(appState.activePosition, false);
-            renderAll();
-            showToast(`Beralih ke lokasi: ${appState.bayName}`, "info");
         }
 
         function openNewLocationModal() {
-            locationModalMode = 'create';
-            const count = Object.keys(appState.locations || {}).length + 1;
+            locationModalMode = 'new';
             document.getElementById('location-modal-title').textContent = 'Tambah Lokasi Baru';
             document.getElementById('location-modal-subtitle').textContent = 'Data lokasi sebelumnya tetap tersimpan aman';
-            document.getElementById('location-name-input').value = `BAY-A0${count}`;
+            document.getElementById('location-name-input').value = '';
             document.getElementById('new-location-pattern').value = appState.stackPattern || '3-2-1';
             document.getElementById('location-pattern-row').classList.remove('hidden');
-
-            const modal = document.getElementById('location-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                const inp = document.getElementById('location-name-input');
-                inp.focus();
-                inp.select();
-            }, 50);
+            showModalEl('location-modal');
+            setTimeout(() => document.getElementById('location-name-input').focus(), 50);
         }
 
         function openRenameLocationModal() {
             locationModalMode = 'rename';
             document.getElementById('location-modal-title').textContent = 'Ubah Nama Lokasi';
-            document.getElementById('location-modal-subtitle').textContent = 'Perbarui label bay atau timbangan aktif';
-            document.getElementById('location-name-input').value = appState.bayName;
+            document.getElementById('location-modal-subtitle').textContent = `Mengubah nama lokasi aktif (${appState.bayName})`;
+            document.getElementById('location-name-input').value = appState.bayName || '';
             document.getElementById('location-pattern-row').classList.add('hidden');
-
-            const modal = document.getElementById('location-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                const inp = document.getElementById('location-name-input');
-                inp.focus();
-                inp.select();
-            }, 50);
+            showModalEl('location-modal');
+            setTimeout(() => document.getElementById('location-name-input').focus(), 50);
         }
 
         function closeLocationModal() {
-            const modal = document.getElementById('location-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            hideModalEl('location-modal');
         }
 
         function saveLocationModal() {
             const rawName = document.getElementById('location-name-input').value.trim().toUpperCase();
             if (!rawName) {
-                showToast("Nama lokasi tidak boleh kosong!", "warning");
+                showToast('Nama lokasi wajib diisi!', 'error');
                 return;
             }
 
             if (locationModalMode === 'rename') {
                 appState.bayName = rawName;
+                syncActiveStateToLocation();
                 saveState();
                 closeLocationModal();
-                showToast(`Nama lokasi diubah menjadi: ${rawName}`, "success");
+                renderAll();
+                showToast(`Nama lokasi diubah menjadi ${rawName}`);
                 return;
             }
 
-            // Mode tambah lokasi baru
-            syncActiveLocationToStore();
-            const newId = 'loc_' + Date.now();
-            const chosenPattern = document.getElementById('new-location-pattern').value || appState.stackPattern || '3-2-1';
+            const existingLoc = Object.values(appState.locations).find(l => l.name.toUpperCase() === rawName);
+            if (existingLoc) {
+                closeLocationModal();
+                switchLocation(existingLoc.id);
+                return;
+            }
 
+            syncActiveStateToLocation();
+            const newId = 'loc_' + Date.now();
+            const chosenPattern = document.getElementById('new-location-pattern').value || '3-2-1';
             appState.locations[newId] = createLocationRecord(newId, rawName, {
+                picName: appState.picName,
+                shift: appState.shift,
                 stackPattern: chosenPattern,
-                totalLayers: appState.totalLayers || 5
+                totalLayers: appState.totalLayers
             });
 
             loadLocationIntoActiveState(newId);
             saveState();
-            syncPatternUI();
-            updateLayerCountUI();
-            resetNonPyramidForm();
-            selectPosition(appState.activePosition, true);
-            renderAll();
             closeLocationModal();
-            showToast(`Lokasi baru "${rawName}" siap diisi!`, "success");
+            renderAll();
+            showToast(`Lokasi baru "${rawName}" dibuat!`);
         }
 
         function confirmDeleteCurrentLocation() {
-            const locIds = Object.keys(appState.locations || {});
-            if (locIds.length <= 1) {
-                showToast("Minimal harus ada 1 lokasi aktif.", "warning");
+            const locKeys = Object.keys(appState.locations);
+            if (locKeys.length <= 1) {
+                showToast('Minimal harus ada 1 lokasi aktif.', 'error');
                 return;
             }
-            const deletedName = appState.bayName;
             showConfirmModal(
-                `Hapus Lokasi "${deletedName}"?`,
-                `Seluruh data coil di lokasi ${deletedName} akan dihapus, sedangkan lokasi lain tetap aman.`,
+                'Hapus Lokasi Ini?',
+                `Seluruh data coil pada lokasi "${appState.bayName}" akan dihapus permanen. Lokasi lain tetap aman.`,
                 () => {
                     delete appState.locations[appState.activeLocationId];
                     const nextId = Object.keys(appState.locations)[0];
                     loadLocationIntoActiveState(nextId);
                     saveState();
-                    syncPatternUI();
-                    updateLayerCountUI();
-                    resetNonPyramidForm();
-                    selectPosition(appState.activePosition, false);
                     renderAll();
-                    showToast(`Lokasi "${deletedName}" telah dihapus.`, "info");
+                    showToast('Lokasi berhasil dihapus', 'info');
                 }
             );
         }
 
         // ==========================================
-        // NAVIGASI MODE, LAYER & POSISI PIRAMID
+        // POLA SUSUNAN PIRAMID & LAYER CONTROLS
+        // ==========================================
+        function syncPatternDropdownUI() {
+            const sel = document.getElementById('stack-pattern-select');
+            const badge = document.getElementById('header-pattern-badge');
+            const overviewLabel = document.getElementById('overview-pattern-label');
+            const pattern = appState.stackPattern || '3-2-1';
+
+            if (badge) badge.textContent = pattern.replace(/-/g, '');
+            if (overviewLabel) overviewLabel.textContent = pattern;
+            if (!sel) return;
+
+            const presetValues = ['3-2-1', '4-3-2-1', '5-4-3-2-1', '2-1'];
+            // Hapus opsi custom dinamis lama jika ada
+            Array.from(sel.options).forEach(opt => {
+                if (opt.dataset.customOption === 'true') opt.remove();
+            });
+
+            if (presetValues.includes(pattern)) {
+                sel.value = pattern;
+            } else {
+                const customOpt = document.createElement('option');
+                customOpt.value = pattern;
+                customOpt.textContent = `${pattern} (${POSITIONS.length} Coil)`;
+                customOpt.dataset.customOption = 'true';
+                sel.insertBefore(customOpt, sel.querySelector('option[value="CUSTOM"]'));
+                sel.value = pattern;
+            }
+        }
+
+        function onStackPatternChange(val) {
+            if (val === 'CUSTOM') {
+                document.getElementById('custom-pattern-input').value = appState.stackPattern || '3-2-1';
+                showModalEl('custom-pattern-modal');
+                syncPatternDropdownUI();
+                return;
+            }
+            applyPatternString(val);
+        }
+
+        function closeCustomPatternModal() {
+            hideModalEl('custom-pattern-modal');
+        }
+
+        function applyCustomPattern() {
+            const raw = document.getElementById('custom-pattern-input').value.trim();
+            const parts = raw.split('-').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n) && n > 0 && n <= 12);
+            if (parts.length === 0) {
+                showToast('Format pola tidak valid! Gunakan angka dipisah strip, misal: 4-3-2-1', 'error');
+                return;
+            }
+            closeCustomPatternModal();
+            applyPatternString(parts.join('-'));
+        }
+
+        function applyPatternString(patternStr) {
+            const normalized = buildPositionsFromPattern(patternStr);
+            appState.stackPattern = normalized;
+            if (!POSITIONS.some(p => p.id === appState.activePosition)) {
+                appState.activePosition = POSITIONS[0].id;
+            }
+            saveState();
+            renderAll();
+            showToast(`Susunan diubah ke ${normalized} (${POSITIONS.length} coil/layer)`);
+        }
+
+        function changeLayerCount(delta) {
+            const next = Math.min(Math.max((appState.totalLayers || 5) + delta, 1), 50);
+            if (next === appState.totalLayers) return;
+            appState.totalLayers = next;
+            if (appState.selectedLayer > next) appState.selectedLayer = next;
+            saveState();
+            renderAll();
+        }
+
+        function toggleCrawlDirection() {
+            appState.crawlDirection = appState.crawlDirection === 'asc' ? 'desc' : 'asc';
+            saveState();
+            appState.selectedLayer = getFirstEmptyLayerForPosition(appState.activePosition);
+            renderAll();
+        }
+
+        // ==========================================
+        // NAVIGASI TAB & POSISI PIRAMID
         // ==========================================
         function switchMode(mode) {
-            appState.currentMode = mode;
+            currentMode = mode;
             const views = {
                 crawl: document.getElementById('view-crawl'),
                 nonpyramid: document.getElementById('view-nonpyramid'),
@@ -1267,31 +1326,109 @@
 
             if (mode === 'layer') {
                 renderLayerOverview();
-                renderMatrixTable();
             } else if (mode === 'nonpyramid') {
                 renderNonPyramidList();
+                prepareNonPyramidFormDefaults();
             } else {
-                renderDynamicPyramidGrid();
-                renderPositionLayerList();
+                renderCrawlView();
             }
         }
 
-        function changeLayerCount(delta) {
-            const nextCount = Math.min(Math.max((appState.totalLayers || 5) + delta, 1), 50);
-            if (nextCount === appState.totalLayers) return;
-            appState.totalLayers = nextCount;
-            if (appState.selectedLayer > appState.totalLayers) {
-                appState.selectedLayer = appState.totalLayers;
+        function getFirstEmptyLayerForPosition(posId) {
+            if (appState.crawlDirection === 'desc') {
+                for (let l = appState.totalLayers; l >= 1; l--) {
+                    const item = appState.coils[`${posId}_${l}`];
+                    if (!item || !item.id) return l;
+                }
+                return appState.totalLayers;
+            } else {
+                for (let l = 1; l <= appState.totalLayers; l++) {
+                    const item = appState.coils[`${posId}_${l}`];
+                    if (!item || !item.id) return l;
+                }
+                return 1;
             }
+        }
+
+        function selectPosition(posId) {
+            appState.activePosition = posId;
+            appState.selectedLayer = getFirstEmptyLayerForPosition(posId);
             saveState();
-            updateLayerCountUI();
-            populateFormForCurrentTarget();
-            renderAll();
+            renderCrawlView();
+            const idInput = document.getElementById('coil-id-input');
+            if (idInput) idInput.focus();
         }
 
-        function updateLayerCountUI() {
-            const disp = document.getElementById('total-layers-display');
-            if (disp) disp.textContent = appState.totalLayers;
+        function nextPosition() {
+            const idx = POSITIONS.findIndex(p => p.id === appState.activePosition);
+            const nextIdx = (idx + 1) % POSITIONS.length;
+            selectPosition(POSITIONS[nextIdx].id);
+        }
+
+        // ==========================================
+        // RENDER DIAGRAM PIRAMID & FORM CRAWL
+        // ==========================================
+        function renderPyramidDiagram() {
+            const container = document.getElementById('dynamic-pyramid-grid');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Kelompokkan POSITIONS berdasarkan visualRowFromTop (1 = Puncak ke bawah)
+            const rowsMap = new Map();
+            POSITIONS.forEach(pos => {
+                if (!rowsMap.has(pos.visualRowFromTop)) rowsMap.set(pos.visualRowFromTop, []);
+                rowsMap.get(pos.visualRowFromTop).push(pos);
+            });
+
+            const sortedRowKeys = Array.from(rowsMap.keys()).sort((a, b) => a - b);
+            sortedRowKeys.forEach(rowKey => {
+                const rowPositions = rowsMap.get(rowKey);
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'flex items-center justify-center gap-2 sm:gap-3';
+
+                rowPositions.forEach(pos => {
+                    let filledCount = 0;
+                    for (let l = 1; l <= appState.totalLayers; l++) {
+                        const item = appState.coils[`${pos.id}_${l}`];
+                        if (item && item.id) filledCount++;
+                    }
+
+                    const isActive = pos.id === appState.activePosition;
+                    const isComplete = filledCount >= appState.totalLayers;
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.onclick = () => selectPosition(pos.id);
+
+                    let nodeColorClass = 'bg-white border-slate-300 text-slate-700 hover:border-amber-400';
+                    if (isActive) {
+                        nodeColorClass = 'bg-amber-500 border-amber-600 text-slate-950 active-coil-node scale-105 shadow-md';
+                    } else if (isComplete) {
+                        nodeColorClass = 'bg-emerald-50 border-emerald-500 text-emerald-900';
+                    } else if (filledCount > 0) {
+                        nodeColorClass = 'bg-amber-50/70 border-amber-300 text-slate-800';
+                    }
+
+                    btn.className = `w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 flex flex-col items-center justify-center p-1.5 transition cursor-pointer shrink-0 ${nodeColorClass}`;
+                    btn.innerHTML = `
+                        <span class="text-[10px] font-mono font-extrabold opacity-75">#${pos.seq}</span>
+                        <span class="text-[11px] sm:text-xs font-extrabold leading-tight text-center line-clamp-2">${escapeHTML(pos.shortLabel)}</span>
+                        <span class="mt-0.5 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${isActive ? 'bg-slate-900 text-amber-300' : 'bg-slate-200/80 text-slate-700'}">
+                            ${filledCount}/${appState.totalLayers}
+                        </span>
+                    `;
+                    rowDiv.appendChild(btn);
+                });
+
+                container.appendChild(rowDiv);
+            });
+        }
+
+        function renderCrawlView() {
+            renderPyramidDiagram();
+
+            const posObj = POSITIONS.find(p => p.id === appState.activePosition) || POSITIONS[0];
+            document.getElementById('active-pos-title').textContent = `#${posObj.seq} • ${posObj.label}`;
 
             const dirLabel = document.getElementById('crawl-direction-label');
             if (dirLabel) {
@@ -1300,124 +1437,52 @@
                     : `Layer 1 &rarr; Layer ${appState.totalLayers}`;
             }
 
-            // Update dropdown target layer di form merangkak
-            const targetSel = document.getElementById('target-layer-select');
-            if (targetSel) {
-                targetSel.innerHTML = '';
-                const layers = [];
-                if (appState.crawlDirection === 'desc') {
-                    for (let l = appState.totalLayers; l >= 1; l--) layers.push(l);
-                } else {
-                    for (let l = 1; l <= appState.totalLayers; l++) layers.push(l);
-                }
-                layers.forEach(l => {
-                    const opt = document.createElement('option');
-                    opt.value = l;
-                    const isFilled = !!(appState.coils[`${appState.activePosition}_${l}`]?.id);
-                    opt.textContent = `Layer ${l}${isFilled ? ' ✓' : ''}`;
-                    targetSel.appendChild(opt);
-                });
-                targetSel.value = appState.selectedLayer;
-            }
-
-            // Update dropdown tinjau per layer
-            const viewSel = document.getElementById('view-layer-selector');
-            if (viewSel) {
-                const prevVal = parseInt(viewSel.value, 10) || 1;
-                viewSel.innerHTML = '';
-                for (let l = 1; l <= appState.totalLayers; l++) {
-                    const opt = document.createElement('option');
-                    opt.value = l;
-                    opt.textContent = `Layer ${l}`;
-                    viewSel.appendChild(opt);
-                }
-                viewSel.value = prevVal <= appState.totalLayers ? prevVal : 1;
-            }
-        }
-
-        function toggleCrawlDirection() {
-            appState.crawlDirection = appState.crawlDirection === 'asc' ? 'desc' : 'asc';
-            // Cari layer kosong pertama sesuai arah baru pada posisi aktif
-            const nextEmpty = findNextEmptyLayerForPosition(appState.activePosition);
-            if (nextEmpty !== null) {
-                appState.selectedLayer = nextEmpty;
-            }
-            saveState();
-            updateLayerCountUI();
-            populateFormForCurrentTarget();
-            renderPositionLayerList();
-            showToast(`Urutan input diubah: ${appState.crawlDirection === 'desc' ? `Belakang (L${appState.totalLayers}) ke Depan (L1)` : `Depan (L1) ke Belakang (L${appState.totalLayers})`}`, "info");
-        }
-
-        function findNextEmptyLayerForPosition(posId) {
+            // Isi dropdown target layer
+            const layerSelect = document.getElementById('target-layer-select');
+            layerSelect.innerHTML = '';
+            const layerOrder = [];
             if (appState.crawlDirection === 'desc') {
-                for (let l = appState.totalLayers; l >= 1; l--) {
-                    if (!appState.coils[`${posId}_${l}`]?.id) return l;
-                }
+                for (let l = appState.totalLayers; l >= 1; l--) layerOrder.push(l);
             } else {
-                for (let l = 1; l <= appState.totalLayers; l++) {
-                    if (!appState.coils[`${posId}_${l}`]?.id) return l;
-                }
-            }
-            return null;
-        }
-
-        function selectPosition(posId, shouldFocus = true) {
-            if (!POSITIONS.some(p => p.id === posId)) {
-                posId = POSITIONS[0]?.id || 'ATAS';
-            }
-            appState.activePosition = posId;
-            const posObj = POSITIONS.find(p => p.id === posId);
-            const titleEl = document.getElementById('active-pos-title');
-            if (titleEl && posObj) {
-                titleEl.textContent = `#${posObj.seq} ${posObj.label}`;
+                for (let l = 1; l <= appState.totalLayers; l++) layerOrder.push(l);
             }
 
-            const nextEmpty = findNextEmptyLayerForPosition(posId);
-            appState.selectedLayer = nextEmpty !== null
-                ? nextEmpty
-                : (appState.crawlDirection === 'desc' ? appState.totalLayers : 1);
+            layerOrder.forEach(l => {
+                const item = appState.coils[`${posObj.id}_${l}`];
+                const opt = document.createElement('option');
+                opt.value = l;
+                opt.textContent = `Layer ${l} ${item && item.id ? '✓' : '(Kosong)'}`;
+                if (l === appState.selectedLayer) opt.selected = true;
+                layerSelect.appendChild(opt);
+            });
 
-            saveState();
-            updateLayerCountUI();
-            populateFormForCurrentTarget();
-            renderDynamicPyramidGrid();
+            populateFormForCurrentSlot();
             renderPositionLayerList();
-
-            if (shouldFocus) {
-                const coilInput = document.getElementById('coil-id-input');
-                if (coilInput) coilInput.focus();
-            }
-        }
-
-        function nextPosition() {
-            const idx = POSITIONS.findIndex(p => p.id === appState.activePosition);
-            const nextIdx = (idx + 1) % POSITIONS.length;
-            selectPosition(POSITIONS[nextIdx].id, true);
         }
 
         function onLayerSelectChange() {
-            const sel = document.getElementById('target-layer-select');
-            appState.selectedLayer = parseInt(sel.value, 10) || 1;
-            saveState();
-            populateFormForCurrentTarget();
-            renderPositionLayerList();
+            const val = parseInt(document.getElementById('target-layer-select').value, 10);
+            if (!isNaN(val)) {
+                appState.selectedLayer = val;
+                populateFormForCurrentSlot();
+                renderPositionLayerList();
+            }
         }
 
-        function populateFormForCurrentTarget() {
+        function populateFormForCurrentSlot() {
             const key = `${appState.activePosition}_${appState.selectedLayer}`;
-            const existing = appState.coils[key] || {};
+            const existing = appState.coils[key];
 
-            document.getElementById('coil-nomor-input').value = existing.nomor || getAutoSequenceNumber(appState.activePosition, appState.selectedLayer);
-            document.getElementById('coil-id-input').value = existing.id || '';
-            document.getElementById('coil-diameter-input').value = existing.diameter || '';
-            document.getElementById('coil-grade-input').value = existing.grade || '';
-            document.getElementById('coil-weight-input').value = existing.weight || '';
-            document.getElementById('coil-weight-unit').value = existing.weightUnit || appState.defaultWeightUnit || 'kg';
-            document.getElementById('coil-heat-input').value = existing.heatNumber || '';
-            document.getElementById('coil-supplier-input').value = existing.supplier || '';
+            document.getElementById('coil-nomor-input').value = existing?.nomor || getAutoSequenceNumber(appState.activePosition);
+            document.getElementById('coil-id-input').value = existing?.id || '';
+            document.getElementById('coil-diameter-input').value = existing?.diameter || '';
+            document.getElementById('coil-grade-input').value = existing?.grade || '';
+            document.getElementById('coil-weight-input').value = existing?.weight || '';
+            document.getElementById('coil-weight-unit').value = existing?.weightUnit || appState.defaultWeightUnit || 'kg';
+            document.getElementById('coil-heat-input').value = existing?.heatNumber || '';
+            document.getElementById('coil-supplier-input').value = existing?.supplier || '';
             document.getElementById('qr-raw-input').value = '';
-            document.getElementById('qr-link-helper-pyramid').classList.add('hidden');
+            hideQrLinkHelper('pyramid');
         }
 
         function copyFromPreviousLayer() {
@@ -1426,39 +1491,43 @@
                 : appState.selectedLayer - 1;
 
             if (prevLayer < 1 || prevLayer > appState.totalLayers) {
-                showToast("Tidak ada layer sebelumnya untuk disalin.", "warning");
+                showToast('Tidak ada layer sebelumnya untuk disalin', 'info');
                 return;
             }
+
             const prevData = appState.coils[`${appState.activePosition}_${prevLayer}`];
             if (!prevData || !prevData.id) {
-                showToast(`Data pada Layer ${prevLayer} masih kosong.`, "warning");
+                showToast(`Data Layer ${prevLayer} masih kosong`, 'info');
                 return;
             }
 
             document.getElementById('coil-diameter-input').value = prevData.diameter || '';
             document.getElementById('coil-grade-input').value = prevData.grade || '';
-            document.getElementById('coil-heat-input').value = prevData.heatNumber || '';
+            document.getElementById('coil-weight-input').value = prevData.weight || '';
             document.getElementById('coil-weight-unit').value = prevData.weightUnit || 'kg';
+            document.getElementById('coil-heat-input').value = prevData.heatNumber || '';
             document.getElementById('coil-supplier-input').value = prevData.supplier || '';
-            showToast(`Spesifikasi disalin dari Layer ${prevLayer}!`, "success");
-            document.getElementById('coil-id-input').focus();
+            showToast(`Spesifikasi disalin dari Layer ${prevLayer}`, 'info');
         }
 
-        function handleQuickSubmit(event) {
-            event.preventDefault();
+        function handleQuickSubmit(e) {
+            e.preventDefault();
             const idVal = document.getElementById('coil-id-input').value.trim().toUpperCase();
             if (!idVal) {
-                showToast("No. Coil wajib diisi!", "warning");
+                showToast('No. Coil wajib diisi!', 'error');
                 document.getElementById('coil-id-input').focus();
                 return;
             }
 
-            const nomorVal = document.getElementById('coil-nomor-input').value.trim().toUpperCase()
-                || getAutoSequenceNumber(appState.activePosition, appState.selectedLayer);
+            const nomorVal = document.getElementById('coil-nomor-input').value.trim().toUpperCase() || getAutoSequenceNumber(appState.activePosition);
             const weightUnit = document.getElementById('coil-weight-unit').value || 'kg';
             appState.defaultWeightUnit = weightUnit;
 
             const key = `${appState.activePosition}_${appState.selectedLayer}`;
+            const existing = appState.coils[key] || {};
+            const activeShift = appState.shift || detectCurrentShiftByTime();
+            const activePic = (appState.picName || '').trim();
+
             appState.coils[key] = {
                 nomor: nomorVal,
                 id: idVal,
@@ -1468,221 +1537,324 @@
                 weightUnit,
                 heatNumber: document.getElementById('coil-heat-input').value.trim().toUpperCase(),
                 supplier: document.getElementById('coil-supplier-input').value.trim(),
+                picName: activePic || existing.picName || '',
+                shift: activeShift,
                 updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
             };
 
             const savedLayer = appState.selectedLayer;
-            // Maju ke layer berikutnya sesuai arah input
+            // Maju ke layer berikutnya sesuai arah merangkak
             if (appState.crawlDirection === 'desc') {
                 if (appState.selectedLayer > 1) {
-                    appState.selectedLayer -= 1;
+                    appState.selectedLayer--;
                 } else {
-                    showToast(`Layer 1 selesai! Semua layer di posisi ini telah dicapai.`, "success");
+                    showToast(`Layer 1 selesai! Semua layer di posisi ini sudah tercapai.`);
                 }
             } else {
                 if (appState.selectedLayer < appState.totalLayers) {
-                    appState.selectedLayer += 1;
+                    appState.selectedLayer++;
                 } else {
-                    showToast(`Layer ${appState.totalLayers} selesai! Semua layer di posisi ini telah dicapai.`, "success");
+                    showToast(`Layer ${savedLayer} selesai! Semua layer di posisi ini sudah tercapai.`);
                 }
             }
 
             saveState();
-            updateLayerCountUI();
-            populateFormForCurrentTarget();
             renderAll();
-            showToast(`Tersimpan di Layer ${savedLayer} (${idVal})`, "success");
+            showToast(`Tersimpan di Layer ${savedLayer} (${idVal})`);
             document.getElementById('coil-id-input').focus();
-        }
-
-        function editLayerItem(posId, layerNum) {
-            appState.activePosition = posId;
-            appState.selectedLayer = layerNum;
-            switchMode('crawl');
-            updateLayerCountUI();
-            populateFormForCurrentTarget();
-            renderDynamicPyramidGrid();
-            renderPositionLayerList();
-            document.getElementById('coil-id-input').focus();
-        }
-
-        function deleteLayerItem(posId, layerNum) {
-            const key = `${posId}_${layerNum}`;
-            if (!appState.coils[key]) return;
-            delete appState.coils[key];
-            saveState();
-            updateLayerCountUI();
-            if (appState.activePosition === posId && appState.selectedLayer === layerNum) {
-                populateFormForCurrentTarget();
-            }
-            renderAll();
-            showToast(`Data Layer ${layerNum} dihapus.`, "info");
-        }
-
-        // ==========================================
-        // RENDER VISUAL PIRAMID & DAFTAR LAYER
-        // ==========================================
-        function renderDynamicPyramidGrid() {
-            const container = document.getElementById('dynamic-pyramid-grid');
-            if (!container) return;
-
-            // Kelompokkan POSITIONS berdasarkan visualRowFromTop (1 = puncak atas, N = paling bawah)
-            const rowsMap = {};
-            POSITIONS.forEach(p => {
-                if (!rowsMap[p.visualRowFromTop]) rowsMap[p.visualRowFromTop] = [];
-                rowsMap[p.visualRowFromTop].push(p);
-            });
-
-            const sortedRowKeys = Object.keys(rowsMap).map(Number).sort((a, b) => a - b);
-            container.innerHTML = '';
-
-            sortedRowKeys.forEach(rowKey => {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'flex items-center justify-center gap-2 sm:gap-3 flex-wrap';
-
-                rowsMap[rowKey].forEach(pos => {
-                    const isSelected = pos.id === appState.activePosition;
-                    let filledCount = 0;
-                    for (let l = 1; l <= appState.totalLayers; l++) {
-                        if (appState.coils[`${pos.id}_${l}`]?.id) filledCount++;
-                    }
-                    const isComplete = filledCount >= appState.totalLayers && appState.totalLayers > 0;
-
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.onclick = () => selectPosition(pos.id, true);
-
-                    let stateClasses = 'bg-white border-slate-300 text-slate-700 hover:border-amber-400';
-                    if (isSelected) {
-                        stateClasses = 'bg-amber-500 border-amber-600 text-slate-950 active-coil-node scale-105 shadow-md';
-                    } else if (isComplete) {
-                        stateClasses = 'bg-emerald-50 border-emerald-500 text-emerald-900';
-                    } else if (filledCount > 0) {
-                        stateClasses = 'bg-amber-50/70 border-amber-400 text-slate-800';
-                    }
-
-                    btn.className = `w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 flex flex-col items-center justify-center p-1.5 transition cursor-pointer relative ${stateClasses}`;
-                    btn.innerHTML = `
-                        <span class="text-[10px] font-mono font-extrabold px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-slate-900 text-amber-400' : 'bg-slate-200 text-slate-700'}">#${pos.seq}</span>
-                        <span class="text-[10px] sm:text-[11px] font-bold leading-tight text-center mt-0.5 line-clamp-2">${escapeHTML(pos.shortLabel)}</span>
-                        <span class="text-[10px] font-mono font-bold mt-0.5 ${isSelected ? 'text-slate-900' : (isComplete ? 'text-emerald-700' : 'text-slate-500')}">${filledCount}/${appState.totalLayers}</span>
-                    `;
-                    rowDiv.appendChild(btn);
-                });
-
-                container.appendChild(rowDiv);
-            });
         }
 
         function renderPositionLayerList() {
             const listEl = document.getElementById('position-layer-list');
             if (!listEl) return;
+            listEl.innerHTML = '';
 
-            const layers = [];
+            const layerOrder = [];
             if (appState.crawlDirection === 'desc') {
-                for (let l = appState.totalLayers; l >= 1; l--) layers.push(l);
+                for (let l = appState.totalLayers; l >= 1; l--) layerOrder.push(l);
             } else {
-                for (let l = 1; l <= appState.totalLayers; l++) layers.push(l);
+                for (let l = 1; l <= appState.totalLayers; l++) layerOrder.push(l);
             }
 
-            listEl.innerHTML = '';
-            layers.forEach(l => {
+            layerOrder.forEach(l => {
                 const key = `${appState.activePosition}_${l}`;
                 const item = appState.coils[key];
-                const isTarget = l === appState.selectedLayer;
+                const isSelected = l === appState.selectedLayer;
 
                 const card = document.createElement('div');
                 card.className = `p-3 rounded-xl border transition flex items-center justify-between gap-2 cursor-pointer ${
-                    isTarget
-                        ? 'bg-amber-50 border-amber-400 ring-1 ring-amber-400'
-                        : (item?.id ? 'bg-white border-slate-200 hover:border-slate-300' : 'bg-slate-50/70 border-dashed border-slate-200 hover:border-slate-300')
+                    isSelected
+                        ? 'bg-amber-50 border-amber-400 shadow-sm'
+                        : (item && item.id ? 'bg-white border-slate-200 hover:border-slate-300' : 'bg-slate-50/70 border-dashed border-slate-200 hover:border-slate-300')
                 }`;
-                card.onclick = () => editLayerItem(appState.activePosition, l);
+                card.onclick = () => {
+                    appState.selectedLayer = l;
+                    renderCrawlView();
+                };
 
                 if (item && item.id) {
-                    const meta = [
+                    const metaParts = [
                         item.diameter ? `Ø${escapeHTML(item.diameter)}` : '',
                         item.grade ? escapeHTML(item.grade) : '',
+                        item.heatNumber ? `Heat:${escapeHTML(item.heatNumber)}` : '',
                         item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '',
                         item.supplier ? escapeHTML(item.supplier) : ''
                     ].filter(Boolean).join(' • ');
 
+                    const picShiftBadge = (item.picName || item.shift)
+                        ? `<span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-semibold">${escapeHTML([item.picName, item.shift].filter(Boolean).join(' • '))}</span>`
+                        : '';
+
                     card.innerHTML = `
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-mono font-extrabold px-2 py-0.5 rounded-md ${isTarget ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-white'}">L${l}</span>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-xs font-mono font-extrabold px-2 py-0.5 rounded bg-slate-900 text-amber-400">L${l}</span>
                                 <span class="text-xs font-mono font-bold text-slate-500">#${escapeHTML(item.nomor || '-')}</span>
                                 <span class="text-sm font-mono font-extrabold text-slate-900 truncate">${escapeHTML(item.id)}</span>
+                                ${picShiftBadge}
                             </div>
-                            <p class="text-[11px] text-slate-500 truncate mt-1">${meta || 'Tanpa detail tambahan'}</p>
+                            <p class="text-[11px] text-slate-600 mt-1 truncate">${metaParts || 'Tanpa keterangan tambahan'}</p>
                         </div>
-                        <button type="button" onclick="event.stopPropagation(); deleteLayerItem('${appState.activePosition}', ${l})" title="Hapus layer ini"
+                        <button type="button" onclick="event.stopPropagation(); deleteLayerItem('${appState.activePosition}', ${l})" title="Hapus item ini"
                             class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     `;
                 } else {
                     card.innerHTML = `
-                        <div class="flex items-center gap-2.5">
-                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md ${isTarget ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 text-slate-600'}">L${l}</span>
-                            <span class="text-xs text-slate-400 italic">${isTarget ? 'Sedang dipilih untuk diisi...' : 'Kosong (ketuk untuk isi)'}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600">L${l}</span>
+                            <span class="text-xs text-slate-400 italic">Belum diisi — ketuk untuk input</span>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                        <span class="text-[11px] font-semibold text-amber-600">${isSelected ? 'Aktif' : 'Pilih'}</span>
                     `;
                 }
+
                 listEl.appendChild(card);
             });
         }
 
-        function renderLayerOverview() {
-            const container = document.getElementById('layer-pyramid-detail');
-            const sel = document.getElementById('view-layer-selector');
-            if (!container || !sel) return;
+        function deleteLayerItem(posId, layerNum) {
+            delete appState.coils[`${posId}_${layerNum}`];
+            saveState();
+            renderAll();
+            showToast(`Data Layer ${layerNum} dihapus`, 'info');
+        }
 
-            const layerNum = parseInt(sel.value, 10) || 1;
-            const rowsMap = {};
-            POSITIONS.forEach(p => {
-                if (!rowsMap[p.visualRowFromTop]) rowsMap[p.visualRowFromTop] = [];
-                rowsMap[p.visualRowFromTop].push(p);
+        function editLayerItem(posId, layerNum) {
+            appState.activePosition = posId;
+            appState.selectedLayer = layerNum;
+            switchMode('crawl');
+        }
+
+        // ==========================================
+        // MODE NON-PIRAMID (SAMPING 1-N)
+        // ==========================================
+        function prepareNonPyramidFormDefaults() {
+            if (editingNonPyramidIndex >= 0) return;
+            const nextNo = (appState.nonPyramidCoils || []).length + 1;
+            const nomorInput = document.getElementById('np-nomor-input');
+            const unitSelect = document.getElementById('np-weight-unit');
+            if (nomorInput) nomorInput.value = nextNo.toString();
+            if (unitSelect) unitSelect.value = appState.defaultWeightUnit || 'kg';
+        }
+
+        function resetNonPyramidForm() {
+            editingNonPyramidIndex = -1;
+            document.getElementById('np-form-mode-label').textContent = 'Tambah Koil Non-Piramid';
+            document.getElementById('np-submit-btn-text').textContent = 'Simpan Koil Non-Piramid';
+            document.getElementById('np-cancel-edit-btn').classList.add('hidden');
+            document.getElementById('np-qr-raw-input').value = '';
+            document.getElementById('np-id-input').value = '';
+            document.getElementById('np-diameter-input').value = '';
+            document.getElementById('np-grade-input').value = '';
+            document.getElementById('np-weight-input').value = '';
+            document.getElementById('np-heat-input').value = '';
+            document.getElementById('np-supplier-input').value = '';
+            hideQrLinkHelper('np');
+            prepareNonPyramidFormDefaults();
+        }
+
+        function handleNonPyramidSubmit(e) {
+            e.preventDefault();
+            const idVal = document.getElementById('np-id-input').value.trim().toUpperCase();
+            if (!idVal) {
+                showToast('No. Coil Non-Piramid wajib diisi!', 'error');
+                document.getElementById('np-id-input').focus();
+                return;
+            }
+
+            const weightUnit = document.getElementById('np-weight-unit').value || 'kg';
+            appState.defaultWeightUnit = weightUnit;
+            const prevNp = (editingNonPyramidIndex >= 0) ? (appState.nonPyramidCoils[editingNonPyramidIndex] || {}) : {};
+            const activeShift = appState.shift || detectCurrentShiftByTime();
+            const activePic = (appState.picName || '').trim();
+
+            const record = {
+                nomor: document.getElementById('np-nomor-input').value.trim().toUpperCase() || ((appState.nonPyramidCoils.length + 1).toString()),
+                id: idVal,
+                diameter: document.getElementById('np-diameter-input').value.trim(),
+                grade: document.getElementById('np-grade-input').value.trim().toUpperCase(),
+                weight: document.getElementById('np-weight-input').value.trim(),
+                weightUnit,
+                heatNumber: document.getElementById('np-heat-input').value.trim().toUpperCase(),
+                supplier: document.getElementById('np-supplier-input').value.trim(),
+                picName: activePic || prevNp.picName || '',
+                shift: activeShift,
+                updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            if (!Array.isArray(appState.nonPyramidCoils)) appState.nonPyramidCoils = [];
+            if (editingNonPyramidIndex >= 0) {
+                appState.nonPyramidCoils[editingNonPyramidIndex] = record;
+                showToast(`Koil Non-Piramid #${record.nomor} diperbarui!`);
+            } else {
+                appState.nonPyramidCoils.push(record);
+                showToast(`Koil Non-Piramid #${record.nomor} (${idVal}) ditambahkan!`);
+            }
+
+            resetNonPyramidForm();
+            saveState();
+            renderAll();
+            document.getElementById('np-id-input').focus();
+        }
+
+        function editNonPyramidItem(idx) {
+            const item = (appState.nonPyramidCoils || [])[idx];
+            if (!item) return;
+            editingNonPyramidIndex = idx;
+            document.getElementById('np-form-mode-label').textContent = `Edit Koil Non-Piramid #${item.nomor || (idx + 1)}`;
+            document.getElementById('np-submit-btn-text').textContent = 'Perbarui Koil Non-Piramid';
+            document.getElementById('np-cancel-edit-btn').classList.remove('hidden');
+
+            document.getElementById('np-nomor-input').value = item.nomor || (idx + 1).toString();
+            document.getElementById('np-id-input').value = item.id || '';
+            document.getElementById('np-diameter-input').value = item.diameter || '';
+            document.getElementById('np-grade-input').value = item.grade || '';
+            document.getElementById('np-weight-input').value = item.weight || '';
+            document.getElementById('np-weight-unit').value = item.weightUnit || 'kg';
+            document.getElementById('np-heat-input').value = item.heatNumber || '';
+            document.getElementById('np-supplier-input').value = item.supplier || '';
+            document.getElementById('np-id-input').focus();
+        }
+
+        function deleteNonPyramidItem(idx) {
+            appState.nonPyramidCoils.splice(idx, 1);
+            if (editingNonPyramidIndex === idx) resetNonPyramidForm();
+            saveState();
+            renderAll();
+            showToast('Koil Non-Piramid dihapus', 'info');
+        }
+
+        function renderNonPyramidList() {
+            const container = document.getElementById('nonpyramid-list-container');
+            const badge = document.getElementById('np-total-badge');
+            const tabCount = document.getElementById('nonpyramid-tab-count');
+            const items = appState.nonPyramidCoils || [];
+
+            if (badge) badge.textContent = `${items.length} Coil`;
+            if (tabCount) tabCount.textContent = items.length;
+            if (!container) return;
+
+            if (items.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada koil non-piramid pada lokasi ini.</div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            items.forEach((item, idx) => {
+                const meta = [
+                    item.diameter ? `Ø${escapeHTML(item.diameter)}` : '',
+                    item.grade ? escapeHTML(item.grade) : '',
+                    item.heatNumber ? `Heat:${escapeHTML(item.heatNumber)}` : '',
+                    item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '',
+                    item.supplier ? escapeHTML(item.supplier) : ''
+                ].filter(Boolean).join(' • ');
+
+                const picShiftBadge = (item.picName || item.shift)
+                    ? `<span class="text-[10px] font-mono bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-semibold">${escapeHTML([item.picName, item.shift].filter(Boolean).join(' • '))}</span>`
+                    : '';
+
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-sky-50/40 transition flex items-center justify-between gap-2 cursor-pointer';
+                card.onclick = () => editNonPyramidItem(idx);
+                card.innerHTML = `
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-xs font-mono font-extrabold px-2 py-0.5 rounded bg-sky-600 text-white">#${escapeHTML(item.nomor || (idx + 1).toString())}</span>
+                            <span class="text-sm font-mono font-extrabold text-slate-900 truncate">${escapeHTML(item.id)}</span>
+                            ${picShiftBadge}
+                        </div>
+                        <p class="text-[11px] text-slate-600 mt-1 truncate">${meta || 'Tanpa keterangan tambahan'}</p>
+                    </div>
+                    <button type="button" onclick="event.stopPropagation(); deleteNonPyramidItem(${idx})" title="Hapus"
+                        class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(card);
             });
+        }
 
-            const sortedRowKeys = Object.keys(rowsMap).map(Number).sort((a, b) => a - b);
-            container.innerHTML = `<div class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full mb-1">Susunan Layer ${layerNum}</div>`;
+        // ==========================================
+        // MODE TINJAU PER LAYER & MATRIKS TABEL
+        // ==========================================
+        function renderLayerOverview() {
+            const selector = document.getElementById('view-layer-selector');
+            const detailBox = document.getElementById('layer-pyramid-detail');
+            const bayLabel = document.getElementById('overview-bay-name');
+            if (bayLabel) bayLabel.textContent = appState.bayName;
 
-            sortedRowKeys.forEach(rowKey => {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'flex items-center justify-center gap-2.5 sm:gap-4 flex-wrap';
+            if (selector) {
+                const prevVal = parseInt(selector.value, 10) || 1;
+                selector.innerHTML = '';
+                for (let l = 1; l <= appState.totalLayers; l++) {
+                    const opt = document.createElement('option');
+                    opt.value = l;
+                    opt.textContent = `Layer ${l}`;
+                    if (l === Math.min(prevVal, appState.totalLayers)) opt.selected = true;
+                    selector.appendChild(opt);
+                }
+            }
 
-                rowsMap[rowKey].forEach(pos => {
-                    const item = appState.coils[`${pos.id}_${layerNum}`];
-                    const hasData = !!(item && item.id);
+            const chosenLayer = selector ? parseInt(selector.value, 10) || 1 : 1;
 
-                    const node = document.createElement('button');
-                    node.type = 'button';
-                    node.onclick = () => editLayerItem(pos.id, layerNum);
-                    node.className = `w-28 sm:w-32 min-h-[96px] rounded-2xl border-2 p-2.5 flex flex-col items-center justify-center text-center transition hover:scale-105 ${
-                        hasData
-                            ? 'bg-white border-emerald-500 shadow-sm'
-                            : 'bg-slate-100/80 border-dashed border-slate-300 text-slate-400'
-                    }`;
-
-                    if (hasData) {
-                        node.innerHTML = `
-                            <span class="text-[10px] font-bold text-emerald-700 uppercase">#${escapeHTML(item.nomor || pos.seq)} • ${escapeHTML(pos.shortLabel)}</span>
-                            <span class="text-xs sm:text-sm font-mono font-extrabold text-slate-900 mt-1 break-all">${escapeHTML(item.id)}</span>
-                            <span class="text-[10px] font-mono text-slate-500 mt-0.5">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : (item.grade || '-')}</span>
-                        `;
-                    } else {
-                        node.innerHTML = `
-                            <span class="text-[10px] font-bold text-slate-400 uppercase">#${pos.seq} • ${escapeHTML(pos.shortLabel)}</span>
-                            <span class="text-xs italic mt-1">Kosong</span>
-                        `;
-                    }
-                    rowDiv.appendChild(node);
+            if (detailBox) {
+                detailBox.innerHTML = '';
+                const rowsMap = new Map();
+                POSITIONS.forEach(pos => {
+                    if (!rowsMap.has(pos.visualRowFromTop)) rowsMap.set(pos.visualRowFromTop, []);
+                    rowsMap.get(pos.visualRowFromTop).push(pos);
                 });
 
-                container.appendChild(rowDiv);
-            });
+                Array.from(rowsMap.keys()).sort((a, b) => a - b).forEach(rowKey => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 w-full';
+                    rowsMap.get(rowKey).forEach(pos => {
+                        const item = appState.coils[`${pos.id}_${chosenLayer}`];
+                        const card = document.createElement('div');
+                        card.onclick = () => editLayerItem(pos.id, chosenLayer);
+                        if (item && item.id) {
+                            card.className = 'w-28 sm:w-36 p-2.5 rounded-2xl bg-white border-2 border-emerald-500 shadow-sm cursor-pointer hover:scale-105 transition text-center';
+                            card.innerHTML = `
+                                <div class="text-[10px] font-bold text-emerald-700">#${pos.seq} ${escapeHTML(pos.shortLabel)}</div>
+                                <div class="text-xs sm:text-sm font-mono font-extrabold text-slate-900 truncate mt-0.5">${escapeHTML(item.id)}</div>
+                                <div class="text-[10px] text-slate-500 truncate mt-0.5">${item.diameter ? `Ø${escapeHTML(item.diameter)} ` : ''}${item.weight ? `${escapeHTML(item.weight)}${escapeHTML(item.weightUnit || 'kg')}` : ''}</div>
+                            `;
+                        } else {
+                            card.className = 'w-28 sm:w-36 p-2.5 rounded-2xl bg-white/60 border border-dashed border-slate-300 cursor-pointer hover:border-amber-400 transition text-center';
+                            card.innerHTML = `
+                                <div class="text-[10px] font-bold text-slate-400">#${pos.seq} ${escapeHTML(pos.shortLabel)}</div>
+                                <div class="text-xs font-semibold text-slate-400 italic mt-1">(Kosong)</div>
+                            `;
+                        }
+                        rowDiv.appendChild(card);
+                    });
+                    detailBox.appendChild(rowDiv);
+                });
+            }
+
+            renderMatrixTable();
         }
 
         function renderMatrixTable() {
@@ -1709,6 +1881,8 @@
                         <td class="p-2.5 text-slate-600">${escapeHTML(item.heatNumber || '-')}</td>
                         <td class="p-2.5 text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</td>
                         <td class="p-2.5 font-sans text-slate-600">${escapeHTML(item.supplier || '-')}</td>
+                        <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || '-')}</td>
+                        <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || '-')}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -1729,199 +1903,48 @@
                     <td class="p-2.5 text-slate-600">${escapeHTML(item.heatNumber || '-')}</td>
                     <td class="p-2.5 text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</td>
                     <td class="p-2.5 font-sans text-slate-600">${escapeHTML(item.supplier || '-')}</td>
+                    <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || '-')}</td>
+                    <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || '-')}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             if (rowCount === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center font-sans text-slate-400 italic">Belum ada data coil yang diinput pada lokasi ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="p-6 text-center font-sans text-slate-400 italic">Belum ada data coil yang diinput pada lokasi ini.</td></tr>`;
             }
         }
 
-        function updateProgressBadge() {
-            const badge = document.getElementById('progress-badge');
-            const npCountBadge = document.getElementById('nonpyramid-tab-count');
-            const totalSlots = POSITIONS.length * (appState.totalLayers || 5);
-            let filledPyramid = 0;
-            for (let l = 1; l <= appState.totalLayers; l++) {
-                POSITIONS.forEach(pos => {
-                    if (appState.coils[`${pos.id}_${l}`]?.id) filledPyramid++;
-                });
-            }
-            const npCount = (appState.nonPyramidCoils || []).length;
-            if (badge) {
-                badge.textContent = npCount > 0 ? `${filledPyramid}/${totalSlots} (+${npCount})` : `${filledPyramid} / ${totalSlots}`;
-            }
-            if (npCountBadge) {
-                npCountBadge.textContent = npCount;
-            }
-        }
-
-        function renderAll() {
-            updateProgressBadge();
-            renderDynamicPyramidGrid();
-            renderPositionLayerList();
-            renderNonPyramidList();
-            if (appState.currentMode === 'layer') {
-                renderLayerOverview();
-                renderMatrixTable();
-            }
-        }
-
-        // ==========================================
-        // NON-PIRAMID (KOIL SAMPING 1-N)
-        // ==========================================
-        let editingNonPyramidIndex = -1;
-
-        function resetNonPyramidForm() {
-            editingNonPyramidIndex = -1;
-            const nextNum = (appState.nonPyramidCoils || []).length + 1;
-            const label = document.getElementById('np-form-mode-label');
-            const cancelBtn = document.getElementById('np-cancel-edit-btn');
-            const submitText = document.getElementById('np-submit-btn-text');
-
-            if (label) label.textContent = 'Tambah Koil Non-Piramid';
-            if (cancelBtn) cancelBtn.classList.add('hidden');
-            if (submitText) submitText.textContent = 'Simpan Koil Non-Piramid';
-
-            const nomorInp = document.getElementById('np-nomor-input');
-            if (nomorInp) nomorInp.value = nextNum.toString();
-            ['np-id-input', 'np-diameter-input', 'np-grade-input', 'np-weight-input', 'np-heat-input', 'np-supplier-input', 'np-qr-raw-input'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-            const unitEl = document.getElementById('np-weight-unit');
-            if (unitEl) unitEl.value = appState.defaultWeightUnit || 'kg';
-            const helperEl = document.getElementById('qr-link-helper-np');
-            if (helperEl) helperEl.classList.add('hidden');
-        }
-
-        function handleNonPyramidSubmit(event) {
-            event.preventDefault();
-            const idVal = document.getElementById('np-id-input').value.trim().toUpperCase();
-            if (!idVal) {
-                showToast("No. Coil wajib diisi!", "warning");
-                document.getElementById('np-id-input').focus();
-                return;
-            }
-
-            const weightUnit = document.getElementById('np-weight-unit').value || 'kg';
-            appState.defaultWeightUnit = weightUnit;
-
-            const record = {
-                nomor: document.getElementById('np-nomor-input').value.trim().toUpperCase() || ((appState.nonPyramidCoils.length + 1).toString()),
-                id: idVal,
-                diameter: document.getElementById('np-diameter-input').value.trim(),
-                grade: document.getElementById('np-grade-input').value.trim().toUpperCase(),
-                weight: document.getElementById('np-weight-input').value.trim(),
-                weightUnit,
-                heatNumber: document.getElementById('np-heat-input').value.trim().toUpperCase(),
-                supplier: document.getElementById('np-supplier-input').value.trim(),
-                updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-            };
-
-            if (editingNonPyramidIndex >= 0 && editingNonPyramidIndex < appState.nonPyramidCoils.length) {
-                appState.nonPyramidCoils[editingNonPyramidIndex] = record;
-                showToast(`Data Non-Piramid #${record.nomor} diperbarui!`, "success");
-            } else {
-                appState.nonPyramidCoils.push(record);
-                showToast(`Koil Non-Piramid #${record.nomor} (${idVal}) ditambahkan!`, "success");
-            }
-
-            saveState();
-            resetNonPyramidForm();
-            renderAll();
-            document.getElementById('np-id-input').focus();
-        }
-
-        function editNonPyramidItem(idx) {
-            const item = appState.nonPyramidCoils[idx];
-            if (!item) return;
-            editingNonPyramidIndex = idx;
-
-            document.getElementById('np-form-mode-label').textContent = `Edit Koil Non-Piramid #${item.nomor || (idx + 1)}`;
-            document.getElementById('np-cancel-edit-btn').classList.remove('hidden');
-            document.getElementById('np-submit-btn-text').textContent = 'Perbarui Koil Non-Piramid';
-
-            document.getElementById('np-nomor-input').value = item.nomor || (idx + 1);
-            document.getElementById('np-id-input').value = item.id || '';
-            document.getElementById('np-diameter-input').value = item.diameter || '';
-            document.getElementById('np-grade-input').value = item.grade || '';
-            document.getElementById('np-weight-input').value = item.weight || '';
-            document.getElementById('np-weight-unit').value = item.weightUnit || 'kg';
-            document.getElementById('np-heat-input').value = item.heatNumber || '';
-            document.getElementById('np-supplier-input').value = item.supplier || '';
-            document.getElementById('np-id-input').focus();
-        }
-
-        function deleteNonPyramidItem(idx) {
-            appState.nonPyramidCoils.splice(idx, 1);
-            if (editingNonPyramidIndex === idx) resetNonPyramidForm();
-            saveState();
-            renderAll();
-            showToast("Item Non-Piramid dihapus.", "info");
-        }
-
-        function renderNonPyramidList() {
-            const container = document.getElementById('nonpyramid-list-container');
-            const badge = document.getElementById('np-total-badge');
-            if (!container) return;
-
-            const items = appState.nonPyramidCoils || [];
-            if (badge) badge.textContent = `${items.length} Coil`;
-
-            if (items.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada koil non-piramid di samping susunan.</div>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            items.forEach((item, idx) => {
-                const meta = [
-                    item.diameter ? `Ø${escapeHTML(item.diameter)}` : '',
-                    item.grade ? escapeHTML(item.grade) : '',
-                    item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '',
-                    item.supplier ? escapeHTML(item.supplier) : ''
-                ].filter(Boolean).join(' • ');
-
-                const card = document.createElement('div');
-                card.className = 'p-3 rounded-xl border border-slate-200 bg-white hover:border-sky-400 transition flex items-center justify-between gap-2 cursor-pointer';
-                card.onclick = () => editNonPyramidItem(idx);
-                card.innerHTML = `
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-mono font-extrabold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800">#${escapeHTML(item.nomor || (idx + 1).toString())}</span>
-                            <span class="text-sm font-mono font-extrabold text-slate-900 truncate">${escapeHTML(item.id)}</span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 truncate mt-1">${meta || 'Tanpa detail tambahan'}</p>
-                    </div>
-                    <button type="button" onclick="event.stopPropagation(); deleteNonPyramidItem(${idx})" title="Hapus"
-                        class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
-                `;
-                container.appendChild(card);
-            });
+        function confirmResetAll() {
+            showConfirmModal(
+                'Reset Data Lokasi Ini?',
+                `Semua data coil piramid & non-piramid di lokasi "${appState.bayName}" akan dikosongkan.`,
+                () => {
+                    appState.coils = {};
+                    appState.nonPyramidCoils = [];
+                    appState.selectedLayer = 1;
+                    saveState();
+                    renderAll();
+                    showToast(`Data lokasi ${appState.bayName} telah direset`, 'info');
+                }
+            );
         }
 
         // ==========================================
         // PARSER QR LABEL (SHAGANG & MASTER STEEL)
         // ==========================================
-        let awaitingExternalCopyPrefix = null;
-
-        function getFormFieldIds(targetPrefix) {
-            if (targetPrefix === 'np') {
+        function getTargetFieldIds(target = 'pyramid') {
+            if (target === 'np') {
                 return {
                     qrRaw: 'np-qr-raw-input',
                     id: 'np-id-input',
                     diameter: 'np-diameter-input',
                     grade: 'np-grade-input',
                     weight: 'np-weight-input',
-                    weightUnit: 'np-weight-unit',
+                    unit: 'np-weight-unit',
                     heat: 'np-heat-input',
                     supplier: 'np-supplier-input',
-                    linkHelper: 'qr-link-helper-np',
-                    linkAnchor: 'qr-link-anchor-np',
+                    helperBox: 'qr-link-helper-np',
+                    helperAnchor: 'qr-link-anchor-np',
                     msPasteBox: 'ms-paste-box-np'
                 };
             }
@@ -1931,229 +1954,195 @@
                 diameter: 'coil-diameter-input',
                 grade: 'coil-grade-input',
                 weight: 'coil-weight-input',
-                weightUnit: 'coil-weight-unit',
+                unit: 'coil-weight-unit',
                 heat: 'coil-heat-input',
                 supplier: 'coil-supplier-input',
-                linkHelper: 'qr-link-helper-pyramid',
-                linkAnchor: 'qr-link-anchor-pyramid',
+                helperBox: 'qr-link-helper-pyramid',
+                helperAnchor: 'qr-link-anchor-pyramid',
                 msPasteBox: 'ms-paste-box-pyramid'
             };
         }
 
-        function handleQrRawInput(val, targetPrefix = 'pyramid') {
-            if (!val) return;
-            if (val.includes('\n') || val.includes('themastersteel.co.id') || val.split('-').length >= 6) {
-                parseAndFillQrString(val, false, targetPrefix);
+        function showQrLinkHelper(url, target = 'pyramid') {
+            const ids = getTargetFieldIds(target);
+            const box = document.getElementById(ids.helperBox);
+            const anchor = document.getElementById(ids.helperAnchor);
+            if (anchor) anchor.href = url;
+            if (box) box.classList.remove('hidden');
+        }
+
+        function hideQrLinkHelper(target = 'pyramid') {
+            const ids = getTargetFieldIds(target);
+            const box = document.getElementById(ids.helperBox);
+            if (box) box.classList.add('hidden');
+        }
+
+        function markAwaitingExternalCopy(target) {
+            awaitingExternalCopyTarget = target;
+        }
+
+        async function pasteMasterSteelBox(target = 'pyramid') {
+            const ids = getTargetFieldIds(target);
+            const box = document.getElementById(ids.msPasteBox);
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const txt = await navigator.clipboard.readText();
+                    if (txt) {
+                        if (box) box.value = txt;
+                        parseAndFillQrString(txt, true, target);
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Fallback ke fokus manual
+            }
+            if (box) {
+                box.focus();
+                showToast('Tekan & tahan pada kotak teks lalu pilih Tempel (Paste)', 'info');
             }
         }
 
-        function handleCoilIdSmartScan(val) {
-            if (!val) return;
-            if (val.includes('themastersteel.co.id') || val.split('-').length >= 6) {
-                parseAndFillQrString(val, false, 'pyramid');
+        function handleQrRawInput(val, target = 'pyramid') {
+            const trimmed = (val || '').trim();
+            if (/^https?:\/\/.*themastersteel\.co\.id/i.test(trimmed)) {
+                showQrLinkHelper(trimmed, target);
+                return;
+            }
+            if (trimmed.includes('\n') || trimmed.split('-').length >= 6) {
+                parseAndFillQrString(trimmed, false, target);
             }
         }
 
-        function parseAndFillQrString(rawText, showFeedback = true, targetPrefix = 'pyramid') {
+        function handleCoilIdSmartScan(val, target = 'pyramid') {
+            const trimmed = (val || '').trim();
+            if (/^https?:\/\/.*themastersteel\.co\.id/i.test(trimmed)) {
+                document.getElementById(getTargetFieldIds(target).id).value = '';
+                showQrLinkHelper(trimmed, target);
+                showToast('Link Master Steel terdeteksi! Klik "1. Buka Link" lalu tempel hasilnya.', 'info');
+                return;
+            }
+            if (trimmed.includes('\n') || trimmed.split('-').length >= 6) {
+                parseAndFillQrString(trimmed, false, target);
+            }
+        }
+
+        function parseAndFillQrString(rawText, showFeedback = true, target = 'pyramid') {
             const text = (rawText || '').trim();
             if (!text) {
-                if (showFeedback) showToast("Teks QR masih kosong.", "warning");
+                if (showFeedback) showToast('Teks QR masih kosong', 'error');
                 return false;
             }
 
-            const fields = getFormFieldIds(targetPrefix);
+            const ids = getTargetFieldIds(target);
 
-            // 1. Cek format teks salinan halaman Master Steel (memiliki key-value Size:, Grade:, Heat No.:, Code No.:, Weight:)
-            if (/Code\s*No\.?\s*:/i.test(text) || /Heat\s*No\.?\s*:/i.test(text) || (/Size\s*:/i.test(text) && /Weight\s*:/i.test(text))) {
+            // 1. Cek jika hanya berupa URL Master Steel
+            if (/^https?:\/\/.*themastersteel\.co\.id\S*$/i.test(text) && !text.includes('\n')) {
+                showQrLinkHelper(text, target);
+                if (showFeedback) showToast('Buka link Master Steel, salin teks halaman, lalu klik Paste.', 'info');
+                return true;
+            }
+
+            // 2. Cek Format Teks Halaman Master Steel (Multi-baris dengan label Size, Grade, Heat No., Code No., Weight)
+            if (/Size\s*:|Grade\s*:|Heat\s*No\.?\s*:|Code\s*No\.?\s*:/i.test(text)) {
                 const extractField = (regex) => {
                     const m = text.match(regex);
                     return m ? m[1].trim() : '';
                 };
 
-                const sizeRaw = extractField(/Size\s*:\s*([^\r\n]+)/i);
-                const diameterClean = sizeRaw.replace(/[∅Ømm\s]/gi, '').replace(/^0+(?=\d)/, '');
-                const grade = extractField(/Grade\s*:\s*([^\r\n]+)/i);
-                const heatNo = extractField(/Heat\s*No\.?\s*:\s*([^\r\n]+)/i);
-                const codeNo = extractField(/Code\s*No\.?\s*:\s*([^\r\n]+)/i);
+                const sizeRaw = extractField(/Size\s*:\s*([^\r\n]+)/i).replace(/[∅Øø]/g, '').trim();
+                const diameterClean = sizeRaw ? String(parseFloat(sizeRaw.replace(',', '.')) || sizeRaw) : '';
+                const grade = extractField(/Grade\s*:\s*([^\r\n]+)/i).toUpperCase();
+                const heatNo = extractField(/Heat\s*No\.?\s*:\s*([^\r\n]+)/i).toUpperCase();
+                const codeNo = extractField(/Code\s*No\.?\s*:\s*([^\r\n]+)/i).toUpperCase();
                 const weightRaw = extractField(/Weight\s*:\s*([^\r\n]+)/i);
 
-                let weightVal = '';
+                let weightNum = '';
                 let weightUnit = 'kg';
-                const wMatch = weightRaw.match(/([\d.,]+)\s*(kg|mt|ton)?/i);
-                if (wMatch) {
-                    weightVal = wMatch[1].replace(/,/g, '');
-                    if (wMatch[2]) {
-                        const u = wMatch[2].toLowerCase();
+                if (weightRaw) {
+                    const wMatch = weightRaw.match(/([\d.,]+)\s*(kg|mt|ton)?/i);
+                    if (wMatch) {
+                        weightNum = wMatch[1].replace(/,/g, '');
+                        const u = (wMatch[2] || '').toLowerCase();
                         weightUnit = (u === 'mt' || u === 'ton') ? 'mt' : 'kg';
                     }
                 }
 
-                if (codeNo) document.getElementById(fields.id).value = codeNo.toUpperCase();
-                if (diameterClean) document.getElementById(fields.diameter).value = diameterClean;
-                if (grade) document.getElementById(fields.grade).value = grade.toUpperCase();
-                if (heatNo) document.getElementById(fields.heat).value = heatNo.toUpperCase();
-                if (weightVal) document.getElementById(fields.weight).value = weightVal;
-                document.getElementById(fields.weightUnit).value = weightUnit;
-                document.getElementById(fields.supplier).value = 'MASTER STEEL';
-
-                document.getElementById(fields.linkHelper).classList.add('hidden');
-                awaitingExternalCopyPrefix = null;
-                showToast(`Data Master Steel (${codeNo || 'OK'}) berhasil diisi!`, "success");
+                if (codeNo) document.getElementById(ids.id).value = codeNo;
+                if (diameterClean) document.getElementById(ids.diameter).value = diameterClean;
+                if (grade) document.getElementById(ids.grade).value = grade;
+                if (heatNo) document.getElementById(ids.heat).value = heatNo;
+                if (weightNum) {
+                    document.getElementById(ids.weight).value = weightNum;
+                    document.getElementById(ids.unit).value = weightUnit;
+                }
+                document.getElementById(ids.supplier).value = 'MASTER STEEL';
+                hideQrLinkHelper(target);
+                if (showFeedback) showToast(`Data Master Steel (${codeNo || 'OK'}) berhasil diisi!`);
                 return true;
             }
 
-            // 2. Cek jika QR berisi URL Master Steel
-            const urlMatch = text.match(/https?:\/\/[^\s]*themastersteel\.co\.id[^\s]*/i);
-            if (urlMatch) {
-                const linkUrl = urlMatch[0];
-                const helper = document.getElementById(fields.linkHelper);
-                const anchor = document.getElementById(fields.linkAnchor);
-                anchor.href = linkUrl;
-                helper.classList.remove('hidden');
-                showToast("Link Master Steel terdeteksi! Ketuk '1. Buka Link' lalu salin isinya.", "info");
-                return true;
-            }
-
-            // 3. Cek format Shagang: SHAGANG-SWRH52A-T690004803-008-2.344-5.5-20260906
+            // 3. Cek Format Shagang: SHAGANG-SWRH52A-T690004803-008-2.344-5.5-20260906
             const parts = text.split('-').map(p => p.trim());
             if (parts.length >= 6) {
-                const supplier = parts[0];
-                const grade = parts[1];
-                const heatNo = parts[2];
-                const coilNo = parts[3];
-                const weightRaw = parts[4];
-                const diameterRaw = parts[5];
+                const supplier = parts[0].toUpperCase();
+                const grade = parts[1].toUpperCase();
+                const heatNo = parts[2].toUpperCase();
+                const coilNo = parts[3].toUpperCase();
+                const weightRaw = parts[4].replace(',', '.');
+                const diameterRaw = parts[5].replace(',', '.');
 
-                document.getElementById(fields.supplier).value = supplier.toUpperCase();
-                document.getElementById(fields.grade).value = grade.toUpperCase();
-                document.getElementById(fields.heat).value = heatNo.toUpperCase();
-                document.getElementById(fields.id).value = coilNo.toUpperCase();
-                document.getElementById(fields.diameter).value = diameterRaw;
+                const wFloat = parseFloat(weightRaw);
+                const weightUnit = (!isNaN(wFloat) && wFloat < 50) ? 'mt' : 'kg';
 
-                const numWeight = parseFloat(weightRaw.replace(',', '.'));
-                if (!isNaN(numWeight)) {
-                    document.getElementById(fields.weight).value = weightRaw;
-                    document.getElementById(fields.weightUnit).value = numWeight < 50 ? 'mt' : 'kg';
-                } else {
-                    document.getElementById(fields.weight).value = weightRaw;
-                }
-
-                document.getElementById(fields.linkHelper).classList.add('hidden');
-                showToast(`QR ${supplier} (${coilNo}) berhasil dibaca!`, "success");
+                document.getElementById(ids.supplier).value = supplier;
+                document.getElementById(ids.grade).value = grade;
+                document.getElementById(ids.heat).value = heatNo;
+                document.getElementById(ids.id).value = coilNo;
+                document.getElementById(ids.weight).value = weightRaw;
+                document.getElementById(ids.unit).value = weightUnit;
+                document.getElementById(ids.diameter).value = diameterRaw;
+                hideQrLinkHelper(target);
+                if (showFeedback) showToast(`QR ${supplier} (${coilNo}) berhasil terbaca!`);
                 return true;
             }
 
-            // Fallback: anggap sebagai No. Coil langsung jika hanya 1 token pendek
-            if (!text.includes(' ') && text.length <= 32) {
-                document.getElementById(fields.id).value = text.toUpperCase();
-                if (showFeedback) showToast(`No. Coil diisi: ${text.toUpperCase()}`, "info");
-                return true;
-            }
-
-            if (showFeedback) {
-                showToast("Format QR tidak dikenali. Periksa teks label.", "warning");
-            }
-            return false;
+            // Jika hanya string kode coil biasa
+            document.getElementById(ids.id).value = text.toUpperCase();
+            if (showFeedback) showToast('Kode dimasukkan ke No. Coil', 'info');
+            return true;
         }
 
-        async function pasteFromClipboardToQr(targetPrefix = 'pyramid') {
-            const fields = getFormFieldIds(targetPrefix);
-            const inp = document.getElementById(fields.qrRaw);
+        async function pasteFromClipboardToQr(target = 'pyramid') {
+            const ids = getTargetFieldIds(target);
+            const inp = document.getElementById(ids.qrRaw);
             try {
                 if (navigator.clipboard && navigator.clipboard.readText) {
-                    const clip = await navigator.clipboard.readText();
-                    if (clip) {
-                        inp.value = clip;
-                        parseAndFillQrString(clip, true, targetPrefix);
+                    const clipText = await navigator.clipboard.readText();
+                    if (clipText) {
+                        inp.value = clipText;
+                        parseAndFillQrString(clipText, true, target);
                         return;
                     }
-                }
-            } catch (e) {}
-            inp.focus();
-            showToast("Tekan & tahan di kotak QR lalu pilih Tempel (Paste).", "info");
-        }
-
-        function markAwaitingExternalCopy(targetPrefix = 'pyramid') {
-            awaitingExternalCopyPrefix = targetPrefix;
-        }
-
-        async function pasteMasterSteelBox(targetPrefix = 'pyramid') {
-            const fields = getFormFieldIds(targetPrefix);
-            const box = document.getElementById(fields.msPasteBox);
-            try {
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    const clip = await navigator.clipboard.readText();
-                    if (clip) {
-                        box.value = clip;
-                        parseAndFillQrString(clip, true, targetPrefix);
-                        return;
-                    }
-                }
-            } catch (e) {}
-            box.focus();
-            showToast("Tekan & tahan di kotak biru lalu pilih Paste.", "info");
-        }
-
-        // Auto-detect saat user kembali dari tab Master Steel setelah menyalin teks
-        window.addEventListener('focus', async () => {
-            if (!awaitingExternalCopyPrefix) return;
-            const prefix = awaitingExternalCopyPrefix;
-            try {
-                if (navigator.clipboard && navigator.clipboard.readText) {
-                    const clip = await navigator.clipboard.readText();
-                    if (clip && (/Code\s*No/i.test(clip) || /Heat\s*No/i.test(clip))) {
-                        const fields = getFormFieldIds(prefix);
-                        document.getElementById(fields.msPasteBox).value = clip;
-                        parseAndFillQrString(clip, true, prefix);
-                    }
-                }
-            } catch (e) {}
-        });
-
-        // ==========================================
-        // FOTO QR & LIVE CAMERA SCANNER
-        // ==========================================
-        let html5QrInstance = null;
-        let activeScannerPrefix = 'pyramid';
-
-        async function handleQrPhotoUpload(event, targetPrefix = 'pyramid') {
-            const file = event.target.files?.[0];
-            if (!file) return;
-            event.target.value = '';
-
-            if (typeof Html5Qrcode === 'undefined') {
-                showToast("Library pemindai QR belum termuat.", "error");
-                return;
-            }
-
-            showToast("Membaca QR dari foto...", "info");
-            try {
-                const fileScanner = new Html5Qrcode("qr-file-reader-hidden");
-                const decodedText = await fileScanner.scanFile(file, false);
-                fileScanner.clear();
-
-                const fields = getFormFieldIds(targetPrefix);
-                document.getElementById(fields.qrRaw).value = decodedText;
-                const isParsed = parseAndFillQrString(decodedText, true, targetPrefix);
-
-                // Simpan foto ke perangkat HANYA jika QR berhasil terbaca dan valid
-                if (isParsed && document.getElementById('save-photo-to-gallery')?.checked) {
-                    const coilId = document.getElementById(fields.id).value || 'COIL';
-                    savePhotoToDevice(file, coilId, targetPrefix);
                 }
             } catch (err) {
-                showToast("QR tidak terbaca pada foto. Foto tidak disimpan, coba potret lebih dekat & terang.", "warning");
+                // Fallback
             }
+            inp.focus();
+            showToast('Tekan & tahan kotak QR lalu pilih Tempel (Paste)', 'info');
         }
 
-        function savePhotoToDevice(file, parsedCoilId, targetPrefix) {
+        // ==========================================
+        // SCANNER QR KAMERA & FOTO FILE
+        // ==========================================
+        function saveVerifiedQrPhoto(file, decodedText) {
             try {
-                const safeBay = (appState.bayName || 'BAY').replace(/[^a-zA-Z0-9_-]/g, '');
-                const safeCoil = (parsedCoilId || 'COIL').replace(/[^a-zA-Z0-9_-]/g, '');
-                const posPart = targetPrefix === 'np'
-                    ? 'NONPIRAMID'
-                    : `L${appState.selectedLayer}_${appState.activePosition}`;
-                const fileName = `QR_${safeBay}_${posPart}_${safeCoil}.jpg`;
+                const saveChk = document.getElementById('save-photo-to-gallery');
+                if (saveChk && !saveChk.checked) return;
+
+                const cleanLoc = (appState.bayName || 'BAY').replace(/[^a-zA-Z0-9_-]/g, '');
+                const coilHint = (decodedText || '').split('-')[3] || 'COIL';
+                const cleanCoil = coilHint.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 18);
+                const fileName = `QR_${cleanLoc}_L${appState.selectedLayer}_${appState.activePosition}_${cleanCoil}.jpg`;
 
                 const url = URL.createObjectURL(file);
                 const a = document.createElement('a');
@@ -2161,187 +2150,110 @@
                 a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 5000);
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 4000);
             } catch (e) {
-                console.warn("Gagal menyimpan salinan foto:", e);
+                console.warn('Gagal menyimpan salinan foto QR:', e);
             }
         }
 
-        function openQrScannerModal(targetPrefix = 'pyramid') {
-            activeScannerPrefix = targetPrefix;
-            const modal = document.getElementById('qr-scanner-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        function handleQrPhotoUpload(event, target = 'pyramid') {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
 
             if (typeof Html5Qrcode === 'undefined') {
-                showToast("Library kamera QR tidak tersedia.", "error");
+                showToast('Library pembaca QR belum siap, coba gunakan tombol Tempel.', 'error');
+                event.target.value = '';
                 return;
             }
 
+            showToast('Membaca QR dari foto...', 'info');
+            const scanner = new Html5Qrcode('qr-file-reader-hidden');
+            scanner.scanFile(file, true)
+                .then(decodedText => {
+                    const ids = getTargetFieldIds(target);
+                    document.getElementById(ids.qrRaw).value = decodedText;
+                    parseAndFillQrString(decodedText, true, target);
+                    // Simpan foto hanya setelah QR berhasil terbaca!
+                    saveVerifiedQrPhoto(file, decodedText);
+                })
+                .catch(() => {
+                    showToast('QR tidak terbaca pada foto. Foto tidak disimpan, silakan foto lebih dekat & jelas.', 'error');
+                })
+                .finally(() => {
+                    event.target.value = '';
+                    try { scanner.clear(); } catch (e) {}
+                });
+        }
+
+        function openQrScannerModal(target = 'pyramid') {
+            activeQrTarget = target;
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast('Kamera live tidak tersedia, gunakan tombol Foto QR.', 'error');
+                return;
+            }
+            showModalEl('qr-scanner-modal');
+
             try {
-                html5QrInstance = new Html5Qrcode("qr-reader");
-                html5QrInstance.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 230, height: 230 } },
+                html5QrScanner = new Html5Qrcode('qr-reader');
+                html5QrScanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
                     (decodedText) => {
-                        const fields = getFormFieldIds(activeScannerPrefix);
-                        document.getElementById(fields.qrRaw).value = decodedText;
-                        parseAndFillQrString(decodedText, true, activeScannerPrefix);
+                        const ids = getTargetFieldIds(activeQrTarget);
+                        document.getElementById(ids.qrRaw).value = decodedText;
+                        parseAndFillQrString(decodedText, true, activeQrTarget);
                         closeQrScannerModal();
                     },
                     () => {}
                 ).catch(() => {
-                    showToast("Akses live kamera diblokir browser. Gunakan tombol 'Foto QR'.", "warning");
+                    closeQrScannerModal();
+                    showToast('Akses kamera live diblokir browser. Gunakan tombol "Foto QR" di sebelahnya!', 'error');
                 });
             } catch (e) {
-                showToast("Kamera tidak dapat dibuka. Gunakan tombol 'Foto QR'.", "warning");
+                closeQrScannerModal();
+                showToast('Gagal membuka kamera live. Gunakan tombol "Foto QR".', 'error');
             }
         }
 
         function closeQrScannerModal() {
-            const modal = document.getElementById('qr-scanner-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            if (html5QrInstance) {
-                html5QrInstance.stop().then(() => {
-                    html5QrInstance.clear();
-                    html5QrInstance = null;
-                }).catch(() => {
-                    html5QrInstance = null;
-                });
+            hideModalEl('qr-scanner-modal');
+            if (html5QrScanner) {
+                try {
+                    html5QrScanner.stop().then(() => html5QrScanner.clear()).catch(() => {});
+                } catch (e) {}
+                html5QrScanner = null;
             }
         }
 
         // ==========================================
-        // MODAL IMPOR & SIMPAN APP STANDALONE
+        // EKSPOR LAPORAN WHATSAPP & CSV (EXCEL)
         // ==========================================
-        function openImportSyncModal() {
-            const modal = document.getElementById('import-sync-modal');
-            document.getElementById('import-text-area').value = '';
-            const fileInp = document.getElementById('import-csv-file');
-            if (fileInp) fileInp.value = '';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        function openExportModal() {
+            syncActiveStateToLocation();
+            const locCount = Object.keys(appState.locations).length;
+            const lbl = document.getElementById('export-all-loc-label');
+            if (lbl) lbl.textContent = `Semua Lokasi (${locCount})`;
+            updateExportPreview();
+            showModalEl('export-modal');
         }
 
-        function handleImportCsvFile(event) {
-            const file = event.target.files?.[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target?.result || '';
-                document.getElementById('import-text-area').value = content;
-                showToast(`File "${file.name}" dimuat. Ketuk 'Sinkronkan Sekarang'.`, "info");
-            };
-            reader.onerror = () => {
-                showToast("Gagal membaca file CSV.", "error");
-            };
-            reader.readAsText(file, 'UTF-8');
+        function closeExportModal() {
+            hideModalEl('export-modal');
         }
 
-        function getCleanStandaloneHtml() {
-            // Kloning DOM agar tidak merusak tampilan saat ini dan pastikan semua modal dalam kondisi tertutup (hidden)
-            const clone = document.documentElement.cloneNode(true);
-            const modalIds = [
-                'confirm-modal',
-                'export-modal',
-                'qr-scanner-modal',
-                'save-app-modal',
-                'location-modal',
-                'custom-pattern-modal',
-                'import-sync-modal'
-            ];
-            modalIds.forEach(id => {
-                const el = clone.querySelector('#' + id);
-                if (el) {
-                    el.classList.add('hidden');
-                    el.classList.remove('flex');
-                }
-            });
-            const toastContainer = clone.querySelector('#toast-container');
-            if (toastContainer) toastContainer.innerHTML = '';
-            return '<!DOCTYPE html>\n' + clone.outerHTML;
-        }
-
-        function downloadStandaloneApp() {
-            const htmlContent = getCleanStandaloneHtml();
-            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-
-            const directLink = document.getElementById('direct-html-download-link');
-            if (directLink) directLink.href = url;
-
-            const modal = document.getElementById('save-app-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeSaveAppModal() {
-            const modal = document.getElementById('save-app-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function copyStandaloneHtml() {
-            const htmlContent = getCleanStandaloneHtml();
-            const temp = document.createElement('textarea');
-            temp.value = htmlContent;
-            document.body.appendChild(temp);
-            temp.select();
-            try {
-                document.execCommand('copy');
-                showToast("Seluruh kode HTML bersih berhasil disalin!", "success");
-            } catch (e) {
-                showToast("Gagal menyalin kode HTML.", "error");
-            }
-            document.body.removeChild(temp);
-        }
-
-        // ==========================================
-        // EKSPOR CSV, SALIN LAPORAN & RESET
-        // ==========================================
-        function getLocationsForExport() {
-            syncActiveLocationToStore();
-            const scope = document.querySelector('input[name="export-scope"]:checked')?.value || 'all';
-            const allLocs = Object.values(appState.locations || {});
+        function getSelectedExportLocations() {
+            syncActiveStateToLocation();
+            const scopeEl = document.querySelector('input[name="export-scope"]:checked');
+            const scope = scopeEl ? scopeEl.value : 'all';
             if (scope === 'current') {
-                return [appState.locations[appState.activeLocationId]].filter(Boolean);
+                return [appState.locations[appState.activeLocationId]];
             }
-            return allLocs;
+            return Object.values(appState.locations);
         }
 
-        function buildSingleLocationReportLines(loc) {
-            const locPositions = [];
-            const bottomToTop = (loc.stackPattern || '3-2-1')
-                .split('-')
-                .map(n => parseInt(n.trim(), 10))
-                .filter(n => !isNaN(n) && n > 0 && n <= 12);
-            const validPattern = bottomToTop.length > 0 ? bottomToTop : [3, 2, 1];
-            const totalRows = validPattern.length;
-            const isLegacy321 = validPattern.join('-') === '3-2-1';
-
-            for (let rIdx = totalRows - 1; rIdx >= 0; rIdx--) {
-                const countInRow = validPattern[rIdx];
-                for (let cIdx = 0; cIdx < countInRow; cIdx++) {
-                    let id = `R${rIdx + 1}_C${cIdx + 1}`;
-                    let shortLabel = `B${rIdx + 1}-P${cIdx + 1}`;
-                    if (isLegacy321) {
-                        if (rIdx === 2 && cIdx === 0) { id = 'ATAS'; shortLabel = 'Atas'; }
-                        else if (rIdx === 1 && cIdx === 0) { id = 'TENGAH_KIRI'; shortLabel = 'Tengah Kiri'; }
-                        else if (rIdx === 1 && cIdx === 1) { id = 'TENGAH_KANAN'; shortLabel = 'Tengah Kanan'; }
-                        else if (rIdx === 0 && cIdx === 0) { id = 'BAWAH_KIRI'; shortLabel = 'Bawah Kiri'; }
-                        else if (rIdx === 0 && cIdx === 1) { id = 'BAWAH_TENGAH'; shortLabel = 'Bawah Tengah'; }
-                        else if (rIdx === 0 && cIdx === 2) { id = 'BAWAH_KANAN'; shortLabel = 'Bawah Kanan'; }
-                    } else {
-                        const rowName = rIdx === totalRows - 1 ? 'Puncak' : (rIdx === 0 ? 'Bawah' : `Baris ${rIdx + 1}`);
-                        const posName = countInRow === 1 ? 'Tengah' : (cIdx === 0 ? 'Kiri' : (cIdx === countInRow - 1 ? 'Kanan' : `Ke-${cIdx + 1}`));
-                        shortLabel = countInRow === 1 ? rowName : `${rowName} ${posName}`;
-                    }
-                    locPositions.push({ id, shortLabel });
-                }
-            }
-
+        function buildLocationReportLines(loc) {
+            const locPositions = generatePositionsList(loc.stackPattern || '3-2-1').positions;
             let lines = [];
             lines.push(`==============================`);
             lines.push(`*LOKASI / BAY: ${loc.name}*`);
@@ -2354,6 +2266,8 @@
                 locPositions.forEach(pos => {
                     const item = (loc.coils || {})[`${pos.id}_${l}`];
                     if (item && (item.id || item.nomor)) {
+                        const itemPic = item.picName || '';
+                        const itemShift = item.shift || '';
                         const details = [
                             item.nomor ? `No:${item.nomor}` : '',
                             `Coil:${item.id}`,
@@ -2361,7 +2275,9 @@
                             item.grade ? `Gr:${item.grade}` : '',
                             item.heatNumber ? `Heat:${item.heatNumber}` : '',
                             item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : '',
-                            item.supplier ? `Supp:${item.supplier}` : ''
+                            item.supplier ? `Supp:${item.supplier}` : '',
+                            itemPic ? `Tim:${itemPic}` : '',
+                            itemShift ? `Shift:${itemShift}` : ''
                         ].filter(Boolean).join(' | ');
                         lines.push(`- ${pos.shortLabel}: ${details}`);
                     } else {
@@ -2374,6 +2290,8 @@
             if (npItems.length > 0) {
                 lines.push(`\n*NON-PIRAMID (SAMPING):*`);
                 npItems.forEach((item, idx) => {
+                    const itemPic = item.picName || '';
+                    const itemShift = item.shift || '';
                     const details = [
                         `No:${item.nomor || (idx + 1)}`,
                         `Coil:${item.id}`,
@@ -2381,7 +2299,9 @@
                         item.grade ? `Gr:${item.grade}` : '',
                         item.heatNumber ? `Heat:${item.heatNumber}` : '',
                         item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : '',
-                        item.supplier ? `Supp:${item.supplier}` : ''
+                        item.supplier ? `Supp:${item.supplier}` : '',
+                        itemPic ? `Tim:${itemPic}` : '',
+                        itemShift ? `Shift:${itemShift}` : ''
                     ].filter(Boolean).join(' | ');
                     lines.push(`- Samping: ${details}`);
                 });
@@ -2390,40 +2310,18 @@
             return lines;
         }
 
-        function generateReportText() {
-            const locs = getLocationsForExport();
-            let allLines = [];
-            locs.forEach((loc, idx) => {
-                if (idx > 0) allLines.push('');
-                allLines.push(...buildSingleLocationReportLines(loc));
-            });
-            return allLines.join('\n');
-        }
-
         function updateExportPreview() {
-            const previewEl = document.getElementById('export-text-preview');
-            if (previewEl) {
-                previewEl.value = generateReportText();
-            }
-        }
-
-        function openExportModal() {
-            syncActiveLocationToStore();
-            const totalLocs = Object.keys(appState.locations || {}).length;
-            const labelAll = document.getElementById('export-all-loc-label');
-            if (labelAll) {
-                labelAll.textContent = `Semua Lokasi (${totalLocs})`;
-            }
-            updateExportPreview();
-            const modal = document.getElementById('export-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeExportModal() {
-            const modal = document.getElementById('export-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            const locs = getSelectedExportLocations();
+            const nowStr = new Date().toLocaleString('id-ID');
+            let allLines = [
+                `*REKAP DATA COILSTACK BY HAN*`,
+                `Waktu Cetak: ${nowStr}`
+            ];
+            locs.forEach(loc => {
+                allLines.push('');
+                allLines = allLines.concat(buildLocationReportLines(loc));
+            });
+            document.getElementById('export-text-preview').value = allLines.join('\n');
         }
 
         function copyReportText() {
@@ -2432,29 +2330,41 @@
             textarea.setSelectionRange(0, 99999);
             try {
                 document.execCommand('copy');
-                showToast("Laporan teks berhasil disalin ke clipboard!", "success");
-            } catch (err) {
-                showToast("Gagal menyalin teks.", "error");
+                showToast('Teks laporan disalin! Siap ditempel ke WhatsApp.');
+            } catch (e) {
+                showToast('Gagal menyalin otomatis, silakan salin manual dari kotak teks.', 'error');
             }
         }
 
-        function downloadCSV() {
-            const locs = getLocationsForExport();
-            const csvEscape = (val) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+        function csvEscape(val) {
+            const s = val === null || val === undefined ? '' : String(val);
+            if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+                return `"${s.replace(/"/g, '""')}"`;
+            }
+            return s;
+        }
 
-            let csvRows = [
-                ['Lokasi_Bay', 'Susunan', 'Layer', 'Posisi', 'Nomor', 'No_Coil', 'Diameter', 'Grade', 'Heat_Number', 'Berat', 'Satuan_Berat', 'Nama_Supplier', 'Waktu_Input'].join(',')
+        function downloadCSV() {
+            const locs = getSelectedExportLocations();
+            const headers = [
+                'Lokasi', 'PIC_Tim', 'Shift', 'Susunan', 'Layer', 'Posisi',
+                'Nomor', 'No_Coil', 'Diameter_mm', 'Grade', 'Heat_Number',
+                'Berat', 'Satuan_Berat', 'Supplier', 'Waktu_Update'
             ];
+            const csvRows = [headers.join(',')];
 
             locs.forEach(loc => {
-                const { positions: locPositions } = generatePositionsList(loc.stackPattern || '3-2-1');
+                const locPositions = generatePositionsList(loc.stackPattern || '3-2-1').positions;
                 const maxLayer = loc.totalLayers || 5;
 
                 for (let l = 1; l <= maxLayer; l++) {
                     locPositions.forEach(pos => {
                         const item = (loc.coils || {})[`${pos.id}_${l}`] || {};
+                        const hasItem = !!(item.id || item.nomor);
                         csvRows.push([
                             csvEscape(loc.name),
+                            csvEscape(hasItem ? (item.picName || '') : ''),
+                            csvEscape(hasItem ? (item.shift || '') : ''),
                             csvEscape(loc.stackPattern || '3-2-1'),
                             l,
                             csvEscape(pos.shortLabel),
@@ -2474,6 +2384,8 @@
                 (loc.nonPyramidCoils || []).forEach((item, idx) => {
                     csvRows.push([
                         csvEscape(loc.name),
+                        csvEscape(item.picName || ''),
+                        csvEscape(item.shift || ''),
                         csvEscape('NON-PIRAMID'),
                         csvEscape('Non-Piramid'),
                         csvEscape('Samping'),
@@ -2490,150 +2402,158 @@
                 });
             });
 
-            const csvString = '\uFEFF' + csvRows.join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const csvContent = '\uFEFF' + csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            const dateStr = new Date().toISOString().slice(0, 10);
-            const filePrefix = locs.length > 1 ? 'SEMUA-LOKASI' : (locs[0]?.name || 'BAY').replace(/[^a-zA-Z0-9_-]/g, '');
+            const a = document.createElement('a');
+            const dateTag = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `CoilStack_Rekap_${dateTag}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+            showToast('File CSV (Excel) berhasil diunduh!');
+        }
 
-            link.setAttribute('href', url);
-            link.setAttribute('download', `CoilStack_${filePrefix}_${dateStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            setTimeout(() => URL.revokeObjectURL(url), 5000);
-            showToast("File CSV berhasil diunduh!", "success");
+        // ==========================================
+        // IMPOR & SINKRONISASI MULTI-USER (CSV & WA)
+        // ==========================================
+        function openImportSyncModal() {
+            document.getElementById('import-text-area').value = '';
+            showModalEl('import-sync-modal');
         }
 
         function closeImportSyncModal() {
-            const modal = document.getElementById('import-sync-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            hideModalEl('import-sync-modal');
         }
 
         async function pasteToImportArea() {
             const area = document.getElementById('import-text-area');
             try {
                 if (navigator.clipboard && navigator.clipboard.readText) {
-                    const clip = await navigator.clipboard.readText();
-                    if (clip) {
-                        area.value = clip;
-                        showToast("Teks ditempel dari clipboard.", "info");
+                    const txt = await navigator.clipboard.readText();
+                    if (txt) {
+                        area.value = txt;
+                        showToast('Teks berhasil ditempel!', 'info');
                         return;
                     }
                 }
             } catch (e) {}
             area.focus();
-            showToast("Tekan & tahan di kotak teks lalu pilih Tempel (Paste).", "info");
+            showToast('Tekan & tahan kotak teks lalu pilih Tempel (Paste)', 'info');
         }
 
-        function confirmResetAll() {
-            showConfirmModal(
-                `Reset Data ${appState.bayName}?`,
-                `Semua data coil piramid dan non-piramid di lokasi ${appState.bayName} akan dihapus permanen. Lokasi lain tetap aman.`,
-                () => {
-                    appState.coils = {};
-                    appState.nonPyramidCoils = [];
-                    appState.selectedLayer = appState.crawlDirection === 'desc' ? appState.totalLayers : 1;
-                    saveState();
-                    updateLayerCountUI();
-                    populateFormForCurrentTarget();
-                    resetNonPyramidForm();
-                    renderAll();
-                    showToast(`Data lokasi ${appState.bayName} telah direset.`, "info");
+        function handleImportCsvFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('import-text-area').value = e.target.result || '';
+                showToast(`File "${file.name}" siap disinkronkan!`, 'info');
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function getOrCreateLocationByName(rawLocName, patternHint, tracker) {
+            const cleanName = (rawLocName || '').trim().toUpperCase();
+            if (!cleanName) {
+                return appState.locations[appState.activeLocationId];
+            }
+            const existing = Object.values(appState.locations).find(l => l.name.toUpperCase() === cleanName);
+            if (existing) {
+                if (patternHint && patternHint !== 'NON-PIRAMID' && !existing.stackPattern) {
+                    existing.stackPattern = patternHint;
                 }
-            );
+                return existing;
+            }
+            const newId = 'loc_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const validPattern = (patternHint && patternHint !== 'NON-PIRAMID') ? patternHint : '3-2-1';
+            const created = createLocationRecord(newId, cleanName, { stackPattern: validPattern });
+            appState.locations[newId] = created;
+            tracker.createdLocCount++;
+            return created;
         }
 
         function parseCsvLine(line, delimiter = ',') {
             const result = [];
-            let current = '';
+            let cur = '';
             let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
                 const ch = line[i];
                 if (ch === '"') {
                     if (inQuotes && line[i + 1] === '"') {
-                        current += '"';
+                        cur += '"';
                         i++;
                     } else {
                         inQuotes = !inQuotes;
                     }
                 } else if (ch === delimiter && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
+                    result.push(cur);
+                    cur = '';
                 } else {
-                    current += ch;
+                    cur += ch;
                 }
             }
-            result.push(current.trim());
+            result.push(cur);
             return result;
         }
 
-        function getOrCreateLocationByName(locName, patternHint, tracker) {
-            const cleanName = (locName || '').trim().toUpperCase();
-            if (!cleanName) return appState.locations[appState.activeLocationId];
-
-            const existingLoc = Object.values(appState.locations).find(
-                l => (l.name || '').trim().toUpperCase() === cleanName
-            );
-            if (existingLoc) {
-                if (patternHint) {
-                    const { normalizedPattern } = generatePositionsList(patternHint);
-                    existingLoc.stackPattern = normalizedPattern;
-                }
-                return existingLoc;
-            }
-
-            const newId = 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-            const normalizedPat = patternHint
-                ? generatePositionsList(patternHint).normalizedPattern
-                : (appState.stackPattern || '3-2-1');
-            const newLoc = createLocationRecord(newId, cleanName, {
-                stackPattern: normalizedPat,
-                totalLayers: 5
-            });
-            appState.locations[newId] = newLoc;
-            tracker.createdLocCount++;
-            return newLoc;
+        function detectCsvDelimiter(headerLine) {
+            const semicolons = (headerLine.match(/;/g) || []).length;
+            const commas = (headerLine.match(/,/g) || []).length;
+            const tabs = (headerLine.match(/\t/g) || []).length;
+            if (semicolons > commas && semicolons >= tabs) return ';';
+            if (tabs > commas && tabs > semicolons) return '\t';
+            return ',';
         }
 
-        function processCsvImport(rawText, mergeMode) {
-            const cleanText = rawText.replace(/^\uFEFF/, '');
-            const lines = cleanText.split(/\r?\n/).filter(l => l.trim() !== '');
-            if (lines.length < 2) return null;
-
-            const delimiter = (lines[0].split(';').length > lines[0].split(',').length) ? ';' : ',';
-            const headers = parseCsvLine(lines[0], delimiter).map(h => h.toLowerCase().replace(/[^a-z0-9_]/g, ''));
-
-            // Validasi apakah baris pertama merupakan header CSV CoilStack
-            const idxCoil = headers.findIndex(h => h === 'no_coil' || h === 'nocoil' || h === 'coil');
-            const idxPos = headers.findIndex(h => h === 'posisi' || h === 'position');
-            if (idxCoil === -1 && idxPos === -1) return null;
-
-            const idxLoc = headers.findIndex(h => h === 'lokasi_bay' || h === 'lokasi' || h === 'bay');
-            const idxSusunan = headers.findIndex(h => h === 'susunan' || h === 'pattern');
-            const idxLayer = headers.findIndex(h => h === 'layer');
-            const idxNomor = headers.findIndex(h => h === 'nomor' || h === 'no');
-            const idxDia = headers.findIndex(h => h === 'diameter');
-            const idxGrade = headers.findIndex(h => h === 'grade');
-            const idxHeat = headers.findIndex(h => h === 'heat_number' || h === 'heatnumber' || h === 'heat');
-            const idxWeight = headers.findIndex(h => h === 'berat' || h === 'weight');
-            const idxUnit = headers.findIndex(h => h === 'satuan_berat' || h === 'satuan' || h === 'unit');
-            const idxSupp = headers.findIndex(h => h === 'nama_supplier' || h === 'supplier');
-            const idxTime = headers.findIndex(h => h === 'waktu_input' || h === 'waktu');
-
+        function importFromCsvText(rawCsv, overwrite) {
+            let lines = rawCsv.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim());
             const tracker = { importedCount: 0, skippedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
+            if (lines.length < 2) return tracker;
 
-            for (let i = 1; i < lines.length; cols = null, i++) {
-                const cols = parseCsvLine(lines[i], delimiter);
+            if (/^sep\s*=\s*[,;\t]/i.test(lines[0].trim())) {
+                lines.shift();
+            }
+            if (lines.length < 2) return tracker;
+
+            const delimiter = detectCsvDelimiter(lines[0]);
+            const headers = parseCsvLine(lines[0], delimiter).map(h => h.trim().toLowerCase().replace(/[\s/.-]+/g, '_'));
+            const findCol = (...names) => headers.findIndex(h => names.includes(h));
+
+            const idxLoc = findCol('lokasi', 'bay', 'location', 'lokasi_bay', 'nama_lokasi');
+            const idxPic = findCol('pic_tim', 'pic', 'tim', 'nama_pic');
+            const idxShift = findCol('shift');
+            const idxSusunan = findCol('susunan', 'pattern', 'pola');
+            const idxLayer = findCol('layer');
+            const idxPos = findCol('posisi', 'position', 'pos');
+            const idxNomor = findCol('nomor', 'no', 'no_urut');
+            const idxCoil = findCol('no_coil', 'coil', 'coil_no', 'kode_coil');
+            const idxDia = findCol('diameter_mm', 'diameter', 'dia', 'size');
+            const idxGrade = findCol('grade');
+            const idxHeat = findCol('heat_number', 'heat', 'heat_no');
+            const idxWeight = findCol('berat', 'weight');
+            const idxUnit = findCol('satuan_berat', 'satuan', 'unit');
+            const idxSupp = findCol('supplier', 'nama_supplier');
+            const idxTime = findCol('waktu_update', 'waktu', 'updated_at');
+
+            for (let r = 1; r < lines.length; r++) {
+                const cols = parseCsvLine(lines[r], delimiter);
                 const id = idxCoil >= 0 ? (cols[idxCoil] || '').trim().toUpperCase() : '';
                 const nomor = idxNomor >= 0 ? (cols[idxNomor] || '').trim().toUpperCase() : '';
                 if (!id && !nomor) continue;
 
                 const locName = idxLoc >= 0 ? (cols[idxLoc] || '').trim() : '';
-                const patternHint = idxSusunan >= 0 ? (cols[idxSusunan] || '').trim() : '';
+                const patternHint = idxSusunan >= 0 ? (cols[idxSusunan] || '').trim().toUpperCase() : '';
                 const targetLoc = getOrCreateLocationByName(locName, patternHint, tracker);
+                if (patternHint && patternHint !== 'NON-PIRAMID' && Object.keys(targetLoc.coils || {}).length === 0) {
+                    targetLoc.stackPattern = generatePositionsList(patternHint).normalizedPattern;
+                }
+
+                const rowPic = (idxPic >= 0 && cols[idxPic]?.trim()) ? cols[idxPic].trim() : '';
+                const rowShift = (idxShift >= 0 && cols[idxShift]?.trim()) ? cols[idxShift].trim() : '';
 
                 const layerRaw = idxLayer >= 0 ? (cols[idxLayer] || '').trim() : '';
                 const posLabelRaw = idxPos >= 0 ? (cols[idxPos] || '').trim() : '';
@@ -2659,15 +2579,17 @@
                         weight,
                         weightUnit,
                         supplier,
+                        picName: rowPic,
+                        shift: rowShift,
                         updatedAt
                     };
                     if (dupIdx !== -1) {
-                        if (mergeMode === 'fill_empty') {
-                            tracker.skippedCount++;
-                        } else {
+                        if (overwrite) {
                             targetLoc.nonPyramidCoils[dupIdx] = itemObj;
                             tracker.importedCount++;
                             tracker.touchedLocIds.add(targetLoc.id);
+                        } else {
+                            tracker.skippedCount++;
                         }
                     } else {
                         targetLoc.nonPyramidCoils.push(itemObj);
@@ -2678,23 +2600,20 @@
                 }
 
                 const layerNum = parseInt(layerRaw.replace(/[^\d]/g, ''), 10);
-                if (!layerNum || layerNum < 1 || layerNum > 50) continue;
-                if (layerNum > (targetLoc.totalLayers || 5)) {
-                    targetLoc.totalLayers = layerNum;
-                }
+                if (isNaN(layerNum) || layerNum < 1) continue;
+                if (layerNum > (targetLoc.totalLayers || 5)) targetLoc.totalLayers = layerNum;
 
-                const { positions: locPositions } = generatePositionsList(targetLoc.stackPattern || '3-2-1');
+                const locPositions = generatePositionsList(targetLoc.stackPattern || '3-2-1').positions;
                 const posObj = locPositions.find(p =>
                     p.shortLabel.toLowerCase() === posLabelRaw.toLowerCase() ||
-                    p.label.toLowerCase() === posLabelRaw.toLowerCase() ||
-                    p.id.toLowerCase() === posLabelRaw.toLowerCase()
+                    p.id.toLowerCase() === posLabelRaw.toLowerCase() ||
+                    p.seq.toString() === posLabelRaw
                 );
                 if (!posObj) continue;
 
-                if (!targetLoc.coils) targetLoc.coils = {};
                 const key = `${posObj.id}_${layerNum}`;
-                const existing = targetLoc.coils[key];
-                if (existing && existing.id && mergeMode === 'fill_empty') {
+                if (!targetLoc.coils) targetLoc.coils = {};
+                if (targetLoc.coils[key] && targetLoc.coils[key].id && !overwrite) {
                     tracker.skippedCount++;
                     continue;
                 }
@@ -2708,6 +2627,8 @@
                     weight,
                     weightUnit,
                     supplier,
+                    picName: rowPic,
+                    shift: rowShift,
                     updatedAt
                 };
                 tracker.importedCount++;
@@ -2720,41 +2641,36 @@
         function processImportSync() {
             const rawText = document.getElementById('import-text-area').value.trim();
             if (!rawText) {
-                showToast("Pilih file CSV atau tempelkan teks rekapan terlebih dahulu!", "warning");
+                showToast('Silakan pilih file CSV atau tempel teks laporan terlebih dahulu!', 'error');
                 return;
             }
 
-            syncActiveLocationToStore();
+            syncActiveStateToLocation();
             const mergeMode = document.querySelector('input[name="merge-mode"]:checked')?.value || 'fill_empty';
+            const overwrite = mergeMode === 'overwrite';
 
-            // 1. Coba proses sebagai CSV terlebih dahulu apabila formatnya sesuai header CSV
-            const csvResult = processCsvImport(rawText, mergeMode);
-            if (csvResult !== null) {
-                if (csvResult.importedCount === 0 && csvResult.skippedCount === 0 && csvResult.createdLocCount === 0) {
-                    showToast("File CSV terbaca, namun tidak ada baris data coil yang terisi.", "warning");
-                    return;
+            const cleanLines = rawText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim());
+            const headerCandidate = /^sep\s*=\s*[,;\t]/i.test(cleanLines[0] || '') ? (cleanLines[1] || '') : (cleanLines[0] || '');
+            if (/[,;\t]/.test(headerCandidate) && /no_coil|no\s*coil|lokasi|bay|layer/i.test(headerCandidate)) {
+                const res = importFromCsvText(rawText, overwrite);
+                if (res.touchedLocIds.size > 0 && !res.touchedLocIds.has(appState.activeLocationId)) {
+                    const firstTouchedId = Array.from(res.touchedLocIds)[0];
+                    appState.activeLocationId = firstTouchedId;
                 }
                 loadLocationIntoActiveState(appState.activeLocationId);
                 saveState();
-                syncPatternUI();
-                updateLayerCountUI();
-                populateFormForCurrentTarget();
-                resetNonPyramidForm();
-                renderAll();
                 closeImportSyncModal();
-
-                const summaryParts = [`${csvResult.importedCount} coil masuk (${csvResult.touchedLocIds.size} lokasi)`];
-                if (csvResult.createdLocCount > 0) summaryParts.push(`${csvResult.createdLocCount} lokasi baru dibuat`);
-                if (csvResult.skippedCount > 0) summaryParts.push(`${csvResult.skippedCount} dilewati`);
-                showToast(`Impor CSV selesai: ${summaryParts.join(', ')}.`, "success");
+                renderAll();
+                const locNames = Array.from(res.touchedLocIds).map(id => appState.locations[id]?.name).filter(Boolean).join(', ');
+                showToast(`CSV Sinkron (${res.touchedLocIds.size} lokasi: ${locNames || '-'}): ${res.importedCount} coil masuk, ${res.createdLocCount} lokasi baru.`);
                 return;
             }
 
-            // 2. Jika bukan CSV, lanjutkan parsing format teks laporan WhatsApp
+            // Parsing format teks laporan WhatsApp
             const lines = rawText.split(/\r?\n/);
-
-            // Default diarahkan ke lokasi aktif apabila teks tempelan tidak mencantumkan header LOKASI / BAY
             let targetLoc = appState.locations[appState.activeLocationId];
+            let blockPicName = '';
+            let blockShift = '';
             let currentLayer = null;
             let isNonPyramidSection = false;
             const tracker = { importedCount: 0, skippedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
@@ -2763,66 +2679,60 @@
                 const trimmed = line.trim();
                 if (!trimmed) return;
 
-                // Deteksi header lokasi: "*LOKASI / BAY: BAY-A02*" atau "LOKASI: TIMBANGAN-2"
-                const locMatch = trimmed.match(/^\*?LOKASI\s*(?:\/\s*BAY)?\s*:\s*([^*]+)\*?$/i);
+                const locMatch = trimmed.match(/^\*?(?:LOKASI\s*(?:\/\s*BAY)?|BAY)\s*:\s*([^*]+)\*?$/i);
                 if (locMatch) {
-                    const locName = locMatch[1].trim().toUpperCase();
-                    if (locName) {
-                        targetLoc = getOrCreateLocationByName(locName, null, tracker);
-                        currentLayer = null;
-                        isNonPyramidSection = false;
-                    }
-                    return;
-                }
-
-                // Deteksi baris konfigurasi: "Susunan: 3-2-1 | Total Layer: 5"
-                if (/^Susunan\s*:/i.test(trimmed)) {
-                    const patSegment = trimmed.split('|')[0];
-                    const patRaw = patSegment.split(':')[1]?.trim();
-                    if (patRaw) {
-                        const { normalizedPattern } = generatePositionsList(patRaw);
-                        targetLoc.stackPattern = normalizedPattern;
-                    }
-                    const layerInfoMatch = trimmed.match(/Total\s+Layer\s*:\s*(\d+)/i);
-                    if (layerInfoMatch) {
-                        const parsedTotal = parseInt(layerInfoMatch[1], 10);
-                        if (parsedTotal > (targetLoc.totalLayers || 5) && parsedTotal <= 50) {
-                            targetLoc.totalLayers = parsedTotal;
-                        }
-                    }
-                    return;
-                }
-
-                // Deteksi header *LAYER X:* atau LAYER X:
-                const layerMatch = trimmed.match(/^\*?LAYER\s+(\d+)\s*:?\*?$/i);
-                if (layerMatch) {
-                    currentLayer = parseInt(layerMatch[1], 10);
+                    targetLoc = getOrCreateLocationByName(locMatch[1], null, tracker);
+                    blockPicName = '';
+                    blockShift = '';
+                    currentLayer = null;
                     isNonPyramidSection = false;
-                    if (currentLayer > (targetLoc.totalLayers || 5) && currentLayer <= 50) {
-                        targetLoc.totalLayers = currentLayer;
+                    return;
+                }
+
+                const susunanMatch = trimmed.match(/^Susunan\s*:\s*([\d-]+)/i);
+                if (susunanMatch && targetLoc) {
+                    targetLoc.stackPattern = generatePositionsList(susunanMatch[1]).normalizedPattern;
+                    return;
+                }
+
+                if (/^PIC\s*(?:\/\s*Tim)?\s*:/i.test(trimmed)) {
+                    const segs = trimmed.split('|');
+                    const picPart = segs[0]?.split(':')[1]?.trim();
+                    if (picPart && picPart !== '-') blockPicName = picPart;
+                    const shiftSeg = segs.find(s => /Shift\s*:/i.test(s));
+                    if (shiftSeg) {
+                        const shiftPart = shiftSeg.split(':')[1]?.trim();
+                        if (shiftPart) blockShift = shiftPart;
                     }
                     return;
                 }
 
-                // Deteksi header *NON-PIRAMID (SAMPING):*
-                if (/^\*?NON-PIRAMID/i.test(trimmed)) {
+                if (/^\*?NON[\s-]*PIRAMID/i.test(trimmed)) {
                     isNonPyramidSection = true;
                     currentLayer = null;
                     return;
                 }
 
-                // Deteksi baris item: "- Atas: No:1 | Coil:008 | Ø5.5 | Gr:SWRH52A | Heat:T690004803 | 2.344 mt | Supp:SHAGANG"
-                if ((currentLayer !== null || isNonPyramidSection) && trimmed.startsWith('-')) {
-                    const withoutDash = trimmed.replace(/^-\s*/, '');
-                    const colonIdx = withoutDash.indexOf(':');
+                const layerMatch = trimmed.match(/^\*?LAYER\s+(\d+)\s*:?\*?$/i);
+                if (layerMatch) {
+                    currentLayer = parseInt(layerMatch[1], 10);
+                    isNonPyramidSection = false;
+                    if (targetLoc && currentLayer > (targetLoc.totalLayers || 5)) {
+                        targetLoc.totalLayers = currentLayer;
+                    }
+                    return;
+                }
+
+                if (trimmed.startsWith('- ')) {
+                    const content = trimmed.slice(2);
+                    const colonIdx = content.indexOf(':');
                     if (colonIdx === -1) return;
 
-                    const posLabelRaw = withoutDash.slice(0, colonIdx).trim();
-                    const payload = withoutDash.slice(colonIdx + 1).trim();
+                    const posLabel = content.slice(0, colonIdx).trim();
+                    const detailStr = content.slice(colonIdx + 1).trim();
+                    if (!detailStr || /^\(Kosong\)$/i.test(detailStr)) return;
 
-                    if (!payload || payload === '(Kosong)') return;
-
-                    const parts = payload.split('|').map(s => s.trim());
+                    const parts = detailStr.split('|').map(p => p.trim());
                     let nomor = '';
                     let id = '';
                     let diameter = '';
@@ -2831,6 +2741,8 @@
                     let weight = '';
                     let weightUnit = 'kg';
                     let supplier = '';
+                    let itemPic = blockPicName;
+                    let itemShift = blockShift;
 
                     parts.forEach(part => {
                         if (/^No\s*:/i.test(part)) nomor = part.replace(/^No\s*:/i, '').trim();
@@ -2839,6 +2751,8 @@
                         else if (/^Gr\s*:/i.test(part)) grade = part.replace(/^Gr\s*:/i, '').trim();
                         else if (/^Heat\s*:/i.test(part)) heatNumber = part.replace(/^Heat\s*:/i, '').trim();
                         else if (/^Supp\s*:/i.test(part)) supplier = part.replace(/^Supp\s*:/i, '').trim();
+                        else if (/^(?:Tim|PIC)\s*:/i.test(part)) itemPic = part.replace(/^(?:Tim|PIC)\s*:/i, '').trim();
+                        else if (/^Shift\s*:/i.test(part)) itemShift = part.replace(/^Shift\s*:/i, '').trim();
                         else if (/^[\d.,]+\s*(kg|mt)$/i.test(part)) {
                             const wMatch = part.match(/^([\d.,]+)\s*(kg|mt)$/i);
                             if (wMatch) {
@@ -2862,15 +2776,17 @@
                             weight,
                             weightUnit,
                             supplier,
+                            picName: itemPic,
+                            shift: itemShift,
                             updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
                         };
                         if (duplicateIdx !== -1) {
-                            if (mergeMode === 'fill_empty') {
-                                tracker.skippedCount++;
-                            } else {
+                            if (overwrite) {
                                 targetLoc.nonPyramidCoils[duplicateIdx] = newItem;
                                 tracker.importedCount++;
                                 tracker.touchedLocIds.add(targetLoc.id);
+                            } else {
+                                tracker.skippedCount++;
                             }
                         } else {
                             targetLoc.nonPyramidCoils.push(newItem);
@@ -2880,19 +2796,17 @@
                         return;
                     }
 
-                    // Cocokkan posisi piramid berdasarkan pola susunan milik targetLoc
-                    const { positions: locPositions } = generatePositionsList(targetLoc.stackPattern || '3-2-1');
+                    if (!currentLayer) return;
+                    const locPositions = generatePositionsList(targetLoc.stackPattern || '3-2-1').positions;
                     const posObj = locPositions.find(p =>
-                        p.shortLabel.toLowerCase() === posLabelRaw.toLowerCase() ||
-                        p.label.toLowerCase() === posLabelRaw.toLowerCase()
+                        p.shortLabel.toLowerCase() === posLabel.toLowerCase() ||
+                        p.id.toLowerCase() === posLabel.toLowerCase()
                     );
                     if (!posObj) return;
 
-                    if (!targetLoc.coils) targetLoc.coils = {};
                     const key = `${posObj.id}_${currentLayer}`;
-                    const existing = targetLoc.coils[key];
-
-                    if (existing && existing.id && mergeMode === 'fill_empty') {
+                    if (!targetLoc.coils) targetLoc.coils = {};
+                    if (targetLoc.coils[key] && targetLoc.coils[key].id && !overwrite) {
                         tracker.skippedCount++;
                         return;
                     }
@@ -2906,6 +2820,8 @@
                         weight,
                         weightUnit,
                         supplier,
+                        picName: itemPic,
+                        shift: itemShift,
                         updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
                     };
                     tracker.importedCount++;
@@ -2913,90 +2829,158 @@
                 }
             });
 
-            if (tracker.importedCount === 0 && tracker.skippedCount === 0 && tracker.createdLocCount === 0) {
-                showToast("Tidak ada data coil valid yang terbaca dari teks tersebut.", "warning");
-                return;
+            if (tracker.touchedLocIds.size > 0 && !tracker.touchedLocIds.has(appState.activeLocationId)) {
+                appState.activeLocationId = Array.from(tracker.touchedLocIds)[0];
             }
-
-            // Muat ulang lokasi aktif apabila lokasi aktif ikut diperbarui saat impor
             loadLocationIntoActiveState(appState.activeLocationId);
             saveState();
-            syncPatternUI();
-            updateLayerCountUI();
-            populateFormForCurrentTarget();
-            resetNonPyramidForm();
-            renderAll();
             closeImportSyncModal();
-
-            const summaryParts = [`${tracker.importedCount} coil masuk (${tracker.touchedLocIds.size} lokasi)`];
-            if (tracker.createdLocCount > 0) summaryParts.push(`${tracker.createdLocCount} lokasi baru dibuat`);
-            if (tracker.skippedCount > 0) summaryParts.push(`${tracker.skippedCount} dilewati`);
-            showToast(`Sinkronisasi selesai: ${summaryParts.join(', ')}.`, "success");
+            renderAll();
+            showToast(`Sinkronisasi selesai: ${tracker.importedCount} coil masuk, ${tracker.createdLocCount} lokasi baru dibuat.`);
         }
 
-        function showConfirmModal(title, message, onConfirmCallback) {
-            const modal = document.getElementById('confirm-modal');
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-message').textContent = message;
-
-            const cancelBtn = document.getElementById('modal-cancel');
-            const confirmBtn = document.getElementById('modal-confirm');
-
-            const close = () => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            };
-
-            cancelBtn.onclick = close;
-            confirmBtn.onclick = () => {
-                close();
-                onConfirmCallback();
-            };
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        // ==========================================
+        // SIMPAN APLIKASI MANDIRI (OFFLINE HTML)
+        // ==========================================
+        function getCleanStandaloneHtml() {
+            const cloneDoc = document.documentElement.cloneNode(true);
+            // Pastikan semua modal dalam kondisi tertutup di salinan HTML
+            ['confirm-modal', 'export-modal', 'qr-scanner-modal', 'save-app-modal', 'location-modal', 'custom-pattern-modal', 'import-sync-modal'].forEach(id => {
+                const m = cloneDoc.querySelector(`#${id}`);
+                if (m) {
+                    m.classList.add('hidden');
+                    m.classList.remove('flex');
+                }
+            });
+            return '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
         }
 
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            const colors = {
-                success: 'bg-emerald-600 text-white border-emerald-500',
-                warning: 'bg-amber-500 text-slate-950 border-amber-400',
-                error: 'bg-red-600 text-white border-red-500',
-                info: 'bg-slate-800 text-white border-slate-700'
-            };
-            const icons = {
-                success: 'fa-circle-check',
-                warning: 'fa-triangle-exclamation',
-                error: 'fa-circle-xmark',
-                info: 'fa-circle-info'
-            };
-            toast.className = `${colors[type] || colors.info} border px-4 py-3 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2.5 pointer-events-auto transition-all duration-300`;
-            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm"></i><span>${escapeHTML(message)}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-8px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+        function downloadStandaloneApp() {
+            const htmlStr = getCleanStandaloneHtml();
+            const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.getElementById('direct-html-download-link');
+            if (link) link.href = url;
+            showModalEl('save-app-modal');
         }
 
-        function escapeHTML(str) {
-            if (!str) return '';
-            return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            }[tag]));
+        function closeSaveAppModal() {
+            hideModalEl('save-app-modal');
         }
 
-        // Jalankan saat halaman siap (aman untuk semua status loading browser / GitHub Pages)
+        function copyStandaloneHtml() {
+            const htmlStr = getCleanStandaloneHtml();
+            const temp = document.createElement('textarea');
+            temp.value = htmlStr;
+            temp.style.position = 'fixed';
+            temp.style.opacity = '0';
+            document.body.appendChild(temp);
+            temp.select();
+            temp.setSelectionRange(0, htmlStr.length);
+            try {
+                document.execCommand('copy');
+                showToast('Kode HTML lengkap berhasil disalin ke clipboard!');
+            } catch (e) {
+                showToast('Gagal menyalin otomatis, silakan salin dari tab editor kode.', 'error');
+            }
+            temp.remove();
+        }
+
+        // ==========================================
+        // RENDER UTAMA & INISIALISASI
+        // ==========================================
+        function updateGlobalProgress() {
+            const totalSlots = POSITIONS.length * (appState.totalLayers || 5);
+            let filled = 0;
+            for (let l = 1; l <= appState.totalLayers; l++) {
+                POSITIONS.forEach(pos => {
+                    const item = appState.coils[`${pos.id}_${l}`];
+                    if (item && item.id) filled++;
+                });
+            }
+            const badge = document.getElementById('progress-badge');
+            if (badge) badge.textContent = `${filled} / ${totalSlots}`;
+
+            const layerDisp = document.getElementById('total-layers-display');
+            if (layerDisp) layerDisp.textContent = appState.totalLayers;
+        }
+
+        function renderAll() {
+            renderLocationSelector();
+            syncPicShiftUI();
+            syncPatternDropdownUI();
+            updateGlobalProgress();
+            renderNonPyramidList();
+
+            if (currentMode === 'layer') {
+                renderLayerOverview();
+            } else if (currentMode === 'nonpyramid') {
+                prepareNonPyramidFormDefaults();
+            } else {
+                renderCrawlView();
+            }
+        }
+
+        function initApp() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        appState = { ...appState, ...parsed };
+                    }
+                }
+            } catch (e) {
+                console.warn('Memulai dengan state awal:', e);
+            }
+
+            if (!appState.locations || Object.keys(appState.locations).length === 0) {
+                const defaultLoc = createLocationRecord('loc_1', appState.bayName || 'BAY-A01', {
+                    picName: appState.picName || '',
+                    shift: appState.shift || detectCurrentShiftByTime(),
+                    stackPattern: appState.stackPattern || '3-2-1',
+                    totalLayers: appState.totalLayers || 5,
+                    activePosition: appState.activePosition || 'ATAS',
+                    selectedLayer: appState.selectedLayer || 1,
+                    crawlDirection: appState.crawlDirection || 'asc',
+                    coils: appState.coils || {},
+                    nonPyramidCoils: appState.nonPyramidCoils || []
+                });
+                appState.locations = { loc_1: defaultLoc };
+                appState.activeLocationId = 'loc_1';
+            }
+
+            if (!appState.locations[appState.activeLocationId]) {
+                appState.activeLocationId = Object.keys(appState.locations)[0];
+            }
+
+            // Sesuaikan shift otomatis berdasarkan jam aktif saat dibuka (kecuali Non-Shift)
+            if (appState.shift !== 'Non-Shift') {
+                appState.shift = detectCurrentShiftByTime();
+            }
+
+            loadLocationIntoActiveState(appState.activeLocationId);
+            saveState();
+            renderAll();
+
+            // Auto-capture clipboard saat user kembali dari membuka link Master Steel
+            window.addEventListener('focus', async () => {
+                if (!awaitingExternalCopyTarget) return;
+                const target = awaitingExternalCopyTarget;
+                awaitingExternalCopyTarget = null;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        const txt = await navigator.clipboard.readText();
+                        if (txt && /Size\s*:|Grade\s*:|Heat\s*No/i.test(txt)) {
+                            parseAndFillQrString(txt, true, target);
+                        }
+                    }
+                } catch (e) {}
+            });
+        }
+
         if (document.readyState === 'loading') {
-            window.addEventListener('DOMContentLoaded', initApp);
+            document.addEventListener('DOMContentLoaded', initApp);
         } else {
             initApp();
         }
