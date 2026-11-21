@@ -601,25 +601,27 @@
                         <p class="text-xs text-slate-500">Siap salin ke WhatsApp atau unduh Excel (CSV)</p>
                     </div>
                 </div>
-                <button onclick="closeExportModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                <button type="button" onclick="closeExportModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <div class="flex flex-col gap-2">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <label class="text-xs font-bold text-slate-600">Cakupan Ekspor:</label>
-                    <div class="flex items-center gap-3 text-xs">
-                        <label class="inline-flex items-center gap-1.5 font-semibold text-slate-800 cursor-pointer">
-                            <input type="radio" name="export-scope" value="all" checked onchange="refreshExportPreview()" class="text-emerald-600">
-                            <span>Semua Lokasi (<span id="export-loc-count">1</span>)</span>
-                        </label>
-                        <label class="inline-flex items-center gap-1.5 font-semibold text-slate-600 cursor-pointer">
-                            <input type="radio" name="export-scope" value="current" onchange="refreshExportPreview()" class="text-emerald-600">
-                            <span>Lokasi Ini Saja</span>
-                        </label>
-                    </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span class="font-bold text-slate-700">Cakupan Ekspor:</span>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                        <input type="radio" name="export-scope" value="all" checked onchange="updateExportPreview()" class="text-emerald-600">
+                        <span id="export-all-loc-label">Semua Lokasi (1)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-600">
+                        <input type="radio" name="export-scope" value="current" onchange="updateExportPreview()" class="text-emerald-600">
+                        <span>Lokasi Ini Saja</span>
+                    </label>
                 </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label for="export-text-preview" class="text-xs font-bold text-slate-700">Pratinjau Laporan Teks:</label>
                 <textarea id="export-text-preview" readonly rows="8" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-xs text-slate-800 focus:outline-none"></textarea>
             </div>
 
@@ -774,7 +776,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-900">Impor & Sinkronisasi Rekapan</h3>
-                        <p class="text-xs text-slate-500">Tempel teks rekap WhatsApp / catatan untuk digabungkan</p>
+                        <p class="text-xs text-slate-500">Unggah file .CSV atau tempel teks laporan WhatsApp</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeImportSyncModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
@@ -783,13 +785,20 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                    <label for="import-text-area" class="text-xs font-bold text-slate-700">Tempel Teks Laporan / Rekap:</label>
-                    <button type="button" onclick="pasteToImportArea()" class="text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 px-2.5 py-1 rounded-lg">
-                        <i class="fa-regular fa-paste mr-1"></i>Tempel dari Clipboard
-                    </button>
+                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                    <label for="import-text-area" class="text-xs font-bold text-slate-700">Unggah File CSV atau Tempel Teks:</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="file" id="import-csv-file" accept=".csv,text/csv" class="hidden" onchange="handleImportCsvFile(event)">
+                        <button type="button" onclick="document.getElementById('import-csv-file').click()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            <i class="fa-solid fa-file-csv"></i>
+                            <span>Pilih File .CSV</span>
+                        </button>
+                        <button type="button" onclick="pasteToImportArea()" class="text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-lg">
+                            <i class="fa-regular fa-paste mr-1"></i>Tempel
+                        </button>
+                    </div>
                 </div>
-                <textarea id="import-text-area" rows="7" placeholder="Tempel teks hasil 'Salin Teks Laporan' dari HP rekan kerja di sini...&#10;&#10;*LAYER 1:*&#10;- Atas: No:1 | Coil:008 | Ø5.5 | Gr:SWRH52A | Heat:T690004803 | 2.344 mt | Supp:SHAGANG" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 focus:outline-none focus:border-sky-500"></textarea>
+                <textarea id="import-text-area" rows="7" placeholder="Pilih file .CSV di atas atau tempel teks laporan WhatsApp / CSV di sini...&#10;&#10;Contoh Teks Laporan:&#10;*LOKASI / BAY: BAY-A01*&#10;*LAYER 1:*&#10;- Atas: No:1 | Coil:008 | Ø5.5 | Gr:SWRH52A | Heat:T690004803 | 2.344 mt | Supp:SHAGANG" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 focus:outline-none focus:border-sky-500"></textarea>
             </div>
 
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
@@ -2210,8 +2219,25 @@
         function openImportSyncModal() {
             const modal = document.getElementById('import-sync-modal');
             document.getElementById('import-text-area').value = '';
+            const fileInp = document.getElementById('import-csv-file');
+            if (fileInp) fileInp.value = '';
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+        }
+
+        function handleImportCsvFile(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target?.result || '';
+                document.getElementById('import-text-area').value = content;
+                showToast(`File "${file.name}" dimuat. Ketuk 'Sinkronkan Sekarang'.`, "info");
+            };
+            reader.onerror = () => {
+                showToast("Gagal membaca file CSV.", "error");
+            };
+            reader.readAsText(file, 'UTF-8');
         }
 
         function getCleanStandaloneHtml() {
@@ -2344,9 +2370,10 @@
                 });
             }
 
-            if (loc.nonPyramidCoils && loc.nonPyramidCoils.length > 0) {
+            const npItems = loc.nonPyramidCoils || [];
+            if (npItems.length > 0) {
                 lines.push(`\n*NON-PIRAMID (SAMPING):*`);
-                loc.nonPyramidCoils.forEach((item, idx) => {
+                npItems.forEach((item, idx) => {
                     const details = [
                         `No:${item.nomor || (idx + 1)}`,
                         `Coil:${item.id}`,
@@ -2356,36 +2383,39 @@
                         item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : '',
                         item.supplier ? `Supp:${item.supplier}` : ''
                     ].filter(Boolean).join(' | ');
-                    lines.push(`- Non-Piramid: ${details}`);
+                    lines.push(`- Samping: ${details}`);
                 });
             }
 
-            return { lines, locPositions };
+            return lines;
         }
 
-        function refreshExportPreview() {
-            const preview = document.getElementById('export-text-preview');
+        function generateReportText() {
             const locs = getLocationsForExport();
-            const totalLocCount = Object.keys(appState.locations || {}).length;
-            const countBadge = document.getElementById('export-loc-count');
-            if (countBadge) countBadge.textContent = totalLocCount;
-
-            let lines = [];
-            lines.push(`*LAPORAN DATA COIL (${locs.length} LOKASI)*`);
-            lines.push(`Waktu: ${new Date().toLocaleString('id-ID')}`);
-
-            locs.forEach(loc => {
-                const res = buildSingleLocationReportLines(loc);
-                lines.push('');
-                lines.push(...res.lines);
+            let allLines = [];
+            locs.forEach((loc, idx) => {
+                if (idx > 0) allLines.push('');
+                allLines.push(...buildSingleLocationReportLines(loc));
             });
+            return allLines.join('\n');
+        }
 
-            preview.value = lines.join('\n');
+        function updateExportPreview() {
+            const previewEl = document.getElementById('export-text-preview');
+            if (previewEl) {
+                previewEl.value = generateReportText();
+            }
         }
 
         function openExportModal() {
+            syncActiveLocationToStore();
+            const totalLocs = Object.keys(appState.locations || {}).length;
+            const labelAll = document.getElementById('export-all-loc-label');
+            if (labelAll) {
+                labelAll.textContent = `Semua Lokasi (${totalLocs})`;
+            }
+            updateExportPreview();
             const modal = document.getElementById('export-modal');
-            refreshExportPreview();
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
@@ -2402,7 +2432,7 @@
             textarea.setSelectionRange(0, 99999);
             try {
                 document.execCommand('copy');
-                showToast("Laporan berhasil disalin ke clipboard!", "success");
+                showToast("Laporan teks berhasil disalin ke clipboard!", "success");
             } catch (err) {
                 showToast("Gagal menyalin teks.", "error");
             }
@@ -2410,84 +2440,70 @@
 
         function downloadCSV() {
             const locs = getLocationsForExport();
-            let csvRows = [];
-            // Header CSV sesuai kolom input + satuan berat + posisi & layer semua lokasi
-            csvRows.push(['Lokasi_Bay', 'Susunan', 'Layer', 'Posisi', 'Nomor', 'No_Coil', 'Diameter', 'Grade', 'Heat_Number', 'Berat', 'Satuan_Berat', 'Nama_Supplier', 'Waktu_Input'].join(','));
+            const csvEscape = (val) => `"${(val || '').toString().replace(/"/g, '""')}"`;
+
+            let csvRows = [
+                ['Lokasi_Bay', 'Susunan', 'Layer', 'Posisi', 'Nomor', 'No_Coil', 'Diameter', 'Grade', 'Heat_Number', 'Berat', 'Satuan_Berat', 'Nama_Supplier', 'Waktu_Input'].join(',')
+            ];
 
             locs.forEach(loc => {
-                const { locPositions } = buildSingleLocationReportLines(loc);
+                const { positions: locPositions } = generatePositionsList(loc.stackPattern || '3-2-1');
                 const maxLayer = loc.totalLayers || 5;
 
                 for (let l = 1; l <= maxLayer; l++) {
                     locPositions.forEach(pos => {
-                        const item = (loc.coils || {})[`${pos.id}_${l}`];
-                        const row = [
-                            `"${(loc.name || '').replace(/"/g, '""')}"`,
-                            `"${loc.stackPattern || '3-2-1'}"`,
+                        const item = (loc.coils || {})[`${pos.id}_${l}`] || {};
+                        csvRows.push([
+                            csvEscape(loc.name),
+                            csvEscape(loc.stackPattern || '3-2-1'),
                             l,
-                            `"${pos.shortLabel}"`,
-                            `"${(item?.nomor || '').replace(/"/g, '""')}"`,
-                            `"${(item?.id || '').replace(/"/g, '""')}"`,
-                            `"${(item?.diameter || '').replace(/"/g, '""')}"`,
-                            `"${(item?.grade || '').replace(/"/g, '""')}"`,
-                            `"${(item?.heatNumber || '').replace(/"/g, '""')}"`,
-                            `"${(item?.weight || '').replace(/"/g, '""')}"`,
-                            `"${item?.weight ? (item?.weightUnit || 'kg') : ''}"`,
-                            `"${(item?.supplier || '').replace(/"/g, '""')}"`,
-                            `"${item?.updatedAt || ''}"`
-                        ];
-                        csvRows.push(row.join(','));
+                            csvEscape(pos.shortLabel),
+                            csvEscape(item.nomor || ''),
+                            csvEscape(item.id || ''),
+                            csvEscape(item.diameter || ''),
+                            csvEscape(item.grade || ''),
+                            csvEscape(item.heatNumber || ''),
+                            csvEscape(item.weight || ''),
+                            csvEscape(item.id ? (item.weightUnit || 'kg') : ''),
+                            csvEscape(item.supplier || ''),
+                            csvEscape(item.updatedAt || '')
+                        ].join(','));
                     });
                 }
 
                 (loc.nonPyramidCoils || []).forEach((item, idx) => {
-                    const row = [
-                        `"${(loc.name || '').replace(/"/g, '""')}"`,
-                        `"${loc.stackPattern || '3-2-1'}"`,
-                        `"Non-Piramid"`,
-                        `"Samping"`,
-                        `"${(item?.nomor || (idx + 1).toString()).replace(/"/g, '""')}"`,
-                        `"${(item?.id || '').replace(/"/g, '""')}"`,
-                        `"${(item?.diameter || '').replace(/"/g, '""')}"`,
-                        `"${(item?.grade || '').replace(/"/g, '""')}"`,
-                        `"${(item?.heatNumber || '').replace(/"/g, '""')}"`,
-                        `"${(item?.weight || '').replace(/"/g, '""')}"`,
-                        `"${item?.weight ? (item?.weightUnit || 'kg') : ''}"`,
-                        `"${(item?.supplier || '').replace(/"/g, '""')}"`,
-                        `"${item?.updatedAt || ''}"`
-                    ];
-                    csvRows.push(row.join(','));
+                    csvRows.push([
+                        csvEscape(loc.name),
+                        csvEscape('NON-PIRAMID'),
+                        csvEscape('Non-Piramid'),
+                        csvEscape('Samping'),
+                        csvEscape(item.nomor || (idx + 1).toString()),
+                        csvEscape(item.id || ''),
+                        csvEscape(item.diameter || ''),
+                        csvEscape(item.grade || ''),
+                        csvEscape(item.heatNumber || ''),
+                        csvEscape(item.weight || ''),
+                        csvEscape(item.id ? (item.weightUnit || 'kg') : ''),
+                        csvEscape(item.supplier || ''),
+                        csvEscape(item.updatedAt || '')
+                    ].join(','));
                 });
             });
 
-            const fileLabel = locs.length > 1 ? `SemuaLokasi_${locs.length}Bay` : appState.bayName;
             const csvString = '\uFEFF' + csvRows.join('\n');
             const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `CoilStack_${fileLabel}_${new Date().toISOString().slice(0,10)}.csv`);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const filePrefix = locs.length > 1 ? 'SEMUA-LOKASI' : (locs[0]?.name || 'BAY').replace(/[^a-zA-Z0-9_-]/g, '');
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `CoilStack_${filePrefix}_${dateStr}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast(`File CSV (${locs.length} lokasi) berhasil diunduh!`, "success");
-        }
-
-        function confirmResetAll() {
-            showConfirmModal(
-                `Reset Data Lokasi "${appState.bayName}"?`,
-                `Seluruh data coil di lokasi ${appState.bayName} akan dikosongkan. Lokasi lain tidak akan terhapus.`,
-                () => {
-                    appState.coils = {};
-                    appState.nonPyramidCoils = [];
-                    appState.selectedLayer = appState.crawlDirection === 'desc' ? appState.totalLayers : 1;
-                    saveState();
-                    populateFormForCurrentTarget();
-                    resetNonPyramidForm();
-                    renderAll();
-                    showToast(`Data lokasi ${appState.bayName} telah direset.`, "info");
-                }
-            );
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+            showToast("File CSV berhasil diunduh!", "success");
         }
 
         function closeImportSyncModal() {
@@ -2500,10 +2516,10 @@
             const area = document.getElementById('import-text-area');
             try {
                 if (navigator.clipboard && navigator.clipboard.readText) {
-                    const text = await navigator.clipboard.readText();
-                    if (text) {
-                        area.value = text;
-                        showToast("Teks ditempel dari clipboard!", "success");
+                    const clip = await navigator.clipboard.readText();
+                    if (clip) {
+                        area.value = clip;
+                        showToast("Teks ditempel dari clipboard.", "info");
                         return;
                     }
                 }
@@ -2512,25 +2528,236 @@
             showToast("Tekan & tahan di kotak teks lalu pilih Tempel (Paste).", "info");
         }
 
+        function confirmResetAll() {
+            showConfirmModal(
+                `Reset Data ${appState.bayName}?`,
+                `Semua data coil piramid dan non-piramid di lokasi ${appState.bayName} akan dihapus permanen. Lokasi lain tetap aman.`,
+                () => {
+                    appState.coils = {};
+                    appState.nonPyramidCoils = [];
+                    appState.selectedLayer = appState.crawlDirection === 'desc' ? appState.totalLayers : 1;
+                    saveState();
+                    updateLayerCountUI();
+                    populateFormForCurrentTarget();
+                    resetNonPyramidForm();
+                    renderAll();
+                    showToast(`Data lokasi ${appState.bayName} telah direset.`, "info");
+                }
+            );
+        }
+
+        function parseCsvLine(line, delimiter = ',') {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === delimiter && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function getOrCreateLocationByName(locName, patternHint, tracker) {
+            const cleanName = (locName || '').trim().toUpperCase();
+            if (!cleanName) return appState.locations[appState.activeLocationId];
+
+            const existingLoc = Object.values(appState.locations).find(
+                l => (l.name || '').trim().toUpperCase() === cleanName
+            );
+            if (existingLoc) {
+                if (patternHint) {
+                    const { normalizedPattern } = generatePositionsList(patternHint);
+                    existingLoc.stackPattern = normalizedPattern;
+                }
+                return existingLoc;
+            }
+
+            const newId = 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+            const normalizedPat = patternHint
+                ? generatePositionsList(patternHint).normalizedPattern
+                : (appState.stackPattern || '3-2-1');
+            const newLoc = createLocationRecord(newId, cleanName, {
+                stackPattern: normalizedPat,
+                totalLayers: 5
+            });
+            appState.locations[newId] = newLoc;
+            tracker.createdLocCount++;
+            return newLoc;
+        }
+
+        function processCsvImport(rawText, mergeMode) {
+            const cleanText = rawText.replace(/^\uFEFF/, '');
+            const lines = cleanText.split(/\r?\n/).filter(l => l.trim() !== '');
+            if (lines.length < 2) return null;
+
+            const delimiter = (lines[0].split(';').length > lines[0].split(',').length) ? ';' : ',';
+            const headers = parseCsvLine(lines[0], delimiter).map(h => h.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+
+            // Validasi apakah baris pertama merupakan header CSV CoilStack
+            const idxCoil = headers.findIndex(h => h === 'no_coil' || h === 'nocoil' || h === 'coil');
+            const idxPos = headers.findIndex(h => h === 'posisi' || h === 'position');
+            if (idxCoil === -1 && idxPos === -1) return null;
+
+            const idxLoc = headers.findIndex(h => h === 'lokasi_bay' || h === 'lokasi' || h === 'bay');
+            const idxSusunan = headers.findIndex(h => h === 'susunan' || h === 'pattern');
+            const idxLayer = headers.findIndex(h => h === 'layer');
+            const idxNomor = headers.findIndex(h => h === 'nomor' || h === 'no');
+            const idxDia = headers.findIndex(h => h === 'diameter');
+            const idxGrade = headers.findIndex(h => h === 'grade');
+            const idxHeat = headers.findIndex(h => h === 'heat_number' || h === 'heatnumber' || h === 'heat');
+            const idxWeight = headers.findIndex(h => h === 'berat' || h === 'weight');
+            const idxUnit = headers.findIndex(h => h === 'satuan_berat' || h === 'satuan' || h === 'unit');
+            const idxSupp = headers.findIndex(h => h === 'nama_supplier' || h === 'supplier');
+            const idxTime = headers.findIndex(h => h === 'waktu_input' || h === 'waktu');
+
+            const tracker = { importedCount: 0, skippedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
+
+            for (let i = 1; i < lines.length; cols = null, i++) {
+                const cols = parseCsvLine(lines[i], delimiter);
+                const id = idxCoil >= 0 ? (cols[idxCoil] || '').trim().toUpperCase() : '';
+                const nomor = idxNomor >= 0 ? (cols[idxNomor] || '').trim().toUpperCase() : '';
+                if (!id && !nomor) continue;
+
+                const locName = idxLoc >= 0 ? (cols[idxLoc] || '').trim() : '';
+                const patternHint = idxSusunan >= 0 ? (cols[idxSusunan] || '').trim() : '';
+                const targetLoc = getOrCreateLocationByName(locName, patternHint, tracker);
+
+                const layerRaw = idxLayer >= 0 ? (cols[idxLayer] || '').trim() : '';
+                const posLabelRaw = idxPos >= 0 ? (cols[idxPos] || '').trim() : '';
+                const diameter = idxDia >= 0 ? (cols[idxDia] || '').trim() : '';
+                const grade = idxGrade >= 0 ? (cols[idxGrade] || '').trim().toUpperCase() : '';
+                const heatNumber = idxHeat >= 0 ? (cols[idxHeat] || '').trim().toUpperCase() : '';
+                const weight = idxWeight >= 0 ? (cols[idxWeight] || '').trim() : '';
+                const unitRaw = idxUnit >= 0 ? (cols[idxUnit] || '').trim().toLowerCase() : '';
+                const weightUnit = (unitRaw === 'mt' || unitRaw === 'ton') ? 'mt' : 'kg';
+                const supplier = idxSupp >= 0 ? (cols[idxSupp] || '').trim() : '';
+                const updatedAt = (idxTime >= 0 && cols[idxTime]) ? cols[idxTime].trim() : new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                const isNonPyramid = /non[\s-]*piramid/i.test(layerRaw) || /^samping$/i.test(posLabelRaw);
+                if (isNonPyramid) {
+                    if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
+                    const dupIdx = targetLoc.nonPyramidCoils.findIndex(c => c.id && c.id === id);
+                    const itemObj = {
+                        nomor: nomor || (targetLoc.nonPyramidCoils.length + 1).toString(),
+                        id: id || nomor,
+                        diameter,
+                        grade,
+                        heatNumber,
+                        weight,
+                        weightUnit,
+                        supplier,
+                        updatedAt
+                    };
+                    if (dupIdx !== -1) {
+                        if (mergeMode === 'fill_empty') {
+                            tracker.skippedCount++;
+                        } else {
+                            targetLoc.nonPyramidCoils[dupIdx] = itemObj;
+                            tracker.importedCount++;
+                            tracker.touchedLocIds.add(targetLoc.id);
+                        }
+                    } else {
+                        targetLoc.nonPyramidCoils.push(itemObj);
+                        tracker.importedCount++;
+                        tracker.touchedLocIds.add(targetLoc.id);
+                    }
+                    continue;
+                }
+
+                const layerNum = parseInt(layerRaw.replace(/[^\d]/g, ''), 10);
+                if (!layerNum || layerNum < 1 || layerNum > 50) continue;
+                if (layerNum > (targetLoc.totalLayers || 5)) {
+                    targetLoc.totalLayers = layerNum;
+                }
+
+                const { positions: locPositions } = generatePositionsList(targetLoc.stackPattern || '3-2-1');
+                const posObj = locPositions.find(p =>
+                    p.shortLabel.toLowerCase() === posLabelRaw.toLowerCase() ||
+                    p.label.toLowerCase() === posLabelRaw.toLowerCase() ||
+                    p.id.toLowerCase() === posLabelRaw.toLowerCase()
+                );
+                if (!posObj) continue;
+
+                if (!targetLoc.coils) targetLoc.coils = {};
+                const key = `${posObj.id}_${layerNum}`;
+                const existing = targetLoc.coils[key];
+                if (existing && existing.id && mergeMode === 'fill_empty') {
+                    tracker.skippedCount++;
+                    continue;
+                }
+
+                targetLoc.coils[key] = {
+                    nomor: nomor || posObj.seq.toString(),
+                    id: id || nomor,
+                    diameter,
+                    grade,
+                    heatNumber,
+                    weight,
+                    weightUnit,
+                    supplier,
+                    updatedAt
+                };
+                tracker.importedCount++;
+                tracker.touchedLocIds.add(targetLoc.id);
+            }
+
+            return tracker;
+        }
+
         function processImportSync() {
             const rawText = document.getElementById('import-text-area').value.trim();
             if (!rawText) {
-                showToast("Tempelkan teks rekapan terlebih dahulu!", "warning");
+                showToast("Pilih file CSV atau tempelkan teks rekapan terlebih dahulu!", "warning");
                 return;
             }
 
             syncActiveLocationToStore();
             const mergeMode = document.querySelector('input[name="merge-mode"]:checked')?.value || 'fill_empty';
+
+            // 1. Coba proses sebagai CSV terlebih dahulu apabila formatnya sesuai header CSV
+            const csvResult = processCsvImport(rawText, mergeMode);
+            if (csvResult !== null) {
+                if (csvResult.importedCount === 0 && csvResult.skippedCount === 0 && csvResult.createdLocCount === 0) {
+                    showToast("File CSV terbaca, namun tidak ada baris data coil yang terisi.", "warning");
+                    return;
+                }
+                loadLocationIntoActiveState(appState.activeLocationId);
+                saveState();
+                syncPatternUI();
+                updateLayerCountUI();
+                populateFormForCurrentTarget();
+                resetNonPyramidForm();
+                renderAll();
+                closeImportSyncModal();
+
+                const summaryParts = [`${csvResult.importedCount} coil masuk (${csvResult.touchedLocIds.size} lokasi)`];
+                if (csvResult.createdLocCount > 0) summaryParts.push(`${csvResult.createdLocCount} lokasi baru dibuat`);
+                if (csvResult.skippedCount > 0) summaryParts.push(`${csvResult.skippedCount} dilewati`);
+                showToast(`Impor CSV selesai: ${summaryParts.join(', ')}.`, "success");
+                return;
+            }
+
+            // 2. Jika bukan CSV, lanjutkan parsing format teks laporan WhatsApp
             const lines = rawText.split(/\r?\n/);
 
             // Default diarahkan ke lokasi aktif apabila teks tempelan tidak mencantumkan header LOKASI / BAY
             let targetLoc = appState.locations[appState.activeLocationId];
             let currentLayer = null;
             let isNonPyramidSection = false;
-            let importedCount = 0;
-            let skippedCount = 0;
-            let createdLocCount = 0;
-            const touchedLocIds = new Set();
+            const tracker = { importedCount: 0, skippedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
 
             lines.forEach(line => {
                 const trimmed = line.trim();
@@ -2541,21 +2768,7 @@
                 if (locMatch) {
                     const locName = locMatch[1].trim().toUpperCase();
                     if (locName) {
-                        const existingLoc = Object.values(appState.locations).find(
-                            l => (l.name || '').trim().toUpperCase() === locName
-                        );
-                        if (existingLoc) {
-                            targetLoc = existingLoc;
-                        } else {
-                            const newId = 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-                            const newLoc = createLocationRecord(newId, locName, {
-                                stackPattern: appState.stackPattern || '3-2-1',
-                                totalLayers: 5
-                            });
-                            appState.locations[newId] = newLoc;
-                            targetLoc = newLoc;
-                            createdLocCount++;
-                        }
+                        targetLoc = getOrCreateLocationByName(locName, null, tracker);
                         currentLayer = null;
                         isNonPyramidSection = false;
                     }
@@ -2653,16 +2866,16 @@
                         };
                         if (duplicateIdx !== -1) {
                             if (mergeMode === 'fill_empty') {
-                                skippedCount++;
+                                tracker.skippedCount++;
                             } else {
                                 targetLoc.nonPyramidCoils[duplicateIdx] = newItem;
-                                importedCount++;
-                                touchedLocIds.add(targetLoc.id);
+                                tracker.importedCount++;
+                                tracker.touchedLocIds.add(targetLoc.id);
                             }
                         } else {
                             targetLoc.nonPyramidCoils.push(newItem);
-                            importedCount++;
-                            touchedLocIds.add(targetLoc.id);
+                            tracker.importedCount++;
+                            tracker.touchedLocIds.add(targetLoc.id);
                         }
                         return;
                     }
@@ -2680,7 +2893,7 @@
                     const existing = targetLoc.coils[key];
 
                     if (existing && existing.id && mergeMode === 'fill_empty') {
-                        skippedCount++;
+                        tracker.skippedCount++;
                         return;
                     }
 
@@ -2695,12 +2908,12 @@
                         supplier,
                         updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
                     };
-                    importedCount++;
-                    touchedLocIds.add(targetLoc.id);
+                    tracker.importedCount++;
+                    tracker.touchedLocIds.add(targetLoc.id);
                 }
             });
 
-            if (importedCount === 0 && skippedCount === 0 && createdLocCount === 0) {
+            if (tracker.importedCount === 0 && tracker.skippedCount === 0 && tracker.createdLocCount === 0) {
                 showToast("Tidak ada data coil valid yang terbaca dari teks tersebut.", "warning");
                 return;
             }
@@ -2715,9 +2928,9 @@
             renderAll();
             closeImportSyncModal();
 
-            const summaryParts = [`${importedCount} coil masuk (${touchedLocIds.size} lokasi)`];
-            if (createdLocCount > 0) summaryParts.push(`${createdLocCount} lokasi baru dibuat`);
-            if (skippedCount > 0) summaryParts.push(`${skippedCount} dilewati`);
+            const summaryParts = [`${tracker.importedCount} coil masuk (${tracker.touchedLocIds.size} lokasi)`];
+            if (tracker.createdLocCount > 0) summaryParts.push(`${tracker.createdLocCount} lokasi baru dibuat`);
+            if (tracker.skippedCount > 0) summaryParts.push(`${tracker.skippedCount} dilewati`);
             showToast(`Sinkronisasi selesai: ${summaryParts.join(', ')}.`, "success");
         }
 
