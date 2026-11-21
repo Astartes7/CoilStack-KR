@@ -823,7 +823,7 @@
         // Pola disimpan dari bawah ke atas, contoh: [3, 2, 1] -> Bawah 3, Tengah 2, Atas 1
         let POSITIONS = [];
 
-        function buildPositionsFromPattern(patternStr) {
+        function generatePositionsList(patternStr) {
             const bottomToTop = (patternStr || '3-2-1')
                 .split('-')
                 .map(n => parseInt(n.trim(), 10))
@@ -871,8 +871,16 @@
                     });
                 }
             }
-            POSITIONS = generated;
-            return validPattern.join('-');
+            return {
+                positions: generated,
+                normalizedPattern: validPattern.join('-')
+            };
+        }
+
+        function buildPositionsFromPattern(patternStr) {
+            const res = generatePositionsList(patternStr);
+            POSITIONS = res.positions;
+            return res.normalizedPattern;
         }
 
         function getAutoSequenceNumber(posId, layerNum) {
@@ -2511,35 +2519,75 @@
                 return;
             }
 
+            syncActiveLocationToStore();
             const mergeMode = document.querySelector('input[name="merge-mode"]:checked')?.value || 'fill_empty';
             const lines = rawText.split(/\r?\n/);
 
+            // Default diarahkan ke lokasi aktif apabila teks tempelan tidak mencantumkan header LOKASI / BAY
+            let targetLoc = appState.locations[appState.activeLocationId];
             let currentLayer = null;
             let isNonPyramidSection = false;
             let importedCount = 0;
             let skippedCount = 0;
-            let maxDetectedLayer = appState.totalLayers;
-
-            // Cek jika ada baris Susunan: ...
-            const patternLine = lines.find(l => /^Susunan\s*:/i.test(l.trim()));
-            if (patternLine) {
-                const patMatch = patternLine.split(':')[1]?.trim();
-                if (patMatch && patMatch !== appState.stackPattern) {
-                    appState.stackPattern = buildPositionsFromPattern(patMatch);
-                    syncPatternUI();
-                }
-            }
+            let createdLocCount = 0;
+            const touchedLocIds = new Set();
 
             lines.forEach(line => {
                 const trimmed = line.trim();
                 if (!trimmed) return;
+
+                // Deteksi header lokasi: "*LOKASI / BAY: BAY-A02*" atau "LOKASI: TIMBANGAN-2"
+                const locMatch = trimmed.match(/^\*?LOKASI\s*(?:\/\s*BAY)?\s*:\s*([^*]+)\*?$/i);
+                if (locMatch) {
+                    const locName = locMatch[1].trim().toUpperCase();
+                    if (locName) {
+                        const existingLoc = Object.values(appState.locations).find(
+                            l => (l.name || '').trim().toUpperCase() === locName
+                        );
+                        if (existingLoc) {
+                            targetLoc = existingLoc;
+                        } else {
+                            const newId = 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                            const newLoc = createLocationRecord(newId, locName, {
+                                stackPattern: appState.stackPattern || '3-2-1',
+                                totalLayers: 5
+                            });
+                            appState.locations[newId] = newLoc;
+                            targetLoc = newLoc;
+                            createdLocCount++;
+                        }
+                        currentLayer = null;
+                        isNonPyramidSection = false;
+                    }
+                    return;
+                }
+
+                // Deteksi baris konfigurasi: "Susunan: 3-2-1 | Total Layer: 5"
+                if (/^Susunan\s*:/i.test(trimmed)) {
+                    const patSegment = trimmed.split('|')[0];
+                    const patRaw = patSegment.split(':')[1]?.trim();
+                    if (patRaw) {
+                        const { normalizedPattern } = generatePositionsList(patRaw);
+                        targetLoc.stackPattern = normalizedPattern;
+                    }
+                    const layerInfoMatch = trimmed.match(/Total\s+Layer\s*:\s*(\d+)/i);
+                    if (layerInfoMatch) {
+                        const parsedTotal = parseInt(layerInfoMatch[1], 10);
+                        if (parsedTotal > (targetLoc.totalLayers || 5) && parsedTotal <= 50) {
+                            targetLoc.totalLayers = parsedTotal;
+                        }
+                    }
+                    return;
+                }
 
                 // Deteksi header *LAYER X:* atau LAYER X:
                 const layerMatch = trimmed.match(/^\*?LAYER\s+(\d+)\s*:?\*?$/i);
                 if (layerMatch) {
                     currentLayer = parseInt(layerMatch[1], 10);
                     isNonPyramidSection = false;
-                    if (currentLayer > maxDetectedLayer) maxDetectedLayer = currentLayer;
+                    if (currentLayer > (targetLoc.totalLayers || 5) && currentLayer <= 50) {
+                        targetLoc.totalLayers = currentLayer;
+                    }
                     return;
                 }
 
@@ -2590,9 +2638,10 @@
                     if (!id && !nomor) return;
 
                     if (isNonPyramidSection) {
-                        const duplicateIdx = appState.nonPyramidCoils.findIndex(c => c.id && c.id === id);
+                        if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
+                        const duplicateIdx = targetLoc.nonPyramidCoils.findIndex(c => c.id && c.id === id);
                         const newItem = {
-                            nomor: nomor || (appState.nonPyramidCoils.length + 1).toString(),
+                            nomor: nomor || (targetLoc.nonPyramidCoils.length + 1).toString(),
                             id: id || nomor,
                             diameter,
                             grade,
@@ -2606,33 +2655,37 @@
                             if (mergeMode === 'fill_empty') {
                                 skippedCount++;
                             } else {
-                                appState.nonPyramidCoils[duplicateIdx] = newItem;
+                                targetLoc.nonPyramidCoils[duplicateIdx] = newItem;
                                 importedCount++;
+                                touchedLocIds.add(targetLoc.id);
                             }
                         } else {
-                            appState.nonPyramidCoils.push(newItem);
+                            targetLoc.nonPyramidCoils.push(newItem);
                             importedCount++;
+                            touchedLocIds.add(targetLoc.id);
                         }
                         return;
                     }
 
-                    // Cocokkan posisi piramid berdasarkan shortLabel atau label
-                    const posObj = POSITIONS.find(p =>
+                    // Cocokkan posisi piramid berdasarkan pola susunan milik targetLoc
+                    const { positions: locPositions } = generatePositionsList(targetLoc.stackPattern || '3-2-1');
+                    const posObj = locPositions.find(p =>
                         p.shortLabel.toLowerCase() === posLabelRaw.toLowerCase() ||
                         p.label.toLowerCase() === posLabelRaw.toLowerCase()
                     );
                     if (!posObj) return;
 
+                    if (!targetLoc.coils) targetLoc.coils = {};
                     const key = `${posObj.id}_${currentLayer}`;
-                    const existing = appState.coils[key];
+                    const existing = targetLoc.coils[key];
 
                     if (existing && existing.id && mergeMode === 'fill_empty') {
                         skippedCount++;
                         return;
                     }
 
-                    appState.coils[key] = {
-                        nomor: nomor || getAutoSequenceNumber(posObj.id, currentLayer),
+                    targetLoc.coils[key] = {
+                        nomor: nomor || posObj.seq.toString(),
                         id: id || nomor,
                         diameter,
                         grade,
@@ -2643,24 +2696,29 @@
                         updatedAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
                     };
                     importedCount++;
+                    touchedLocIds.add(targetLoc.id);
                 }
             });
 
-            if (importedCount === 0 && skippedCount === 0) {
+            if (importedCount === 0 && skippedCount === 0 && createdLocCount === 0) {
                 showToast("Tidak ada data coil valid yang terbaca dari teks tersebut.", "warning");
                 return;
             }
 
-            if (maxDetectedLayer > appState.totalLayers && maxDetectedLayer <= 50) {
-                appState.totalLayers = maxDetectedLayer;
-            }
-
+            // Muat ulang lokasi aktif apabila lokasi aktif ikut diperbarui saat impor
+            loadLocationIntoActiveState(appState.activeLocationId);
             saveState();
+            syncPatternUI();
             updateLayerCountUI();
             populateFormForCurrentTarget();
+            resetNonPyramidForm();
             renderAll();
             closeImportSyncModal();
-            showToast(`Sinkronisasi selesai: ${importedCount} coil masuk${skippedCount > 0 ? `, ${skippedCount} dilewati` : ''}.`, "success");
+
+            const summaryParts = [`${importedCount} coil masuk (${touchedLocIds.size} lokasi)`];
+            if (createdLocCount > 0) summaryParts.push(`${createdLocCount} lokasi baru dibuat`);
+            if (skippedCount > 0) summaryParts.push(`${skippedCount} dilewati`);
+            showToast(`Sinkronisasi selesai: ${summaryParts.join(', ')}.`, "success");
         }
 
         function showConfirmModal(title, message, onConfirmCallback) {
