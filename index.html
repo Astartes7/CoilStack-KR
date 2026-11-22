@@ -388,10 +388,19 @@
                     </div>
 
                     <!-- Tombol Submit -->
-                    <button type="submit" class="mt-1 w-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-extrabold py-3 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md">
-                        <i class="fa-solid fa-check"></i>
-                        <span>Simpan & Lanjut ke Layer Berikutnya</span>
-                    </button>
+                    <div class="mt-1 flex rounded-xl shadow-md overflow-hidden border border-amber-400/30">
+                        <button type="submit" class="flex-1 min-w-0 bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-slate-950 font-extrabold py-3 px-4 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Simpan</span>
+                        </button>
+                        <select id="quick-save-action" aria-label="Opsi lanjutan setelah menyimpan"
+                            title="Pilih tindakan setelah menyimpan"
+                            class="w-[78px] sm:w-[116px] bg-amber-600 hover:bg-amber-500 text-slate-950 border-l border-amber-400/60 px-2 text-xs font-bold focus:outline-none cursor-pointer">
+                            <option value="save">Simpan saja</option>
+                            <option value="next-row">Lanjut baris</option>
+                            <option value="next-layer">Lanjut layer</option>
+                        </select>
+                    </div>
                 </form>
 
                 <!-- Daftar Layer pada Posisi Terpilih -->
@@ -2135,19 +2144,20 @@
             }
 
             const key = `${appState.activePosition}_${appState.selectedLayer}`;
+            const saveAction = document.getElementById('quick-save-action')?.value || 'save';
             const dup = findDuplicateCoil(idVal, { pyramidKey: key });
             if (dup) {
                 showConfirmModal(
                     'No. Coil Duplikat',
                     `No. Coil ${idVal} sudah terdaftar di ${describeDuplicate(dup)}. Tetap simpan di slot ini?`,
-                    () => performQuickSave(idVal, key)
+                    () => performQuickSave(idVal, key, saveAction)
                 );
                 return;
             }
-            performQuickSave(idVal, key);
+            performQuickSave(idVal, key, saveAction);
         }
 
-        function performQuickSave(idVal, key) {
+        function performQuickSave(idVal, key, saveAction = 'save') {
             const nomorVal = document.getElementById('coil-nomor-input').value.trim().toUpperCase() || getAutoSequenceNumber(appState.activePosition);
             const weightUnit = document.getElementById('coil-weight-unit').value || 'kg';
             appState.defaultWeightUnit = weightUnit;
@@ -2173,18 +2183,28 @@
             };
 
             const savedLayer = appState.selectedLayer;
-            // Maju ke layer berikutnya sesuai arah merangkak
-            if (appState.crawlDirection === 'desc') {
-                if (appState.selectedLayer > 1) {
-                    appState.selectedLayer--;
+            if (saveAction === 'next-row') {
+                // Baris berikutnya: maju mundur sesuai arah input yang dipilih.
+                if (appState.crawlDirection === 'desc') {
+                    if (appState.selectedLayer > 1) {
+                        appState.selectedLayer--;
+                    } else {
+                        showToast('Baris terakhir posisi ini sudah tercapai.', 'info');
+                    }
                 } else {
-                    showToast(`Layer 1 selesai! Semua layer di posisi ini sudah tercapai.`);
+                    if (appState.selectedLayer < appState.totalLayers) {
+                        appState.selectedLayer++;
+                    } else {
+                        showToast('Baris terakhir posisi ini sudah tercapai.', 'info');
+                    }
                 }
-            } else {
-                if (appState.selectedLayer < appState.totalLayers) {
-                    appState.selectedLayer++;
-                } else {
-                    showToast(`Layer ${savedLayer} selesai! Semua layer di posisi ini sudah tercapai.`);
+            } else if (saveAction === 'next-layer') {
+                // Layer berikutnya: pindah ke posisi piramid berikutnya.
+                const posIndex = POSITIONS.findIndex(pos => pos.id === appState.activePosition);
+                if (posIndex >= 0) {
+                    const nextPosition = POSITIONS[(posIndex + 1) % POSITIONS.length];
+                    appState.activePosition = nextPosition.id;
+                    appState.selectedLayer = getFirstEmptyLayerForPosition(nextPosition.id);
                 }
             }
 
