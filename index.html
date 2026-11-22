@@ -981,12 +981,9 @@
             const keyMatch = /^(.+)_(\d+)$/.exec(String(excludeKey || ''));
             if (keyMatch) {
                 const posId = keyMatch[1];
-                const layer = parseInt(keyMatch[2], 10);
                 const locPositions = generatePositionsList((loc && loc.stackPattern) || '3-2-1').positions;
                 const pos = locPositions.find(p => p.id === posId);
-                if (pos && !isNaN(layer) && layer > 0) {
-                    return String((layer - 1) * locPositions.length + pos.seq);
-                }
+                if (pos) return String(pos.seq);
             }
 
             const used = new Set();
@@ -1010,17 +1007,16 @@
                 const keyMatch = /^(.+)_(\d+)$/.exec(String(key));
                 if (!keyMatch) return;
                 const pos = positions.find(p => p.id === keyMatch[1]);
-                const layer = parseInt(keyMatch[2], 10);
-                if (!pos || isNaN(layer) || layer < 1) return;
+                if (!pos) return;
 
-                const canonicalNomor = String((layer - 1) * positions.length + pos.seq);
+                const canonicalNomor = String(pos.seq);
                 if (String(rec.nomor || '') !== canonicalNomor) {
                     rec.nomor = canonicalNomor;
                     changedCount++;
                 }
             });
 
-            loc.pyramidSequenceVersion = 2;
+            loc.pyramidSequenceVersion = 3;
             return changedCount;
         }
 
@@ -3822,7 +3818,7 @@
 
             let migratedSequenceCount = 0;
             Object.values(appState.locations).forEach(loc => {
-                if (loc.pyramidSequenceVersion !== 2) {
+                if (loc.pyramidSequenceVersion !== 3) {
                     migratedSequenceCount += migratePyramidSequenceNumbers(loc);
                 }
             });
