@@ -397,8 +397,8 @@
                             title="Pilih tindakan setelah menyimpan"
                             class="w-[78px] sm:w-[116px] bg-amber-600 hover:bg-amber-500 text-slate-950 border-l border-amber-400/60 px-2 text-xs font-bold focus:outline-none cursor-pointer">
                             <option value="save">Simpan saja</option>
-                            <option value="next-row">Lanjut baris</option>
-                            <option value="next-layer">Lanjut layer</option>
+                            <option value="next-position">Lanjut Posisi</option>
+                            <option value="next-layer">Lanjut Layer</option>
                         </select>
                     </div>
                 </form>
@@ -2183,28 +2183,28 @@
             };
 
             const savedLayer = appState.selectedLayer;
-            if (saveAction === 'next-row') {
-                // Baris berikutnya: maju mundur sesuai arah input yang dipilih.
-                if (appState.crawlDirection === 'desc') {
-                    if (appState.selectedLayer > 1) {
-                        appState.selectedLayer--;
-                    } else {
-                        showToast('Baris terakhir posisi ini sudah tercapai.', 'info');
-                    }
-                } else {
-                    if (appState.selectedLayer < appState.totalLayers) {
-                        appState.selectedLayer++;
-                    } else {
-                        showToast('Baris terakhir posisi ini sudah tercapai.', 'info');
-                    }
-                }
-            } else if (saveAction === 'next-layer') {
-                // Layer berikutnya: pindah ke posisi piramid berikutnya.
+            if (saveAction === 'next-position') {
+                // Posisi berikutnya: pindah ke posisi piramid berikutnya.
                 const posIndex = POSITIONS.findIndex(pos => pos.id === appState.activePosition);
                 if (posIndex >= 0) {
                     const nextPosition = POSITIONS[(posIndex + 1) % POSITIONS.length];
                     appState.activePosition = nextPosition.id;
                     appState.selectedLayer = getFirstEmptyLayerForPosition(nextPosition.id);
+                }
+            } else if (saveAction === 'next-layer') {
+                // Layer berikutnya: maju mundur pada posisi yang sama sesuai arah input.
+                if (appState.crawlDirection === 'desc') {
+                    if (appState.selectedLayer > 1) {
+                        appState.selectedLayer--;
+                    } else {
+                        showToast('Layer terakhir posisi ini sudah tercapai.', 'info');
+                    }
+                } else {
+                    if (appState.selectedLayer < appState.totalLayers) {
+                        appState.selectedLayer++;
+                    } else {
+                        showToast('Layer terakhir posisi ini sudah tercapai.', 'info');
+                    }
                 }
             }
 
