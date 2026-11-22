@@ -978,6 +978,17 @@
         }
 
         function getNextCoilNomorInLocation(loc, excludeKey) {
+            const keyMatch = /^(.+)_(\d+)$/.exec(String(excludeKey || ''));
+            if (keyMatch) {
+                const posId = keyMatch[1];
+                const layer = parseInt(keyMatch[2], 10);
+                const locPositions = generatePositionsList((loc && loc.stackPattern) || '3-2-1').positions;
+                const pos = locPositions.find(p => p.id === posId);
+                if (pos && !isNaN(layer) && layer > 0) {
+                    return String((layer - 1) * locPositions.length + pos.seq);
+                }
+            }
+
             const used = new Set();
             Object.entries((loc && loc.coils) || {}).forEach(([key, rec]) => {
                 if (key === excludeKey || !rec) return;
