@@ -606,7 +606,7 @@
                 </div>
             </div>
 
-            <!-- Tabel Ringkasan Semua Layer -->
+            <!-- Daftar Lengkap Semua Coil -->
             <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 overflow-hidden">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-bold text-slate-900">Daftar Lengkap Coil (<span id="overview-bay-name">BAY-A01</span>)</h3>
@@ -614,27 +614,8 @@
                         <i class="fa-solid fa-trash-can mr-1"></i> Reset Lokasi Ini
                     </button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
-                                <th class="p-2.5 font-bold">Layer</th>
-                                <th class="p-2.5 font-bold">Posisi</th>
-                                <th class="p-2.5 font-bold">Nomor</th>
-                                <th class="p-2.5 font-bold">No. Coil</th>
-                                <th class="p-2.5 font-bold">Diameter</th>
-                                <th class="p-2.5 font-bold">Grade</th>
-                                <th class="p-2.5 font-bold">Heat Number</th>
-                                <th class="p-2.5 font-bold">Berat</th>
-                                <th class="p-2.5 font-bold">Supplier</th>
-                                <th class="p-2.5 font-bold">Tim / PIC</th>
-                                <th class="p-2.5 font-bold">Shift</th>
-                            </tr>
-                        </thead>
-                        <tbody id="matrix-table-body" class="divide-y divide-slate-100 font-mono">
-                            <!-- Diisi dinamis -->
-                        </tbody>
-                    </table>
+                <div id="matrix-table-body" class="grid grid-cols-1 lg:grid-cols-2 gap-2.5 max-h-[520px] overflow-y-auto pr-1">
+                    <!-- Daftar kartu lengkap dirender dinamis -->
                 </div>
             </div>
         </section>
@@ -665,10 +646,13 @@
                     <option value="heat">No. Heat</option>
                     <option value="grade">Grade</option>
                 </select>
-                <div class="relative">
+                <div class="relative flex items-center">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="search" id="search-query" oninput="updateSearchResults()" placeholder="Masukkan kata kunci..." autocomplete="off"
-                        class="w-full bg-slate-100 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-sm font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500">
+                    <input type="search" id="search-query" oninput="updateSearchResults()" placeholder="Cari atau lihat semua coil..." autocomplete="off"
+                        class="w-full bg-slate-100 border border-slate-300 rounded-xl pl-9 pr-10 py-2.5 text-sm font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500">
+                    <button type="button" onclick="clearSearchQuery()" title="Kosongkan pencarian" class="absolute right-2 w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-500 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
                 </div>
             </div>
 
@@ -2717,9 +2701,9 @@
         }
 
         function renderMatrixTable() {
-            const tbody = document.getElementById('matrix-table-body');
-            if (!tbody) return;
-            tbody.innerHTML = '';
+            const container = document.getElementById('matrix-table-body');
+            if (!container) return;
+            container.innerHTML = '';
 
             let rowCount = 0;
             for (let l = 1; l <= appState.totalLayers; l++) {
@@ -2727,49 +2711,53 @@
                     const item = appState.coils[`${pos.id}_${l}`];
                     if (!item || !item.id) return;
                     rowCount++;
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-amber-50/50 cursor-pointer';
-                    tr.onclick = () => editLayerItem(pos.id, l);
-                    tr.innerHTML = `
-                        <td class="p-2.5 font-bold text-amber-700">L${l}</td>
-                        <td class="p-2.5 font-sans text-slate-700">${escapeHTML(pos.shortLabel)}</td>
-                        <td class="p-2.5 text-slate-600">${escapeHTML(item.nomor || '-')}</td>
-                        <td class="p-2.5 font-bold text-slate-900">${escapeHTML(item.id)}</td>
-                        <td class="p-2.5 text-slate-600">${escapeHTML(item.diameter || '-')}</td>
-                        <td class="p-2.5 text-slate-600">${escapeHTML(item.grade || '-')}</td>
-                        <td class="p-2.5 text-slate-600">${escapeHTML(item.heatNumber || '-')}</td>
-                        <td class="p-2.5 text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</td>
-                        <td class="p-2.5 font-sans text-slate-600">${escapeHTML(item.supplier || '-')}</td>
-                        <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || appState.picName || '-')}</td>
-                        <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || appState.shift || '-')}</td>
-                    `;
-                    tbody.appendChild(tr);
+                    const card = document.createElement('div');
+                    card.className = 'rounded-xl border border-amber-200 bg-amber-50/40 p-3 cursor-pointer hover:border-amber-400 transition';
+                    card.onclick = () => editLayerItem(pos.id, l);
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded-lg">L${l} - ${escapeHTML(pos.shortLabel)}</span>
+                            <span class="text-[10px] font-mono font-bold text-slate-500">Nomor ${escapeHTML(item.nomor || '-')}</span>
+                        </div>
+                        <div class="text-sm font-mono font-extrabold text-slate-900 mb-2">${escapeHTML(item.id)}</div>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                            <div><span class="text-slate-400">Heat:</span> <b class="text-slate-700">${escapeHTML(item.heatNumber || '-')}</b></div>
+                            <div><span class="text-slate-400">Grade:</span> <b class="text-slate-700">${escapeHTML(item.grade || '-')}</b></div>
+                            <div><span class="text-slate-400">Diameter:</span> <b class="text-slate-700">${escapeHTML(item.diameter ? `Ø${item.diameter}` : '-')}</b></div>
+                            <div><span class="text-slate-400">Berat:</span> <b class="text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</b></div>
+                            <div><span class="text-slate-400">Supplier:</span> <b class="text-slate-700">${escapeHTML(item.supplier || '-')}</b></div>
+                            <div><span class="text-slate-400">PIC:</span> <b class="text-slate-700">${escapeHTML(item.picName || appState.picName || '-')}</b></div>
+                            <div class="col-span-2"><span class="text-slate-400">Shift:</span> <b class="text-sky-700">${escapeHTML(item.shift || appState.shift || '-')}</b></div>
+                        </div>`;
+                    container.appendChild(card);
                 });
             }
 
             (appState.nonPyramidCoils || []).forEach((item, idx) => {
                 rowCount++;
-                const tr = document.createElement('tr');
-                tr.className = 'bg-sky-50/40 hover:bg-sky-50 cursor-pointer';
-                tr.onclick = () => { switchMode('nonpyramid'); editNonPyramidItem(idx); };
-                tr.innerHTML = `
-                    <td class="p-2.5 font-bold text-sky-700">Non-Piramid</td>
-                    <td class="p-2.5 font-sans text-slate-700">Samping</td>
-                    <td class="p-2.5 text-slate-600">${escapeHTML(item.nomor || (idx + 1).toString())}</td>
-                    <td class="p-2.5 font-bold text-slate-900">${escapeHTML(item.id)}</td>
-                    <td class="p-2.5 text-slate-600">${escapeHTML(item.diameter || '-')}</td>
-                    <td class="p-2.5 text-slate-600">${escapeHTML(item.grade || '-')}</td>
-                    <td class="p-2.5 text-slate-600">${escapeHTML(item.heatNumber || '-')}</td>
-                    <td class="p-2.5 text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</td>
-                    <td class="p-2.5 font-sans text-slate-600">${escapeHTML(item.supplier || '-')}</td>
-                    <td class="p-2.5 font-sans font-semibold text-slate-700">${escapeHTML(item.picName || appState.picName || '-')}</td>
-                    <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || appState.shift || '-')}</td>
-                `;
-                tbody.appendChild(tr);
+                const card = document.createElement('div');
+                card.className = 'rounded-xl border border-sky-200 bg-sky-50/40 p-3 cursor-pointer hover:border-sky-400 transition';
+                card.onclick = () => { switchMode('nonpyramid'); editNonPyramidItem(idx); };
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-xs font-bold text-sky-700 bg-sky-100 px-2 py-1 rounded-lg">Non-Piramid - Samping</span>
+                        <span class="text-[10px] font-mono font-bold text-slate-500">Nomor ${escapeHTML(item.nomor || (idx + 1).toString())}</span>
+                    </div>
+                    <div class="text-sm font-mono font-extrabold text-slate-900 mb-2">${escapeHTML(item.id)}</div>
+                    <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                        <div><span class="text-slate-400">Heat:</span> <b class="text-slate-700">${escapeHTML(item.heatNumber || '-')}</b></div>
+                        <div><span class="text-slate-400">Grade:</span> <b class="text-slate-700">${escapeHTML(item.grade || '-')}</b></div>
+                        <div><span class="text-slate-400">Diameter:</span> <b class="text-slate-700">${escapeHTML(item.diameter ? `Ø${item.diameter}` : '-')}</b></div>
+                        <div><span class="text-slate-400">Berat:</span> <b class="text-slate-700">${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : '-'}</b></div>
+                        <div><span class="text-slate-400">Supplier:</span> <b class="text-slate-700">${escapeHTML(item.supplier || '-')}</b></div>
+                        <div><span class="text-slate-400">PIC:</span> <b class="text-slate-700">${escapeHTML(item.picName || appState.picName || '-')}</b></div>
+                        <div class="col-span-2"><span class="text-slate-400">Shift:</span> <b class="text-sky-700">${escapeHTML(item.shift || appState.shift || '-')}</b></div>
+                    </div>`;
+                container.appendChild(card);
             });
 
             if (rowCount === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="p-6 text-center font-sans text-slate-400 italic">Belum ada data coil yang diinput pada lokasi ini.</td></tr>`;
+                container.innerHTML = `<div class="col-span-full py-8 text-center font-sans text-slate-400 italic">Belum ada data coil yang diinput pada lokasi ini.</div>`;
             }
         }
 
@@ -3160,6 +3148,13 @@
             hideModalEl('search-modal');
         }
 
+        function clearSearchQuery() {
+            const input = document.getElementById('search-query');
+            if (input) input.value = '';
+            updateSearchResults();
+            input?.focus();
+        }
+
         function getSearchLocations() {
             syncActiveStateToLocation();
             const scopeEl = document.querySelector('input[name="search-scope"]:checked');
@@ -3183,6 +3178,8 @@
                     results.push({
                         locationId: loc.id,
                         locationName: loc.name || 'Lokasi',
+                        locationPicName: loc.picName || '',
+                        locationShift: loc.shift || '',
                         type: 'pyramid',
                         posId,
                         posLabel: pos ? pos.shortLabel : posId,
@@ -3196,6 +3193,8 @@
                     results.push({
                         locationId: loc.id,
                         locationName: loc.name || 'Lokasi',
+                        locationPicName: loc.picName || '',
+                        locationShift: loc.shift || '',
                         type: 'nonpyramid',
                         index,
                         posLabel: 'Samping',
@@ -3216,17 +3215,6 @@
 
             const query = queryInput.value.trim().toUpperCase();
             searchResults = [];
-
-            if (!query) {
-                if (countEl) countEl.textContent = '0 hasil';
-                container.innerHTML = `
-                    <div class="py-10 text-center text-xs text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass mb-2 text-lg"></i>
-                        <div>Masukkan kata kunci untuk mencari data coil.</div>
-                    </div>`;
-                return;
-            }
-
             const fieldMap = {
                 id: 'id',
                 heat: 'heatNumber',
@@ -3234,9 +3222,17 @@
             };
             const field = fieldMap[typeSelect.value] || 'id';
 
-            searchResults = collectSearchResults(getSearchLocations()).filter(result => {
-                const value = String(result.item[field] || '').trim().toUpperCase();
-                return value.includes(query);
+            searchResults = collectSearchResults(getSearchLocations()).filter(result =>
+                !query || String(result.item[field] || '').trim().toUpperCase().includes(query)
+            );
+            searchResults.sort((a, b) => {
+                if (a.locationName !== b.locationName) return a.locationName.localeCompare(b.locationName);
+                if (a.type !== b.type) return a.type === 'pyramid' ? -1 : 1;
+                if (a.type === 'pyramid' && b.type === 'pyramid') {
+                    if (a.layer !== b.layer) return Number(a.layer) - Number(b.layer);
+                    return a.posLabel.localeCompare(b.posLabel);
+                }
+                return (parseInt(a.item.nomor || a.index + 1, 10) || 0) - (parseInt(b.item.nomor || b.index + 1, 10) || 0);
             });
 
             if (countEl) countEl.textContent = `${searchResults.length} hasil`;
@@ -3245,7 +3241,7 @@
                 container.innerHTML = `
                     <div class="py-10 text-center text-xs text-slate-400">
                         <i class="fa-solid fa-box-open mb-2 text-lg"></i>
-                        <div>Tidak ada data yang cocok.</div>
+                        <div>${query ? 'Tidak ada data yang cocok.' : 'Belum ada data coil pada cakupan pilihan.'}</div>
                     </div>`;
                 return;
             }
@@ -3259,6 +3255,7 @@
                 const weight = item.weight
                     ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}`
                     : '-';
+                const diameter = item.diameter ? `Ø${escapeHTML(item.diameter)}` : '-';
 
                 return `
                     <div class="rounded-xl border ${isPyramid ? 'border-amber-200 bg-amber-50/40' : 'border-sky-200 bg-sky-50/40'} p-3 flex items-start justify-between gap-3">
@@ -3267,11 +3264,16 @@
                                 <span class="${isPyramid ? 'text-amber-700 bg-amber-100' : 'text-sky-700 bg-sky-100'} px-2 py-0.5 rounded-full text-[10px] font-bold">${escapeHTML(result.locationName)}</span>
                                 <span class="text-[10px] font-bold text-slate-500">${escapeHTML(positionText)}</span>
                             </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1 text-xs">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-1 text-xs">
                                 <div><span class="text-slate-400">No. Coil:</span> <b class="font-mono text-slate-900">${escapeHTML(item.id || '-')}</b></div>
                                 <div><span class="text-slate-400">Heat:</span> <b class="font-mono text-slate-700">${escapeHTML(item.heatNumber || '-')}</b></div>
                                 <div><span class="text-slate-400">Grade:</span> <b class="font-mono text-slate-700">${escapeHTML(item.grade || '-')}</b></div>
+                                <div><span class="text-slate-400">Nomor:</span> <b class="font-mono text-slate-700">${escapeHTML(item.nomor || '-')}</b></div>
+                                <div><span class="text-slate-400">Diameter:</span> <b class="font-mono text-slate-700">${diameter}</b></div>
                                 <div><span class="text-slate-400">Berat:</span> <b class="font-mono text-slate-700">${weight}</b></div>
+                                <div><span class="text-slate-400">Supplier:</span> <b class="text-slate-700">${escapeHTML(item.supplier || '-')}</b></div>
+                                <div><span class="text-slate-400">PIC:</span> <b class="text-slate-700">${escapeHTML(item.picName || result.locationPicName || '-')}</b></div>
+                                <div><span class="text-slate-400">Shift:</span> <b class="font-mono text-sky-700">${escapeHTML(item.shift || result.locationShift || '-')}</b></div>
                             </div>
                         </div>
                         <button type="button" onclick="editSearchResult(${index})" class="shrink-0 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
