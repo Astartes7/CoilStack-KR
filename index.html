@@ -92,6 +92,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2">
+                <button type="button" onclick="openSummaryModal()" title="Ringkasan total coil, layer, berat, dan area susunan" class="bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span class="hidden sm:inline">Ringkasan</span>
+                </button>
                 <button type="button" onclick="openImportSyncModal()" title="Impor & gabungkan rekapan CSV atau WhatsApp" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-file-import"></i>
                     <span class="hidden sm:inline">Impor / Gabung</span>
@@ -632,6 +636,60 @@
         </section>
 
     </main>
+
+    <!-- Modal Ringkasan Data -->
+    <div id="summary-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 max-h-[90vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Ringkasan Detail Coil</h3>
+                        <p class="text-xs text-slate-500">Total coil, area susunan, berat, dan komposisi</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSummaryModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span class="font-bold text-slate-700">Cakupan Ringkasan:</span>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                        <input type="radio" name="summary-scope" value="current" checked onchange="updateSummaryModal()" class="text-violet-600">
+                        Lokasi Ini Saja
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-600">
+                        <input type="radio" name="summary-scope" value="all" onchange="updateSummaryModal()" class="text-violet-600">
+                        <span id="summary-all-loc-label">Semua Lokasi</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="summary-metrics" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <h4 class="text-xs font-bold text-slate-700 mb-2">Komposisi Diameter</h4>
+                    <div id="summary-diameters" class="text-xs text-slate-600 flex flex-col gap-1"></div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <h4 class="text-xs font-bold text-slate-700 mb-2">Komposisi Grade</h4>
+                    <div id="summary-grades" class="text-xs text-slate-600 flex flex-col gap-1"></div>
+                </div>
+            </div>
+
+            <textarea id="summary-text-preview" readonly rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 font-mono text-xs text-slate-100 focus:outline-none"></textarea>
+
+            <button type="button" onclick="copySummaryText()" class="w-full py-2.5 px-4 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
+                <i class="fa-regular fa-copy"></i>
+                <span>Salin Ringkasan</span>
+            </button>
+        </div>
+    </div>
 
     <!-- Modal Ekspor & Rekap Data -->
     <div id="export-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
@@ -3020,6 +3078,175 @@
         // ==========================================
         // EKSPOR LAPORAN WHATSAPP & CSV (EXCEL)
         // ==========================================
+        function openSummaryModal() {
+            syncActiveStateToLocation();
+            const locCount = Object.keys(appState.locations).length;
+            const lbl = document.getElementById('summary-all-loc-label');
+            if (lbl) lbl.textContent = `Semua Lokasi (${locCount})`;
+            updateSummaryModal();
+            showModalEl('summary-modal');
+        }
+
+        function closeSummaryModal() {
+            hideModalEl('summary-modal');
+        }
+
+        function getSelectedSummaryLocations() {
+            syncActiveStateToLocation();
+            const scopeEl = document.querySelector('input[name="summary-scope"]:checked');
+            const scope = scopeEl ? scopeEl.value : 'current';
+            if (scope === 'all') return Object.values(appState.locations);
+            return [appState.locations[appState.activeLocationId]].filter(Boolean);
+        }
+
+        function normalizeSummaryWeight(item) {
+            const parsed = parseFloat(String(item.weight || '').replace(',', '.'));
+            if (isNaN(parsed) || parsed <= 0) return 0;
+            return String(item.weightUnit || 'kg').toLowerCase() === 'mt' ? parsed * 1000 : parsed;
+        }
+
+        function formatSummaryNumber(value, decimals = 2) {
+            return value.toLocaleString('id-ID', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: decimals
+            });
+        }
+
+        function getSummaryData(locs) {
+            let pyramidCount = 0;
+            let nonPyramidCount = 0;
+            let slotCapacity = 0;
+            let occupiedSlots = 0;
+            let occupiedLayers = 0;
+            let maxLayerCount = 0;
+            let weightKg = 0;
+            const diameters = new Map();
+            const grades = new Map();
+
+            locs.forEach(loc => {
+                const positions = generatePositionsList(loc.stackPattern || '3-2-1').positions;
+                const maxLayer = parseInt(loc.totalLayers || 1, 10);
+                slotCapacity += positions.length * maxLayer;
+                maxLayerCount += maxLayer;
+
+                let locOccupiedLayerCount = 0;
+                for (let layer = 1; layer <= maxLayer; layer++) {
+                    let layerOccupied = false;
+                    positions.forEach(pos => {
+                        const item = (loc.coils || {})[`${pos.id}_${layer}`];
+                        if (item && item.id) {
+                            pyramidCount++;
+                            occupiedSlots++;
+                            layerOccupied = true;
+                            weightKg += normalizeSummaryWeight(item);
+
+                            const diameter = String(item.diameter || '-').trim() || '-';
+                            diameters.set(diameter, (diameters.get(diameter) || 0) + 1);
+                            const grade = String(item.grade || '-').trim() || '-';
+                            grades.set(grade, (grades.get(grade) || 0) + 1);
+                        }
+                    });
+                    if (layerOccupied) locOccupiedLayerCount++;
+                }
+                occupiedLayers += locOccupiedLayerCount;
+
+                (loc.nonPyramidCoils || []).forEach(item => {
+                    if (!item || !item.id) return;
+                    nonPyramidCount++;
+                    weightKg += normalizeSummaryWeight(item);
+                    const diameter = String(item.diameter || '-').trim() || '-';
+                    diameters.set(diameter, (diameters.get(diameter) || 0) + 1);
+                    const grade = String(item.grade || '-').trim() || '-';
+                    grades.set(grade, (grades.get(grade) || 0) + 1);
+                });
+            });
+
+            return {
+                pyramidCount,
+                nonPyramidCount,
+                totalCount: pyramidCount + nonPyramidCount,
+                slotCapacity,
+                occupiedSlots,
+                emptySlots: Math.max(slotCapacity - occupiedSlots, 0),
+                occupiedAreaPercent: slotCapacity > 0 ? (occupiedSlots / slotCapacity) * 100 : 0,
+                occupiedLayers,
+                maxLayerCount,
+                weightKg,
+                diameters,
+                grades
+            };
+        }
+
+        function renderSummaryBreakdown(containerId, values) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            if (!values.size) {
+                container.innerHTML = '<span class="text-slate-400 italic">Belum ada data</span>';
+                return;
+            }
+            Array.from(values.entries())
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'id'))
+                .forEach(([label, count]) => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between gap-3';
+                    row.innerHTML = `<span>${escapeHTML(label)}</span><b class="font-mono text-slate-900">${count} coil</b>`;
+                    container.appendChild(row);
+                });
+        }
+
+        function updateSummaryModal() {
+            const locs = getSelectedSummaryLocations();
+            const scopeEl = document.querySelector('input[name="summary-scope"]:checked');
+            const isAll = scopeEl ? scopeEl.value === 'all' : false;
+            const data = getSummaryData(locs);
+
+            const metricCards = [
+                ['Total Coil', data.totalCount.toString(), 'Piramid + Non-Piramid'],
+                ['Koil Piramid', data.pyramidCount.toString(), 'Data pada susunan'],
+                ['Koil Non-Piramid', data.nonPyramidCount.toString(), 'Koil lepas/samping'],
+                ['Area Terisi', `${formatSummaryNumber(data.occupiedAreaPercent, 1)}%`, `${data.occupiedSlots} dari ${data.slotCapacity} slot`],
+                ['Slot Kosong', data.emptySlots.toString(), 'Dari seluruh slot piramid'],
+                ['Layer Terisi', data.occupiedLayers.toString(), `Dari ${data.maxLayerCount} layer tersedia`],
+                ['Berat KG', `${formatSummaryNumber(data.weightKg)} kg`, 'Konversi otomatis'],
+                ['Berat MT', `${formatSummaryNumber(data.weightKg / 1000, 3)} mt`, '1 mt = 1000 kg'],
+                ['Lokasi', locs.length.toString(), isAll ? 'Cakupan semua lokasi' : 'Lokasi aktif']
+            ];
+
+            const metricsContainer = document.getElementById('summary-metrics');
+            metricsContainer.innerHTML = metricCards.map(([title, value, subtitle]) => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 min-h-[92px]">
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500">${escapeHTML(title)}</div>
+                    <div class="mt-1 text-xl font-mono font-extrabold text-slate-900">${escapeHTML(value)}</div>
+                    <div class="mt-1 text-[10px] text-slate-500">${escapeHTML(subtitle)}</div>
+                </div>
+            `).join('');
+
+            renderSummaryBreakdown('summary-diameters', data.diameters);
+            renderSummaryBreakdown('summary-grades', data.grades);
+
+            const scopeLabel = isAll ? 'Semua Lokasi' : (locs[0]?.name || 'Lokasi Aktif');
+            const text = [
+                '*RINGKASAN COILSTACK BY HAN*',
+                `Cakupan: ${scopeLabel}`,
+                `Total Coil: ${data.totalCount}`,
+                `- Piramid: ${data.pyramidCount}`,
+                `- Non-Piramid: ${data.nonPyramidCount}`,
+                `Area Susunan Terisi: ${formatSummaryNumber(data.occupiedAreaPercent, 1)}% (${data.occupiedSlots}/${data.slotCapacity} slot)`,
+                `Slot Kosong: ${data.emptySlots}`,
+                `Layer Terisi: ${data.occupiedLayers} dari ${data.maxLayerCount}`,
+                `Total Berat: ${formatSummaryNumber(data.weightKg)} kg (${formatSummaryNumber(data.weightKg / 1000, 3)} mt)`,
+                `Waktu Cetak: ${new Date().toLocaleString('id-ID')}`
+            ].join('\n');
+            document.getElementById('summary-text-preview').value = text;
+        }
+
+        async function copySummaryText() {
+            const text = document.getElementById('summary-text-preview').value;
+            const ok = await copyTextToClipboard(text);
+            showToast(ok ? 'Ringkasan disalin!' : 'Gagal menyalin ringkasan.', ok ? 'success' : 'error');
+        }
+
         function openExportModal() {
             syncActiveStateToLocation();
             const locCount = Object.keys(appState.locations).length;
