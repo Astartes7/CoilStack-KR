@@ -92,6 +92,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-1.5 sm:gap-2">
+                <button type="button" onclick="openSearchModal()" title="Cari coil berdasarkan nomor coil, heat number, atau grade" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span class="hidden sm:inline">Cari</span>
+                </button>
                 <button type="button" onclick="openSummaryModal()" title="Ringkasan total coil, layer, berat, dan area susunan" class="bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span class="hidden sm:inline">Ringkasan</span>
@@ -636,6 +640,61 @@
         </section>
 
     </main>
+
+    <!-- Modal Pencarian Data Coil -->
+    <div id="search-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-4 sm:p-5 shadow-2xl border border-slate-200 flex flex-col gap-3 max-h-[92vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Cari Data Coil</h3>
+                        <p class="text-xs text-slate-500">Cari berdasarkan No. Coil, No. Heat, atau Grade</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSearchModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-2">
+                <select id="search-type" onchange="updateSearchResults()" class="bg-slate-100 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:border-sky-500">
+                    <option value="id">No. Coil</option>
+                    <option value="heat">No. Heat</option>
+                    <option value="grade">Grade</option>
+                </select>
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="search" id="search-query" oninput="updateSearchResults()" placeholder="Masukkan kata kunci..." autocomplete="off"
+                        class="w-full bg-slate-100 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-sm font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                <span class="font-bold text-slate-700">Cari di:</span>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                        <input type="radio" name="search-scope" value="current" checked onchange="updateSearchResults()" class="text-sky-600">
+                        Lokasi Ini
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-600">
+                        <input type="radio" name="search-scope" value="all" onchange="updateSearchResults()" class="text-sky-600">
+                        <span id="search-all-loc-label">Semua Lokasi</span>
+                    </label>
+                </div>
+                <span id="search-result-count" class="font-mono font-bold text-sky-700">0 hasil</span>
+            </div>
+
+            <div id="search-results" class="flex flex-col gap-2 overflow-y-auto pr-1 min-h-[120px] max-h-[55vh]">
+                <div class="py-10 text-center text-xs text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass mb-2 text-lg"></i>
+                    <div>Masukkan kata kunci untuk mencari data coil.</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Ringkasan Data -->
     <div id="summary-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
@@ -1203,6 +1262,7 @@
         let activeQrTarget = 'pyramid';
         let awaitingExternalCopyTarget = null;
         let saveStateTimer = null;
+        let searchResults = [];
 
         // ==========================================
         // HELPER UI & MODAL
@@ -3078,6 +3138,170 @@
         // ==========================================
         // EKSPOR LAPORAN WHATSAPP & CSV (EXCEL)
         // ==========================================
+        function openSearchModal() {
+            syncActiveStateToLocation();
+            const locCount = Object.keys(appState.locations || {}).length;
+            const lbl = document.getElementById('search-all-loc-label');
+            if (lbl) lbl.textContent = `Semua Lokasi (${locCount})`;
+            showModalEl('search-modal');
+            updateSearchResults();
+            setTimeout(() => document.getElementById('search-query')?.focus(), 50);
+        }
+
+        function closeSearchModal() {
+            hideModalEl('search-modal');
+        }
+
+        function getSearchLocations() {
+            syncActiveStateToLocation();
+            const scopeEl = document.querySelector('input[name="search-scope"]:checked');
+            const scope = scopeEl ? scopeEl.value : 'current';
+            if (scope === 'all') return Object.values(appState.locations || {});
+            return [(appState.locations || {})[appState.activeLocationId]].filter(Boolean);
+        }
+
+        function collectSearchResults(locs) {
+            const results = [];
+            locs.forEach(loc => {
+                const positions = generatePositionsList(loc.stackPattern || '3-2-1').positions;
+                const posById = new Map(positions.map(pos => [pos.id, pos]));
+
+                Object.entries(loc.coils || {}).forEach(([key, item]) => {
+                    if (!item || !item.id) return;
+                    const parts = key.split('_');
+                    const layer = parseInt(parts.pop(), 10);
+                    const posId = parts.join('_');
+                    const pos = posById.get(posId);
+                    results.push({
+                        locationId: loc.id,
+                        locationName: loc.name || 'Lokasi',
+                        type: 'pyramid',
+                        posId,
+                        posLabel: pos ? pos.shortLabel : posId,
+                        layer: isNaN(layer) ? '-' : layer,
+                        item
+                    });
+                });
+
+                (loc.nonPyramidCoils || []).forEach((item, index) => {
+                    if (!item || !item.id) return;
+                    results.push({
+                        locationId: loc.id,
+                        locationName: loc.name || 'Lokasi',
+                        type: 'nonpyramid',
+                        index,
+                        posLabel: 'Samping',
+                        layer: '-',
+                        item
+                    });
+                });
+            });
+            return results;
+        }
+
+        function updateSearchResults() {
+            const queryInput = document.getElementById('search-query');
+            const typeSelect = document.getElementById('search-type');
+            const container = document.getElementById('search-results');
+            const countEl = document.getElementById('search-result-count');
+            if (!queryInput || !typeSelect || !container) return;
+
+            const query = queryInput.value.trim().toUpperCase();
+            searchResults = [];
+
+            if (!query) {
+                if (countEl) countEl.textContent = '0 hasil';
+                container.innerHTML = `
+                    <div class="py-10 text-center text-xs text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass mb-2 text-lg"></i>
+                        <div>Masukkan kata kunci untuk mencari data coil.</div>
+                    </div>`;
+                return;
+            }
+
+            const fieldMap = {
+                id: 'id',
+                heat: 'heatNumber',
+                grade: 'grade'
+            };
+            const field = fieldMap[typeSelect.value] || 'id';
+
+            searchResults = collectSearchResults(getSearchLocations()).filter(result => {
+                const value = String(result.item[field] || '').trim().toUpperCase();
+                return value.includes(query);
+            });
+
+            if (countEl) countEl.textContent = `${searchResults.length} hasil`;
+
+            if (searchResults.length === 0) {
+                container.innerHTML = `
+                    <div class="py-10 text-center text-xs text-slate-400">
+                        <i class="fa-solid fa-box-open mb-2 text-lg"></i>
+                        <div>Tidak ada data yang cocok.</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = searchResults.map((result, index) => {
+                const item = result.item;
+                const isPyramid = result.type === 'pyramid';
+                const positionText = isPyramid
+                    ? `L${result.layer} - ${result.posLabel}`
+                    : 'Non-Piramid - Samping';
+                const weight = item.weight
+                    ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}`
+                    : '-';
+
+                return `
+                    <div class="rounded-xl border ${isPyramid ? 'border-amber-200 bg-amber-50/40' : 'border-sky-200 bg-sky-50/40'} p-3 flex items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                <span class="${isPyramid ? 'text-amber-700 bg-amber-100' : 'text-sky-700 bg-sky-100'} px-2 py-0.5 rounded-full text-[10px] font-bold">${escapeHTML(result.locationName)}</span>
+                                <span class="text-[10px] font-bold text-slate-500">${escapeHTML(positionText)}</span>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1 text-xs">
+                                <div><span class="text-slate-400">No. Coil:</span> <b class="font-mono text-slate-900">${escapeHTML(item.id || '-')}</b></div>
+                                <div><span class="text-slate-400">Heat:</span> <b class="font-mono text-slate-700">${escapeHTML(item.heatNumber || '-')}</b></div>
+                                <div><span class="text-slate-400">Grade:</span> <b class="font-mono text-slate-700">${escapeHTML(item.grade || '-')}</b></div>
+                                <div><span class="text-slate-400">Berat:</span> <b class="font-mono text-slate-700">${weight}</b></div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="editSearchResult(${index})" class="shrink-0 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-pen"></i>
+                            <span>Edit</span>
+                        </button>
+                    </div>`;
+            }).join('');
+        }
+
+        function editSearchResult(index) {
+            const result = searchResults[index];
+            if (!result) return;
+
+            syncActiveStateToLocation();
+            if (appState.activeLocationId !== result.locationId) {
+                switchLocation(result.locationId);
+            }
+
+            closeSearchModal();
+
+            if (result.type === 'pyramid') {
+                appState.activePosition = result.posId;
+                appState.selectedLayer = result.layer;
+                switchMode('crawl');
+                setTimeout(() => {
+                    populateFormForCurrentSlot();
+                    const target = document.getElementById('quick-input-form');
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 30);
+            } else {
+                switchMode('nonpyramid');
+                setTimeout(() => {
+                    editNonPyramidItem(result.index);
+                }, 30);
+            }
+        }
+
         function openSummaryModal() {
             syncActiveStateToLocation();
             const locCount = Object.keys(appState.locations).length;
