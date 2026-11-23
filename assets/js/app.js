@@ -932,12 +932,14 @@
             const views = {
                 crawl: document.getElementById('view-crawl'),
                 nonpyramid: document.getElementById('view-nonpyramid'),
-                layer: document.getElementById('view-layer')
+                layer: document.getElementById('view-layer'),
+                production: document.getElementById('view-production')
             };
             const tabs = {
                 crawl: document.getElementById('tab-crawl'),
                 nonpyramid: document.getElementById('tab-nonpyramid'),
-                layer: document.getElementById('tab-layer')
+                layer: document.getElementById('tab-layer'),
+                production: document.getElementById('tab-production')
             };
 
             Object.keys(views).forEach(k => {
@@ -965,6 +967,8 @@
             } else if (mode === 'nonpyramid') {
                 renderNonPyramidList();
                 prepareNonPyramidFormDefaults();
+            } else if (mode === 'production') {
+                renderProductionUsageList();
             } else {
                 renderCrawlView();
             }
@@ -2090,6 +2094,167 @@
             showToast(`Status coil diubah menjadi ${getCoilStatusLabel(item.status)}`, 'info');
         }
 
+        function getProductionCoilRecords() {
+            syncActiveStateToLocation();
+            const records = [];
+            const positions = generatePositionsList(appState.stackPattern || '3-2-1').positions;
+            positions.forEach(pos => {
+                for (let layer = 1; layer <= (appState.totalLayers || 1); layer++) {
+                    const item = (appState.coils || {})[`${pos.id}_${layer}`];
+                    if (!item || !item.id) continue;
+                    records.push({
+                        type: 'pyramid',
+                        posId: pos.id,
+                        position: pos.shortLabel,
+                        layer,
+                        index: null,
+                        item
+                    });
+                }
+            });
+            (appState.nonPyramidCoils || []).forEach((item, index) => {
+                if (!item || !item.id) return;
+                records.push({
+                    type: 'nonpyramid',
+                    posId: null,
+                    position: 'Samping',
+                    layer: null,
+                    index,
+                    item
+                });
+            });
+            return records;
+        }
+
+        function renderProductionUsageList(query = '') {
+            const list = document.getElementById('production-coil-list');
+            if (!list) return;
+            const badge = document.getElementById('production-location-badge');
+            if (badge) badge.textContent = appState.bayName || 'Lokasi';
+
+            const statusFilter = document.getElementById('production-status-filter')?.value || 'AKTIF';
+            const normalizedQuery = normalizeDuplicateValue(query);
+            const records = getProductionCoilRecords().filter(record => {
+                const item = record.item;
+                const status = normalizeCoilStatus(item.status);
+                if (statusFilter !== 'ALL' && status !== statusFilter) return false;
+                if (!normalizedQuery) return true;
+                return [item.id, item.nomor, item.heatNumber, item.grade, item.supplier]
+                    .some(value => normalizeDuplicateValue(value).includes(normalizedQuery));
+            });
+
+            if (records.length === 0) {
+                list.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200">${normalizedQuery ? 'Coil tidak ditemukan pada lokasi ini.' : 'Tidak ada coil dengan status filter ini.'}</div>`;
+                return;
+            }
+
+            list.innerHTML = '';
+            records.forEach(record => {
+                const item = record.item;
+                const status = normalizeCoilStatus(item.status);
+                const locationText = record.type === 'pyramid'
+                    ? `${escapeHTML(record.position)} • Layer ${record.layer}`
+                    : `Non-Piramid • No. Urut ${escapeHTML(item.nomor || record.index + 1)}`;
+                const card = document.createElement('div');
+                card.className = 'p-3 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3';
+                card.innerHTML = `
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-xs font-mono font-extrabold px-2 py-0.5 rounded ${record.type === 'pyramid' ? 'bg-slate-900 text-amber-300' : 'bg-sky-600 text-white'}">${record.type === 'pyramid' ? `L${record.layer}` : 'NP'}</span>
+                            <span class="text-sm font-mono font-extrabold text-slate-900 truncate">${escapeHTML(item.id)}</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${status === 'AKTIF' ? 'bg-emerald-100 text-emerald-700' : status === 'DIPAKAI_PRODUKSI' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-700'}">${escapeHTML(getCoilStatusLabel(status))}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-600 mt-1">${locationText} • Heat ${escapeHTML(item.heatNumber || '-')} • ${escapeHTML(item.weight || '-')} ${escapeHTML(item.weightUnit || 'kg')}</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5 truncate">${escapeHTML(item.supplier || '-')} • ${escapeHTML(item.grade || '-')} • Ø${escapeHTML(item.diameter || '-')}</p>
+                    </div>
+                    ${status === 'AKTIF' ? `<button type="button" class="shrink-0 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition" data-production-record="${encodeURIComponent(JSON.stringify(record))}">
+                        <i class="fa-solid fa-industry mr-1"></i>Dipakai
+                    </button>` : ''}
+                `;
+                const button = card.querySelector('[data-production-record]');
+                if (button) button.addEventListener('click', () => confirmProductionUsage(record));
+                list.appendChild(card);
+            });
+        }
+
+        function confirmProductionUsage(record) {
+            const item = record.item;
+            const locationText = record.type === 'pyramid'
+                ? `Piramid ${record.position}, Layer ${record.layer}`
+                : `Non-Piramid No. Urut ${item.nomor || record.index + 1}`;
+            showConfirmModal(
+                'Tandai Coil Dipakai Produksi?',
+                `Coil ${item.id} (${locationText}) akan ditandai DIPAKAI PRODUKSI. Data coil tidak akan dihapus.`,
+                () => {
+                    if (record.type === 'pyramid') {
+                        markLayerCoilStatus(record.posId, record.layer, 'DIPAKAI_PRODUKSI');
+                    } else {
+                        markNonPyramidCoilStatus(record.index, 'DIPAKAI_PRODUKSI');
+                    }
+                    renderProductionUsageList(document.getElementById('production-search-input')?.value || '');
+                }
+            );
+        }
+
+        function handleProductionQrDecoded(decodedText) {
+            const input = document.getElementById('production-search-input');
+            if (!input) return;
+            input.value = decodedText;
+            const codeMatch = String(decodedText).match(/Code\s*No\.?\s*:\s*([^\r\n]+)/i);
+            const parts = String(decodedText).split('-').map(part => part.trim());
+            const candidates = [
+                codeMatch ? codeMatch[1].trim() : '',
+                parts.length >= 4 ? parts[3] : '',
+                getCoilHintFromDecoded(decodedText)
+            ].filter(Boolean);
+
+            const records = getProductionCoilRecords();
+            const matched = records.find(record => candidates.some(candidate =>
+                normalizeDuplicateValue(candidate) === normalizeDuplicateValue(record.item.id) ||
+                normalizeDuplicateValue(candidate) === normalizeDuplicateValue(record.item.heatNumber)
+            ));
+            if (matched) input.value = matched.item.id;
+            renderProductionUsageList(input.value);
+        }
+
+        async function pasteProductionFromClipboard() {
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        handleProductionQrDecoded(text);
+                        return;
+                    }
+                }
+            } catch (e) {}
+            document.getElementById('production-search-input')?.focus();
+            showToast('Tekan & tahan kotak pencarian lalu pilih Tempel', 'info');
+        }
+
+        function handleProductionQrPhoto(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast('Library pembaca QR belum siap, gunakan paste teks QR.', 'error');
+                event.target.value = '';
+                return;
+            }
+            showToast('Membaca QR dari foto...', 'info');
+            const scanner = new Html5Qrcode('qr-file-reader-hidden');
+            scanner.scanFile(file, true)
+                .then(decodedText => {
+                    handleProductionQrDecoded(decodedText);
+                    event.target.value = '';
+                })
+                .catch(() => {
+                    showToast('QR tidak terbaca pada foto. Foto lebih dekat & pastikan QR jelas.', 'error');
+                    event.target.value = '';
+                })
+                .finally(() => {
+                    try { scanner.clear(); } catch (e) {}
+                });
+        }
+
         function renderNonPyramidList() {
             const container = document.getElementById('nonpyramid-list-container');
             const badge = document.getElementById('np-total-badge');
@@ -2567,6 +2732,11 @@
         function handleQrPhotoUpload(event, target = 'pyramid') {
             const file = event.target.files && event.target.files[0];
             if (!file) return;
+                if (target === 'production') {
+                    handleProductionQrPhoto({ target: { files: [file], value: event.target.value } });
+                    event.target.value = '';
+                    return;
+                }
 
             if (typeof Html5Qrcode === 'undefined') {
                 showToast('Library pembaca QR belum siap, coba gunakan tombol Tempel.', 'error');
@@ -2607,6 +2777,11 @@
                     { facingMode: 'environment' },
                     { fps: 10, qrbox: { width: 220, height: 220 } },
                     (decodedText) => {
+                        if (activeQrTarget === 'production') {
+                            handleProductionQrDecoded(decodedText);
+                            closeQrScannerModal();
+                            return;
+                        }
                         const ids = getTargetFieldIds(activeQrTarget);
                         document.getElementById(ids.qrRaw).value = decodedText;
                         parseAndFillQrString(decodedText, true, activeQrTarget);
@@ -3437,6 +3612,8 @@
                 renderLayerOverview();
             } else if (currentMode === 'nonpyramid') {
                 prepareNonPyramidFormDefaults();
+            } else if (currentMode === 'production') {
+                renderProductionUsageList(document.getElementById('production-search-input')?.value || '');
             } else {
                 renderCrawlView();
             }

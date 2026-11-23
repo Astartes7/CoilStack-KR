@@ -169,7 +169,7 @@
     <main id="main-content" class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col gap-5">
 
         <!-- Mode Switcher Tabs -->
-        <div class="grid grid-cols-3 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
+        <div class="grid grid-cols-2 sm:grid-cols-4 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
             <button type="button" id="tab-crawl" onclick="switchMode('crawl')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm">
                 <i class="fa-solid fa-person-crawling text-amber-500"></i>
                 <span>Piramid (Merangkak)</span>
@@ -182,11 +182,16 @@
                 <i class="fa-solid fa-layer-group text-slate-400"></i>
                 <span>Lihat Per Layer</span>
             </button>
+            <button type="button" id="tab-production" onclick="switchMode('production')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+                <i class="fa-solid fa-industry text-rose-500"></i>
+                <span>Dipakai Produksi</span>
+            </button>
         </div>
 
         <div id="view-crawl-container"></div>
         <div id="view-non-pyramid-container"></div>
         <div id="view-layer-review-container"></div>
+        <div id="view-production-container"></div>
     </main>
 
     <div id="app-modals-container"></div>
@@ -197,6 +202,7 @@
                 ['view-crawl-container', 'views/crawl.html'],
                 ['view-non-pyramid-container', 'views/non-pyramid.html'],
                 ['view-layer-review-container', 'views/layer-review.html'],
+                ['view-production-container', 'views/production.html'],
                 ['app-modals-container', 'views/modals.html']
             ];
             for (const [containerId, url] of fragments) {
