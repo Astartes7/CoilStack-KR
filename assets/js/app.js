@@ -116,6 +116,15 @@
             return !!item && normalizeCoilStatus(item.status) === 'AKTIF';
         }
 
+        function freePyramidSlotsForUsedCoils(coils) {
+            if (!coils || typeof coils !== 'object') return;
+            Object.entries(coils).forEach(([key, item]) => {
+                if (item && ['DIPAKAI_PRODUKSI', 'HILANG'].includes(normalizeCoilStatus(item.status))) {
+                    delete coils[key];
+                }
+            });
+        }
+
         function isMeaningfulDuplicateValue(value) {
             const normalized = normalizeDuplicateValue(value);
             return normalized !== '' && normalized !== '0';
@@ -337,9 +346,11 @@
         function loadLocationIntoActiveState(locId) {
             const loc = appState.locations[locId];
             if (!loc) return;
-            Object.values(loc.coils || {}).forEach(item => {
-                if (item && item.id) item.status = normalizeCoilStatus(item.status);
+            Object.entries(loc.coils || {}).forEach(([key, item]) => {
+                if (!item || !item.id) return;
+                item.status = normalizeCoilStatus(item.status);
             });
+            freePyramidSlotsForUsedCoils(loc.coils);
             (loc.nonPyramidCoils || []).forEach(item => {
                 if (item && item.id) item.status = normalizeCoilStatus(item.status);
             });
@@ -362,6 +373,11 @@
                 saveStateTimer = null;
             }
             syncActiveStateToLocation();
+            freePyramidSlotsForUsedCoils(appState.coils);
+            Object.values(appState.locations || {}).forEach(loc => {
+                if (!loc) return;
+                freePyramidSlotsForUsedCoils(loc.coils);
+            });
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
             } catch (e) {
@@ -1900,20 +1916,26 @@
             const coilId = item && item.id ? ` (${item.id})` : '';
             showConfirmModal(
                 'Tandai Coil DIPAKAI PRODUKSI?',
-                `Coil di Layer ${layerNum}${coilId} tidak akan dihapus. Status akan berubah menjadi DIPAKAI PRODUKSI dan seluruh berat dianggap habis dikonsumsi.`,
+                `Coil di Layer ${layerNum}${coilId} akan keluar dari slot dan dapat diganti oleh coil lain.`,
                 () => {
-                    appState.coils[`${posId}_${layerNum}`].status = 'DIPAKAI_PRODUKSI';
-                    saveState();
-                    renderAll();
-                    showToast(`Data Layer ${layerNum} ditandai DIPAKAI PRODUKSI`, 'info');
+                    markLayerCoilStatus(posId, layerNum, 'DIPAKAI_PRODUKSI');
                 }
             );
         }
 
         function markLayerCoilStatus(posId, layerNum, status) {
-            const item = appState.coils[`${posId}_${layerNum}`];
+            const key = `${posId}_${layerNum}`;
+            const item = appState.coils[key];
             if (!item) return;
-            item.status = normalizeCoilStatus(status);
+            const normalizedStatus = normalizeCoilStatus(status);
+            if (normalizedStatus === 'DIPAKAI_PRODUKSI' || normalizedStatus === 'HILANG') {
+                delete appState.coils[key];
+                saveState();
+                renderAll();
+                showToast(`${getCoilStatusLabel(normalizedStatus)}. Slot Layer ${layerNum} kini kosong`, 'success');
+                return;
+            }
+            item.status = normalizedStatus;
             item.updatedAt = new Date().toLocaleString('id-ID');
             saveState();
             renderAll();
@@ -2182,9 +2204,12 @@
             const locationText = record.type === 'pyramid'
                 ? `Piramid ${record.position}, Layer ${record.layer}`
                 : `Non-Piramid No. Urut ${item.nomor || record.index + 1}`;
+            const impactText = record.type === 'pyramid'
+                ? `Slot piramid akan kosong dan dapat diisi coil lain.`
+                : `Data coil tidak akan dihapus.`;
             showConfirmModal(
                 'Tandai Coil Dipakai Produksi?',
-                `Coil ${item.id} (${locationText}) akan ditandai DIPAKAI PRODUKSI. Data coil tidak akan dihapus.`,
+                `Coil ${item.id} (${locationText}) akan ditandai DIPAKAI PRODUKSI. ${impactText}`,
                 () => {
                     if (record.type === 'pyramid') {
                         markLayerCoilStatus(record.posId, record.layer, 'DIPAKAI_PRODUKSI');
