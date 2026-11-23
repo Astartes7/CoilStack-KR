@@ -88,7 +88,7 @@
                         </div>
                         <div class="col-span-8">
                             <label for="np-id-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">No. Coil *</label>
-                            <input type="text" id="np-id-input" placeholder="Ketik / Scan No. Coil..." autocomplete="off"
+                            <input type="text" id="np-id-input" required placeholder="Ketik / Scan No. Coil..." autocomplete="off"
                                 oninput="handleCoilIdSmartScan(this.value, 'np')"
                                 class="w-full bg-slate-800 border-2 border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
@@ -107,9 +107,9 @@
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="np-weight-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Berat</label>
+                            <label for="np-weight-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">Berat *</label>
                             <div class="flex bg-slate-800 border border-slate-600 focus-within:border-sky-400 rounded-xl overflow-hidden">
-                                <input type="text" id="np-weight-input" inputmode="decimal" placeholder="2150" autocomplete="off"
+                                <input type="text" id="np-weight-input" required inputmode="decimal" placeholder="2150" autocomplete="off"
                                     class="w-full min-w-0 bg-transparent px-2.5 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
                                 <select id="np-weight-unit" aria-label="Satuan Berat Non-Piramid"
                                     class="bg-slate-700 text-sky-300 text-xs font-mono font-bold px-1.5 border-l border-slate-600 focus:outline-none cursor-pointer">
@@ -123,15 +123,23 @@
                     <!-- Heat Number & Supplier -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <label for="np-heat-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Heat Number</label>
-                            <input type="text" id="np-heat-input" placeholder="Heat No..." autocomplete="off"
+                            <label for="np-heat-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">Heat Number *</label>
+                            <input type="text" id="np-heat-input" required placeholder="Heat No..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="np-supplier-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Nama Supplier</label>
-                            <input type="text" id="np-supplier-input" placeholder="Nama Supplier..." autocomplete="off"
+                            <label for="np-supplier-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">Nama Supplier *</label>
+                            <input type="text" id="np-supplier-input" required placeholder="Nama Supplier..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none">
                         </div>
+                    </div>
+                    <div>
+                        <label for="np-status-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Status Coil</label>
+                        <select id="np-status-input" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-sky-400">
+                            <option value="AKTIF">AKTIF</option>
+                            <option value="DIPAKAI_PRODUKSI">DIPAKAI PRODUKSI</option>
+                            <option value="HILANG">HILANG</option>
+                        </select>
                     </div>
 
                     <button type="submit" class="mt-1 w-full bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-extrabold py-3 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md">

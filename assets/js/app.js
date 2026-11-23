@@ -98,6 +98,24 @@
             return String(value || '').trim().toUpperCase();
         }
 
+        function normalizeCoilStatus(value) {
+            const status = normalizeDuplicateValue(value).replace(/[\s-]+/g, '_');
+            if (status === 'DIPAKAI' || status === 'DIPAKAI_PRODUKSI' || status === 'HABIS') return 'DIPAKAI_PRODUKSI';
+            if (status === 'HILANG') return 'HILANG';
+            return 'AKTIF';
+        }
+
+        function getCoilStatusLabel(status) {
+            const normalized = normalizeCoilStatus(status);
+            if (normalized === 'DIPAKAI_PRODUKSI') return 'DIPAKAI PRODUKSI';
+            if (normalized === 'HILANG') return 'HILANG';
+            return 'AKTIF';
+        }
+
+        function isCoilActive(item) {
+            return !!item && normalizeCoilStatus(item.status) === 'AKTIF';
+        }
+
         function isMeaningfulDuplicateValue(value) {
             const normalized = normalizeDuplicateValue(value);
             return normalized !== '' && normalized !== '0';
@@ -319,6 +337,12 @@
         function loadLocationIntoActiveState(locId) {
             const loc = appState.locations[locId];
             if (!loc) return;
+            Object.values(loc.coils || {}).forEach(item => {
+                if (item && item.id) item.status = normalizeCoilStatus(item.status);
+            });
+            (loc.nonPyramidCoils || []).forEach(item => {
+                if (item && item.id) item.status = normalizeCoilStatus(item.status);
+            });
             appState.activeLocationId = locId;
             appState.bayName = loc.name || 'BAY-A01';
             appState.picName = loc.picName || '';
@@ -361,7 +385,8 @@
 
             const locs = Object.values(appState.locations || {});
             locs.forEach(loc => {
-                const count = Object.values(loc.coils || {}).filter(c => c && c.id).length + (loc.nonPyramidCoils || []).length;
+                const count = Object.values(loc.coils || {}).filter(c => c && c.id && isCoilActive(c)).length +
+                    (loc.nonPyramidCoils || []).filter(c => c && c.id && isCoilActive(c)).length;
                 const opt = document.createElement('option');
                 opt.value = loc.id;
                 opt.textContent = `${loc.name} (${count})`;
@@ -1076,6 +1101,7 @@
                             <div class="flex flex-wrap items-center gap-1.5">
                                 <span class="font-mono font-extrabold text-slate-900">${escapeHTML(record.id)}</span>
                                 <span class="text-[10px] px-1.5 py-0.5 rounded-full ${record.type === 'pyramid' ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'}">${record.type === 'pyramid' ? 'Piramid' : 'Non-Piramid'}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full ${normalizeCoilStatus(record.status) === 'AKTIF' ? 'bg-emerald-100 text-emerald-700' : normalizeCoilStatus(record.status) === 'HILANG' ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-700'}">${getCoilStatusLabel(record.status)}</span>
                             </div>
                             <div class="text-[11px] text-slate-600 mt-1">${escapeHTML(record.locName)} • ${escapeHTML(record.position)}${record.layer ? ` • Layer ${record.layer}` : ''}</div>
                         </div>
@@ -1128,10 +1154,11 @@
 
             Object.values(appState.locations || {}).forEach(loc => {
                 let pyramid = 0;
-                let nonPyramid = (loc.nonPyramidCoils || []).filter(item => item && item.id).length;
+                let nonPyramid = (loc.nonPyramidCoils || []).filter(item => item && item.id && isCoilActive(item)).length;
                 let weightKg = 0;
                 Object.values(loc.coils || {}).forEach(item => {
                     if (!item || !item.id) return;
+                    if (!isCoilActive(item)) return;
                     pyramid++;
                     const weight = parseFloat(String(item.weight || '').replace(',', '.'));
                     if (!isNaN(weight)) {
@@ -1140,6 +1167,7 @@
                 });
                 (loc.nonPyramidCoils || []).forEach(item => {
                     if (!item || !item.id) return;
+                    if (!isCoilActive(item)) return;
                     const weight = parseFloat(String(item.weight || '').replace(',', '.'));
                     if (!isNaN(weight)) {
                         weightKg += (item.weightUnit || 'kg') === 'mt' ? weight * 1000 : weight;
@@ -1648,6 +1676,7 @@
             document.getElementById('coil-weight-unit').value = existing?.weightUnit || appState.defaultWeightUnit || 'kg';
             document.getElementById('coil-heat-input').value = existing?.heatNumber || '';
             document.getElementById('coil-supplier-input').value = existing?.supplier || '';
+            document.getElementById('coil-status-input').value = normalizeCoilStatus(existing?.status);
             document.getElementById('qr-raw-input').value = '';
             hideQrLinkHelper('pyramid');
         }
@@ -1674,6 +1703,7 @@
             document.getElementById('coil-weight-unit').value = prevData.weightUnit || 'kg';
             document.getElementById('coil-heat-input').value = prevData.heatNumber || '';
             document.getElementById('coil-supplier-input').value = prevData.supplier || '';
+            document.getElementById('coil-status-input').value = normalizeCoilStatus(prevData.status);
             showToast(`Spesifikasi disalin dari Layer ${prevLayer}`, 'info');
         }
 
@@ -1687,15 +1717,27 @@
             }
 
             const weightVal = document.getElementById('coil-weight-input').value.trim();
-            if (weightVal && isNaN(parseFloat(weightVal.replace(',', '.')))) {
-                showToast('Berat harus berupa angka!', 'error');
+            const weightNumber = parseFloat(weightVal.replace(',', '.'));
+            if (!weightVal || isNaN(weightNumber) || weightNumber <= 0) {
+                showToast('Berat wajib diisi dengan angka lebih dari 0!', 'error');
                 document.getElementById('coil-weight-input').focus();
+                return;
+            }
+            const heatVal = document.getElementById('coil-heat-input').value.trim();
+            if (!heatVal) {
+                showToast('Heat Number wajib diisi!', 'error');
+                document.getElementById('coil-heat-input').focus();
+                return;
+            }
+            const supplierVal = document.getElementById('coil-supplier-input').value.trim();
+            if (!supplierVal) {
+                showToast('Nama Supplier wajib diisi!', 'error');
+                document.getElementById('coil-supplier-input').focus();
                 return;
             }
 
             const key = `${appState.activePosition}_${appState.selectedLayer}`;
             const saveAction = document.getElementById('quick-save-action')?.value || 'save';
-            const heatVal = document.getElementById('coil-heat-input').value.trim().toUpperCase();
             const dup = findDuplicateCoil(idVal, {
                 heatNumber: heatVal,
                 locationId: appState.activeLocationId,
@@ -1736,6 +1778,7 @@
                 weightUnit,
                 heatNumber: document.getElementById('coil-heat-input').value.trim().toUpperCase(),
                 supplier: document.getElementById('coil-supplier-input').value.trim(),
+                status: normalizeCoilStatus(document.getElementById('coil-status-input')?.value),
                 picName: activePic || existing.picName || '',
                 shift: activeShift,
                 updatedAt: new Date().toLocaleString('id-ID')
@@ -1826,10 +1869,13 @@
                             </div>
                             <p class="text-[11px] text-slate-600 mt-1 truncate">${metaParts || 'Tanpa keterangan tambahan'}</p>
                         </div>
-                        <button type="button" onclick="event.stopPropagation(); deleteLayerItem('${appState.activePosition}', ${l})" title="Hapus item ini"
-                            class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
+                        <select onchange="event.stopPropagation(); markLayerCoilStatus('${appState.activePosition}', ${l}, this.value)" onclick="event.stopPropagation()"
+                            title="Ubah status coil"
+                            class="shrink-0 max-w-[118px] bg-slate-100 border border-slate-300 rounded-lg px-1.5 py-1 text-[10px] font-bold text-slate-700">
+                            <option value="AKTIF" ${normalizeCoilStatus(item.status) === 'AKTIF' ? 'selected' : ''}>AKTIF</option>
+                            <option value="DIPAKAI_PRODUKSI" ${normalizeCoilStatus(item.status) === 'DIPAKAI_PRODUKSI' ? 'selected' : ''}>DIPAKAI PRODUKSI</option>
+                            <option value="HILANG" ${normalizeCoilStatus(item.status) === 'HILANG' ? 'selected' : ''}>HILANG</option>
+                        </select>
                     `;
                 } else {
                     card.innerHTML = `
@@ -1849,15 +1895,25 @@
             const item = appState.coils[`${posId}_${layerNum}`];
             const coilId = item && item.id ? ` (${item.id})` : '';
             showConfirmModal(
-                'Hapus Data Coil?',
-                `Data coil di Layer ${layerNum}${coilId} akan dihapus permanen.`,
+                'Tandai Coil DIPAKAI PRODUKSI?',
+                `Coil di Layer ${layerNum}${coilId} tidak akan dihapus. Status akan berubah menjadi DIPAKAI PRODUKSI dan seluruh berat dianggap habis dikonsumsi.`,
                 () => {
-                    delete appState.coils[`${posId}_${layerNum}`];
+                    appState.coils[`${posId}_${layerNum}`].status = 'DIPAKAI_PRODUKSI';
                     saveState();
                     renderAll();
-                    showToast(`Data Layer ${layerNum} dihapus`, 'info');
+                    showToast(`Data Layer ${layerNum} ditandai DIPAKAI PRODUKSI`, 'info');
                 }
             );
+        }
+
+        function markLayerCoilStatus(posId, layerNum, status) {
+            const item = appState.coils[`${posId}_${layerNum}`];
+            if (!item) return;
+            item.status = normalizeCoilStatus(status);
+            item.updatedAt = new Date().toLocaleString('id-ID');
+            saveState();
+            renderAll();
+            showToast(`Status coil diubah menjadi ${getCoilStatusLabel(item.status)}`, 'info');
         }
 
         function editLayerItem(posId, layerNum) {
@@ -1892,6 +1948,7 @@
             document.getElementById('np-weight-input').value = '';
             document.getElementById('np-heat-input').value = '';
             document.getElementById('np-supplier-input').value = '';
+            document.getElementById('np-status-input').value = 'AKTIF';
             hideQrLinkHelper('np');
             prepareNonPyramidFormDefaults();
         }
@@ -1906,9 +1963,22 @@
             }
 
             const weightVal = document.getElementById('np-weight-input').value.trim();
-            if (weightVal && isNaN(parseFloat(weightVal.replace(',', '.')))) {
-                showToast('Berat harus berupa angka!', 'error');
+            const weightNumber = parseFloat(weightVal.replace(',', '.'));
+            if (!weightVal || isNaN(weightNumber) || weightNumber <= 0) {
+                showToast('Berat wajib diisi dengan angka lebih dari 0!', 'error');
                 document.getElementById('np-weight-input').focus();
+                return;
+            }
+            const heatVal = document.getElementById('np-heat-input').value.trim();
+            if (!heatVal) {
+                showToast('Heat Number wajib diisi!', 'error');
+                document.getElementById('np-heat-input').focus();
+                return;
+            }
+            const supplierVal = document.getElementById('np-supplier-input').value.trim();
+            if (!supplierVal) {
+                showToast('Nama Supplier wajib diisi!', 'error');
+                document.getElementById('np-supplier-input').focus();
                 return;
             }
 
@@ -1930,6 +2000,7 @@
                 weightUnit,
                 heatNumber: document.getElementById('np-heat-input').value.trim().toUpperCase(),
                 supplier: document.getElementById('np-supplier-input').value.trim(),
+                status: normalizeCoilStatus(document.getElementById('np-status-input')?.value),
                 picName: activePic || prevNp.picName || '',
                 shift: activeShift,
                 updatedAt: new Date().toLocaleString('id-ID')
@@ -1987,6 +2058,7 @@
             document.getElementById('np-weight-unit').value = item.weightUnit || 'kg';
             document.getElementById('np-heat-input').value = item.heatNumber || '';
             document.getElementById('np-supplier-input').value = item.supplier || '';
+            document.getElementById('np-status-input').value = normalizeCoilStatus(item.status);
             const formEl = document.getElementById('nonpyramid-form');
             if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             document.getElementById('np-id-input').focus();
@@ -1996,16 +2068,26 @@
             const item = (appState.nonPyramidCoils || [])[idx];
             const coilId = item && item.id ? ` (${item.id})` : '';
             showConfirmModal(
-                'Hapus Koil Non-Piramid?',
-                `Koil #${item?.nomor || idx + 1}${coilId} akan dihapus permanen.`,
+                'Tandai Koil DIPAKAI PRODUKSI?',
+                `Koil #${item?.nomor || idx + 1}${coilId} tidak akan dihapus. Status berubah menjadi DIPAKAI PRODUKSI dan seluruh berat dianggap habis dikonsumsi.`,
                 () => {
-                    appState.nonPyramidCoils.splice(idx, 1);
-                    if (editingNonPyramidIndex === idx) resetNonPyramidForm();
+                    if (appState.nonPyramidCoils[idx]) appState.nonPyramidCoils[idx].status = 'DIPAKAI_PRODUKSI';
+                    if (editingNonPyramidIndex === idx) document.getElementById('np-status-input').value = 'DIPAKAI_PRODUKSI';
                     saveState();
                     renderAll();
-                    showToast('Koil Non-Piramid dihapus', 'info');
+                    showToast('Koil Non-Piramid ditandai DIPAKAI PRODUKSI', 'info');
                 }
             );
+        }
+
+        function markNonPyramidCoilStatus(idx, status) {
+            const item = appState.nonPyramidCoils[idx];
+            if (!item) return;
+            item.status = normalizeCoilStatus(status);
+            item.updatedAt = new Date().toLocaleString('id-ID');
+            saveState();
+            renderAll();
+            showToast(`Status coil diubah menjadi ${getCoilStatusLabel(item.status)}`, 'info');
         }
 
         function renderNonPyramidList() {
@@ -2014,8 +2096,9 @@
             const tabCount = document.getElementById('nonpyramid-tab-count');
             const items = appState.nonPyramidCoils || [];
 
-            if (badge) badge.textContent = `${items.length} Coil`;
-            if (tabCount) tabCount.textContent = items.length;
+            const activeCount = items.filter(item => item && item.id && isCoilActive(item)).length;
+            if (badge) badge.textContent = `${activeCount} Aktif`;
+            if (tabCount) tabCount.textContent = activeCount;
             if (!container) return;
 
             if (items.length === 0) {
@@ -2051,10 +2134,13 @@
                         </div>
                         <p class="text-[11px] text-slate-600 mt-1 truncate">${meta || 'Tanpa keterangan tambahan'}</p>
                     </div>
-                    <button type="button" onclick="event.stopPropagation(); deleteNonPyramidItem(${idx})" title="Hapus"
-                        class="w-8 h-8 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center shrink-0 transition">
-                        <i class="fa-solid fa-trash-can text-xs"></i>
-                    </button>
+                    <select onchange="event.stopPropagation(); markNonPyramidCoilStatus(${idx}, this.value)" onclick="event.stopPropagation()"
+                        title="Ubah status coil"
+                        class="shrink-0 max-w-[118px] bg-slate-100 border border-slate-300 rounded-lg px-1.5 py-1 text-[10px] font-bold text-slate-700">
+                        <option value="AKTIF" ${normalizeCoilStatus(item.status) === 'AKTIF' ? 'selected' : ''}>AKTIF</option>
+                        <option value="DIPAKAI_PRODUKSI" ${normalizeCoilStatus(item.status) === 'DIPAKAI_PRODUKSI' ? 'selected' : ''}>DIPAKAI PRODUKSI</option>
+                        <option value="HILANG" ${normalizeCoilStatus(item.status) === 'HILANG' ? 'selected' : ''}>HILANG</option>
+                    </select>
                 `;
                 container.appendChild(card);
             });
@@ -2597,6 +2683,7 @@
                             item.heatNumber ? `Heat:${item.heatNumber}` : '',
                             item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : '',
                             item.supplier ? `Supp:${item.supplier}` : '',
+                            `Status:${getCoilStatusLabel(item.status)}`,
                             itemPic ? `Tim:${itemPic}` : '',
                             itemShift ? `Shift:${itemShift}` : ''
                         ].filter(Boolean).join(' | ');
@@ -2621,6 +2708,7 @@
                         item.heatNumber ? `Heat:${item.heatNumber}` : '',
                         item.weight ? `${item.weight} ${item.weightUnit || 'kg'}` : '',
                         item.supplier ? `Supp:${item.supplier}` : '',
+                        `Status:${getCoilStatusLabel(item.status)}`,
                         itemPic ? `Tim:${itemPic}` : '',
                         itemShift ? `Shift:${itemShift}` : ''
                     ].filter(Boolean).join(' | ');
@@ -2693,7 +2781,7 @@
             const headers = [
                 'Lokasi', 'PIC_Tim', 'Shift', 'Susunan', 'Layer', 'Posisi',
                 'Nomor', 'No_Coil', 'Diameter_mm', 'Grade', 'Heat_Number',
-                'Berat', 'Satuan_Berat', 'Supplier', 'Waktu_Update'
+                'Berat', 'Satuan_Berat', 'Supplier', 'Status', 'Waktu_Update'
             ];
             const csvRows = [headers.join(',')];
 
@@ -2722,6 +2810,7 @@
                             csvEscape(item.weight || ''),
                             csvEscape(item.id ? (item.weightUnit || 'kg') : ''),
                             csvEscape(item.supplier || ''),
+                            csvEscape(getCoilStatusLabel(item.status)),
                             csvEscape(item.updatedAt || '')
                         ].join(','));
                     });
@@ -2745,6 +2834,7 @@
                         csvEscape(item.weight || ''),
                         csvEscape(item.id ? (item.weightUnit || 'kg') : ''),
                         csvEscape(item.supplier || ''),
+                        csvEscape(getCoilStatusLabel(item.status)),
                         csvEscape(item.updatedAt || '')
                     ].join(','));
                 });
@@ -2929,6 +3019,7 @@
             const idxUnit = findCol('satuan_berat', 'satuan', 'unit');
             const idxSupp = findCol('supplier', 'nama_supplier');
             const idxTime = findCol('waktu_update', 'waktu', 'updated_at');
+            const idxStatus = findCol('status', 'status_coil');
 
             for (let r = 1; r < rows.length; r++) {
                 const cols = rows[r];
@@ -2955,7 +3046,13 @@
                 const unitRaw = idxUnit >= 0 ? (cols[idxUnit] || '').trim().toLowerCase() : '';
                 const weightUnit = (unitRaw === 'mt' || unitRaw === 'ton') ? 'mt' : 'kg';
                 const supplier = idxSupp >= 0 ? (cols[idxSupp] || '').trim() : '';
+                const status = idxStatus >= 0 ? normalizeCoilStatus(cols[idxStatus]) : 'AKTIF';
                 const updatedAt = (idxTime >= 0 && cols[idxTime]) ? cols[idxTime].trim() : new Date().toLocaleString('id-ID');
+                const weightNumber = parseFloat(String(weight).replace(',', '.'));
+                if (!id || !heatNumber || !weight || isNaN(weightNumber) || weightNumber <= 0 || !supplier) {
+                    tracker.skippedCount++;
+                    continue;
+                }
 
                 const isNonPyramid = /non[\s-]*piramid/i.test(layerRaw) || /^samping$/i.test(posLabelRaw);
                 if (isNonPyramid) {
@@ -2980,6 +3077,7 @@
                         weight,
                         weightUnit,
                         supplier,
+                        status,
                         picName: rowPic,
                         shift: rowShift,
                         updatedAt
@@ -3038,6 +3136,7 @@
                     weight,
                     weightUnit,
                     supplier,
+                    status,
                     picName: rowPic,
                     shift: rowShift,
                     updatedAt
@@ -3172,6 +3271,7 @@
                     let weight = '';
                     let weightUnit = 'kg';
                     let supplier = '';
+                    let status = 'AKTIF';
                     let itemPic = blockPicName;
                     let itemShift = blockShift;
 
@@ -3182,6 +3282,7 @@
                         else if (/^Gr\s*:/i.test(part)) grade = part.replace(/^Gr\s*:/i, '').trim();
                         else if (/^Heat\s*:/i.test(part)) heatNumber = part.replace(/^Heat\s*:/i, '').trim();
                         else if (/^Supp\s*:/i.test(part)) supplier = part.replace(/^Supp\s*:/i, '').trim();
+                        else if (/^Status\s*:/i.test(part)) status = normalizeCoilStatus(part.replace(/^Status\s*:/i, '').trim());
                         else if (/^(?:Tim|PIC)\s*:/i.test(part)) itemPic = part.replace(/^(?:Tim|PIC)\s*:/i, '').trim();
                         else if (/^Shift\s*:/i.test(part)) itemShift = part.replace(/^Shift\s*:/i, '').trim();
                         else if (/^[\d.,]+\s*(kg|mt)$/i.test(part)) {
@@ -3193,7 +3294,11 @@
                         }
                     });
 
-                    if (!id && !nomor) return;
+                    const weightNumber = parseFloat(String(weight).replace(',', '.'));
+                    if (!id || !heatNumber || !weight || isNaN(weightNumber) || weightNumber <= 0 || !supplier) {
+                        tracker.skippedCount++;
+                        return;
+                    }
 
                     if (isNonPyramidSection) {
                         if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
@@ -3217,6 +3322,7 @@
                             weight,
                             weightUnit,
                             supplier,
+                            status,
                             picName: itemPic,
                             shift: itemShift,
                             updatedAt: new Date().toLocaleString('id-ID')
@@ -3271,6 +3377,7 @@
                         weight,
                         weightUnit,
                         supplier,
+                        status,
                         picName: itemPic,
                         shift: itemShift,
                         updatedAt: new Date().toLocaleString('id-ID')

@@ -149,7 +149,7 @@
                         </div>
                         <div class="col-span-8">
                             <label for="coil-id-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">No. Coil *</label>
-                            <input type="text" id="coil-id-input" placeholder="Ketik / Scan No. Coil..." autocomplete="off"
+                            <input type="text" id="coil-id-input" required placeholder="Ketik / Scan No. Coil..." autocomplete="off"
                                 oninput="handleCoilIdSmartScan(this.value, 'pyramid')"
                                 class="w-full bg-slate-800 border-2 border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
@@ -168,9 +168,9 @@
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="coil-weight-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Berat</label>
+                            <label for="coil-weight-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">Berat *</label>
                             <div class="flex bg-slate-800 border border-slate-600 focus-within:border-amber-400 rounded-xl overflow-hidden">
-                                <input type="text" id="coil-weight-input" inputmode="decimal" placeholder="2150" autocomplete="off"
+                                <input type="text" id="coil-weight-input" required inputmode="decimal" placeholder="2150" autocomplete="off"
                                     class="w-full min-w-0 bg-transparent px-2.5 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
                                 <select id="coil-weight-unit" aria-label="Satuan Berat"
                                     class="bg-slate-700 text-amber-300 text-xs font-mono font-bold px-1.5 border-l border-slate-600 focus:outline-none cursor-pointer">
@@ -184,15 +184,23 @@
                     <!-- Baris 3: Heat Number & Nama Supplier -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <label for="coil-heat-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Heat Number</label>
-                            <input type="text" id="coil-heat-input" placeholder="Heat No..." autocomplete="off"
+                            <label for="coil-heat-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">Heat Number *</label>
+                            <input type="text" id="coil-heat-input" required placeholder="Heat No..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="coil-supplier-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Nama Supplier</label>
-                            <input type="text" id="coil-supplier-input" placeholder="Nama Supplier..." autocomplete="off"
+                            <label for="coil-supplier-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">Nama Supplier *</label>
+                            <input type="text" id="coil-supplier-input" required placeholder="Nama Supplier..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none">
                         </div>
+                    </div>
+                    <div>
+                        <label for="coil-status-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Status Coil</label>
+                        <select id="coil-status-input" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-amber-400">
+                            <option value="AKTIF">AKTIF</option>
+                            <option value="DIPAKAI_PRODUKSI">DIPAKAI PRODUKSI</option>
+                            <option value="HILANG">HILANG</option>
+                        </select>
                     </div>
 
                     <!-- Tombol Submit -->
