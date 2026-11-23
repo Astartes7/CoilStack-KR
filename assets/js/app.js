@@ -102,6 +102,7 @@
             const status = normalizeDuplicateValue(value).replace(/[\s-]+/g, '_');
             if (status === 'DIPAKAI' || status === 'DIPAKAI_PRODUKSI' || status === 'HABIS') return 'DIPAKAI_PRODUKSI';
             if (status === 'HILANG') return 'HILANG';
+            if (status === 'DIHAPUS' || status === 'DELETED') return 'DIHAPUS';
             return 'AKTIF';
         }
 
@@ -109,6 +110,7 @@
             const normalized = normalizeCoilStatus(status);
             if (normalized === 'DIPAKAI_PRODUKSI') return 'DIPAKAI PRODUKSI';
             if (normalized === 'HILANG') return 'HILANG';
+            if (normalized === 'DIHAPUS') return 'DIHAPUS';
             return 'AKTIF';
         }
 
@@ -157,7 +159,10 @@
         function freePyramidSlotsForUsedCoils(coils, context = {}) {
             if (!coils || typeof coils !== 'object') return;
             Object.entries(coils).forEach(([key, item]) => {
-                if (item && ['DIPAKAI_PRODUKSI', 'HILANG'].includes(normalizeCoilStatus(item.status))) {
+                const status = normalizeCoilStatus(item?.status);
+                if (item && status === 'DIHAPUS') {
+                    delete coils[key];
+                } else if (item && ['DIPAKAI_PRODUKSI', 'HILANG'].includes(status)) {
                     const parts = key.split('_');
                     const layer = parseInt(parts.pop(), 10);
                     const posId = parts.join('_');
@@ -428,9 +433,13 @@
                 locId: appState.activeLocationId,
                 locName: appState.bayName
             });
+            appState.nonPyramidCoils = (appState.nonPyramidCoils || []).filter(item => normalizeCoilStatus(item?.status) !== 'DIHAPUS');
             Object.values(appState.locations || {}).forEach(loc => {
                 if (!loc) return;
                 freePyramidSlotsForUsedCoils(loc.coils, { locId: loc.id, locName: loc.name });
+                if (Array.isArray(loc.nonPyramidCoils)) {
+                    loc.nonPyramidCoils = loc.nonPyramidCoils.filter(item => normalizeCoilStatus(item?.status) !== 'DIHAPUS');
+                }
             });
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
@@ -1888,6 +1897,16 @@
             appState.picName = activePic;
             appState.shift = activeShift;
 
+            const status = normalizeCoilStatus(document.getElementById('coil-status-input')?.value);
+            if (status === 'DIHAPUS') {
+                delete appState.coils[key];
+                saveState();
+                renderAll();
+                showToast(`Data coil ${idVal} dihapus permanen dari slot`, 'success');
+                document.getElementById('coil-id-input').focus();
+                return;
+            }
+
             appState.coils[key] = {
                 nomor: nomorVal,
                 id: idVal,
@@ -1897,7 +1916,7 @@
                 weightUnit,
                 heatNumber: document.getElementById('coil-heat-input').value.trim().toUpperCase(),
                 supplier: document.getElementById('coil-supplier-input').value.trim(),
-                status: normalizeCoilStatus(document.getElementById('coil-status-input')?.value),
+                status,
                 picName: activePic || existing.picName || '',
                 shift: activeShift,
                 updatedAt: new Date().toLocaleString('id-ID')
@@ -1994,6 +2013,7 @@
                             <option value="AKTIF" ${normalizeCoilStatus(item.status) === 'AKTIF' ? 'selected' : ''}>AKTIF</option>
                             <option value="DIPAKAI_PRODUKSI" ${normalizeCoilStatus(item.status) === 'DIPAKAI_PRODUKSI' ? 'selected' : ''}>DIPAKAI PRODUKSI</option>
                             <option value="HILANG" ${normalizeCoilStatus(item.status) === 'HILANG' ? 'selected' : ''}>HILANG</option>
+                            <option value="DIHAPUS" ${normalizeCoilStatus(item.status) === 'DIHAPUS' ? 'selected' : ''}>DIHAPUS</option>
                         </select>
                     `;
                 } else {
@@ -2027,6 +2047,20 @@
             const item = appState.coils[key];
             if (!item) return;
             const normalizedStatus = normalizeCoilStatus(status);
+            if (normalizedStatus === 'DIHAPUS') {
+                showConfirmModal(
+                    'Hapus Data Coil Permanen?',
+                    `Data coil ${item.id || '-'} akan dihapus dari slot dan tidak akan tersimpan di riwayat.`,
+                    () => {
+                        delete appState.coils[key];
+                        saveState();
+                        renderAll();
+                        showToast(`Data coil ${item.id || '-'} dihapus permanen`, 'success');
+                    },
+                    () => renderAll()
+                );
+                return;
+            }
             if (normalizedStatus === 'DIPAKAI_PRODUKSI' || normalizedStatus === 'HILANG') {
                 const pos = POSITIONS.find(p => p.id === posId);
                 const exitedItem = {
@@ -2166,6 +2200,15 @@
 
         function commitNonPyramidRecord(record, editingIdx, idVal) {
             if (!Array.isArray(appState.nonPyramidCoils)) appState.nonPyramidCoils = [];
+            if (record.status === 'DIHAPUS') {
+                if (editingIdx >= 0) appState.nonPyramidCoils.splice(editingIdx, 1);
+                resetNonPyramidForm();
+                saveState();
+                renderAll();
+                showToast(`Data coil ${idVal} dihapus permanen`, 'success');
+                document.getElementById('np-id-input').focus();
+                return;
+            }
             if (editingIdx >= 0 && editingIdx < appState.nonPyramidCoils.length) {
                 appState.nonPyramidCoils[editingIdx] = record;
                 showToast(`Koil Non-Piramid #${record.nomor} diperbarui!`);
@@ -2232,7 +2275,23 @@
         function markNonPyramidCoilStatus(idx, status) {
             const item = appState.nonPyramidCoils[idx];
             if (!item) return;
-            item.status = normalizeCoilStatus(status);
+            const normalizedStatus = normalizeCoilStatus(status);
+            if (normalizedStatus === 'DIHAPUS') {
+                showConfirmModal(
+                    'Hapus Data Coil Permanen?',
+                    `Data coil ${item.id || '-'} akan dihapus permanen dan tidak akan tersimpan di riwayat.`,
+                    () => {
+                        appState.nonPyramidCoils.splice(idx, 1);
+                        if (editingNonPyramidIndex === idx) resetNonPyramidForm();
+                        saveState();
+                        renderAll();
+                        showToast(`Data coil ${item.id || '-'} dihapus permanen`, 'success');
+                    },
+                    () => renderAll()
+                );
+                return;
+            }
+            item.status = normalizedStatus;
             item.updatedAt = new Date().toLocaleString('id-ID');
             if (item.status === 'DIPAKAI_PRODUKSI' || item.status === 'HILANG') {
                 archiveCoilRecord(item, {
@@ -2463,6 +2522,7 @@
                         <option value="AKTIF" ${normalizeCoilStatus(item.status) === 'AKTIF' ? 'selected' : ''}>AKTIF</option>
                         <option value="DIPAKAI_PRODUKSI" ${normalizeCoilStatus(item.status) === 'DIPAKAI_PRODUKSI' ? 'selected' : ''}>DIPAKAI PRODUKSI</option>
                         <option value="HILANG" ${normalizeCoilStatus(item.status) === 'HILANG' ? 'selected' : ''}>HILANG</option>
+                        <option value="DIHAPUS" ${normalizeCoilStatus(item.status) === 'DIHAPUS' ? 'selected' : ''}>DIHAPUS</option>
                     </select>
                 `;
                 container.appendChild(card);
