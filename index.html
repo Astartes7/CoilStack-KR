@@ -1177,6 +1177,41 @@
             return null;
         }
 
+        function findSameCoilDifferentHeat(id, heatNumber, opts = {}) {
+            const target = String(id || '').trim().toUpperCase();
+            const targetHeat = String(heatNumber || '').trim().toUpperCase();
+            if (!target) return null;
+            syncActiveStateToLocation();
+
+            const matches = (item) => {
+                if (!item || String(item.id || '').trim().toUpperCase() !== target) return false;
+                return String(item.heatNumber || '').trim().toUpperCase() !== targetHeat;
+            };
+
+            for (const [key, item] of Object.entries(appState.coils || {})) {
+                if (key !== opts.pyramidKey && matches(item)) {
+                    return { type: 'pyramid', key, item, locName: appState.bayName };
+                }
+            }
+            for (let i = 0; i < (appState.nonPyramidCoils || []).length; i++) {
+                if (i !== opts.nonPyramidIndex && matches(appState.nonPyramidCoils[i])) {
+                    return { type: 'nonpyramid', index: i, item: appState.nonPyramidCoils[i], locName: appState.bayName };
+                }
+            }
+            for (const loc of Object.values(appState.locations || {})) {
+                if (!loc || loc.id === appState.activeLocationId) continue;
+                for (const [key, item] of Object.entries(loc.coils || {})) {
+                    if (matches(item)) return { type: 'other_pyramid', locName: loc.name, key, item };
+                }
+                for (let i = 0; i < (loc.nonPyramidCoils || []).length; i++) {
+                    if (matches(loc.nonPyramidCoils[i])) {
+                        return { type: 'other_nonpyramid', locName: loc.name, index: i, item: loc.nonPyramidCoils[i] };
+                    }
+                }
+            }
+            return null;
+        }
+
         function describeDuplicate(dup) {
             if (!dup) return '';
             if (dup.type === 'pyramid') {
@@ -1308,6 +1343,9 @@
             document.getElementById('modal-message').textContent = message;
             const cancelBtn = document.getElementById('modal-cancel');
             const confirmBtn = document.getElementById('modal-confirm');
+            cancelBtn.classList.remove('hidden');
+            confirmBtn.textContent = 'Ya, Lanjutkan';
+            confirmBtn.className = 'px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow-sm';
 
             const cleanup = () => hideModalEl('confirm-modal');
             cancelBtn.onclick = () => {
@@ -1318,6 +1356,18 @@
                 cleanup();
                 if (typeof onConfirm === 'function') onConfirm();
             };
+            showModalEl('confirm-modal');
+        }
+
+        function showBlockingErrorModal(title, message) {
+            const cancelBtn = document.getElementById('modal-cancel');
+            const confirmBtn = document.getElementById('modal-confirm');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            cancelBtn.classList.add('hidden');
+            confirmBtn.textContent = 'Tutup';
+            confirmBtn.className = 'px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition shadow-sm';
+            confirmBtn.onclick = () => hideModalEl('confirm-modal');
             showModalEl('confirm-modal');
         }
 
@@ -2292,9 +2342,17 @@
             const saveAction = document.getElementById('quick-save-action')?.value || 'save';
             const dup = findDuplicateCoil(idVal, heatVal, { pyramidKey: key });
             if (dup) {
+                showBlockingErrorModal(
+                    'Input Ditolak: Coil Duplikat',
+                    `No. Coil ${idVal} dan Heat ${heatVal || '-'} sudah terdaftar di ${describeDuplicate(dup)}. Data tidak disimpan.`
+                );
+                return;
+            }
+            const sameCoil = findSameCoilDifferentHeat(idVal, heatVal, { pyramidKey: key });
+            if (sameCoil) {
                 showConfirmModal(
-                    'No. Coil Duplikat',
-                    `No. Coil ${idVal} dengan Heat ${heatVal || '-'} sudah terdaftar di ${describeDuplicate(dup)}. Tetap simpan di slot ini?`,
+                    'No. Coil Sama, Heat Berbeda',
+                    `No. Coil ${idVal} sudah terdaftar di ${describeDuplicate(sameCoil)} dengan Heat berbeda. Tetap lanjutkan penyimpanan?`,
                     () => performQuickSave(idVal, key, saveAction)
                 );
                 return;
@@ -2524,9 +2582,17 @@
             const heatVal = document.getElementById('np-heat-input').value.trim().toUpperCase();
             const dup = findDuplicateCoil(idVal, heatVal, { nonPyramidIndex: editingIdx >= 0 ? editingIdx : undefined });
             if (dup) {
+                showBlockingErrorModal(
+                    'Input Ditolak: Coil Duplikat',
+                    `No. Coil ${idVal} dan Heat ${heatVal || '-'} sudah terdaftar di ${describeDuplicate(dup)}. Data tidak disimpan.`
+                );
+                return;
+            }
+            const sameCoil = findSameCoilDifferentHeat(idVal, heatVal, { nonPyramidIndex: editingIdx >= 0 ? editingIdx : undefined });
+            if (sameCoil) {
                 showConfirmModal(
-                    'No. Coil Duplikat',
-                    `No. Coil ${idVal} dengan Heat ${heatVal || '-'} sudah terdaftar di ${describeDuplicate(dup)}. Tetap simpan sebagai koil non-piramid?`,
+                    'No. Coil Sama, Heat Berbeda',
+                    `No. Coil ${idVal} sudah terdaftar di ${describeDuplicate(sameCoil)} dengan Heat berbeda. Tetap lanjutkan penyimpanan?`,
                     () => commitNonPyramidRecord(record, editingIdx, idVal)
                 );
                 return;
