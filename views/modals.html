@@ -200,6 +200,31 @@
         </div>
     </div>
 
+    <!-- Modal Riwayat Coil Keluar -->
+    <div id="coil-history-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl p-4 sm:p-5 shadow-2xl border border-slate-200 flex flex-col gap-3 max-h-[92vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900">Riwayat Coil Keluar</h3>
+                    <p class="text-xs text-slate-500">Data coil yang dipakai produksi atau hilang tetap tersimpan</p>
+                </div>
+                <button type="button" onclick="closeCoilHistory()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-2">
+                <input id="coil-history-search" type="search" placeholder="Cari no. coil, heat, supplier, lokasi..." oninput="renderCoilHistory()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:border-rose-500">
+                <select id="coil-history-status" onchange="renderCoilHistory()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700">
+                    <option value="ALL">Semua Status</option>
+                    <option value="DIPAKAI_PRODUKSI">Dipakai Produksi</option>
+                    <option value="HILANG">Hilang</option>
+                </select>
+            </div>
+            <div id="coil-history-count" class="text-[11px] font-bold text-slate-500"></div>
+            <div id="coil-history-results" class="overflow-auto max-h-[58vh] flex flex-col gap-2"></div>
+        </div>
+    </div>
+
     <!-- Modal Ringkasan Data Coil -->
     <div id="coil-summary-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-2xl w-full max-w-3xl p-4 sm:p-5 shadow-2xl border border-slate-200 flex flex-col gap-3 max-h-[92vh]">

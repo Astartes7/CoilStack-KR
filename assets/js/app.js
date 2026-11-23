@@ -116,10 +116,59 @@
             return !!item && normalizeCoilStatus(item.status) === 'AKTIF';
         }
 
-        function freePyramidSlotsForUsedCoils(coils) {
+        function archiveCoilRecord(item, context = {}) {
+            if (!item || !item.id) return;
+            const normalizedStatus = normalizeCoilStatus(item.status);
+            if (normalizedStatus !== 'DIPAKAI_PRODUKSI' && normalizedStatus !== 'HILANG') return;
+
+            if (!Array.isArray(appState.coilHistory)) appState.coilHistory = [];
+            const archiveRecord = {
+                ...item,
+                status: normalizedStatus,
+                locId: context.locId || appState.activeLocationId || '',
+                locName: context.locName || appState.bayName || '',
+                type: context.type || 'pyramid',
+                position: context.position || '',
+                layer: context.layer ?? null,
+                nomorUrut: context.nomorUrut ?? item.nomor ?? null,
+                exitedAt: item.updatedAt || new Date().toLocaleString('id-ID')
+            };
+            const signature = [
+                archiveRecord.locId,
+                archiveRecord.type,
+                archiveRecord.position,
+                archiveRecord.layer ?? '',
+                normalizeDuplicateValue(archiveRecord.id),
+                normalizeDuplicateValue(archiveRecord.heatNumber),
+                archiveRecord.status
+            ].join('|');
+            const alreadyArchived = appState.coilHistory.some(record => [
+                record.locId || '',
+                record.type || '',
+                record.position || '',
+                record.layer ?? '',
+                normalizeDuplicateValue(record.id),
+                normalizeDuplicateValue(record.heatNumber),
+                normalizeCoilStatus(record.status)
+            ].join('|') === signature);
+            if (!alreadyArchived) appState.coilHistory.unshift(archiveRecord);
+        }
+
+        function freePyramidSlotsForUsedCoils(coils, context = {}) {
             if (!coils || typeof coils !== 'object') return;
             Object.entries(coils).forEach(([key, item]) => {
                 if (item && ['DIPAKAI_PRODUKSI', 'HILANG'].includes(normalizeCoilStatus(item.status))) {
+                    const parts = key.split('_');
+                    const layer = parseInt(parts.pop(), 10);
+                    const posId = parts.join('_');
+                    const pos = POSITIONS.find(p => p.id === posId);
+                    archiveCoilRecord(item, {
+                        locId: context.locId,
+                        locName: context.locName,
+                        type: 'pyramid',
+                        position: pos ? pos.shortLabel : posId,
+                        layer: isNaN(layer) ? null : layer
+                    });
                     delete coils[key];
                 }
             });
@@ -245,6 +294,7 @@
             defaultWeightUnit: 'kg',
             coils: {},
             nonPyramidCoils: [],
+            coilHistory: [],
             activeLocationId: 'loc_1',
             locations: {}
         };
@@ -346,11 +396,11 @@
         function loadLocationIntoActiveState(locId) {
             const loc = appState.locations[locId];
             if (!loc) return;
+            if (!Array.isArray(appState.coilHistory)) appState.coilHistory = [];
             Object.entries(loc.coils || {}).forEach(([key, item]) => {
                 if (!item || !item.id) return;
                 item.status = normalizeCoilStatus(item.status);
             });
-            freePyramidSlotsForUsedCoils(loc.coils);
             (loc.nonPyramidCoils || []).forEach(item => {
                 if (item && item.id) item.status = normalizeCoilStatus(item.status);
             });
@@ -359,6 +409,7 @@
             appState.picName = loc.picName || '';
             appState.shift = loc.shift || detectCurrentShiftByTime();
             appState.stackPattern = buildPositionsFromPattern(loc.stackPattern || '3-2-1');
+            freePyramidSlotsForUsedCoils(loc.coils, { locId: loc.id, locName: loc.name });
             appState.totalLayers = loc.totalLayers || 2;
             appState.activePosition = POSITIONS.some(p => p.id === loc.activePosition) ? loc.activePosition : POSITIONS[0].id;
             appState.selectedLayer = Math.min(Math.max(loc.selectedLayer || 1, 1), appState.totalLayers);
@@ -373,10 +424,13 @@
                 saveStateTimer = null;
             }
             syncActiveStateToLocation();
-            freePyramidSlotsForUsedCoils(appState.coils);
+            freePyramidSlotsForUsedCoils(appState.coils, {
+                locId: appState.activeLocationId,
+                locName: appState.bayName
+            });
             Object.values(appState.locations || {}).forEach(loc => {
                 if (!loc) return;
-                freePyramidSlotsForUsedCoils(loc.coils);
+                freePyramidSlotsForUsedCoils(loc.coils, { locId: loc.id, locName: loc.name });
             });
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
@@ -1040,6 +1094,51 @@
 
         function closeCoilSummary() {
             hideModalEl('coil-summary-modal');
+        }
+
+        function openCoilHistory() {
+            showModalEl('coil-history-modal');
+            renderCoilHistory();
+            document.getElementById('coil-history-search')?.focus();
+        }
+
+        function closeCoilHistory() {
+            hideModalEl('coil-history-modal');
+        }
+
+        function renderCoilHistory() {
+            const container = document.getElementById('coil-history-results');
+            const countEl = document.getElementById('coil-history-count');
+            if (!container) return;
+            const query = normalizeDuplicateValue(document.getElementById('coil-history-search')?.value);
+            const statusFilter = document.getElementById('coil-history-status')?.value || 'ALL';
+            const records = (Array.isArray(appState.coilHistory) ? appState.coilHistory : []).filter(record => {
+                if (statusFilter !== 'ALL' && normalizeCoilStatus(record.status) !== statusFilter) return false;
+                if (!query) return true;
+                return [record.id, record.nomor, record.heatNumber, record.supplier, record.grade, record.locName, record.position]
+                    .some(value => normalizeDuplicateValue(value).includes(query));
+            });
+            if (countEl) countEl.textContent = `${records.length} data riwayat coil`;
+            if (records.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200">Belum ada riwayat coil.</div>';
+                return;
+            }
+            container.innerHTML = records.map(record => {
+                const status = normalizeCoilStatus(record.status);
+                const location = record.type === 'pyramid'
+                    ? `${record.position || '-'} • Layer ${record.layer || '-'}`
+                    : `Non-Piramid • No. Urut ${record.nomorUrut || record.nomor || '-'}`;
+                return `
+                    <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-sm font-mono font-extrabold text-slate-900">${escapeHTML(record.id || '-')}</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${status === 'HILANG' ? 'bg-red-100 text-red-700' : 'bg-rose-100 text-rose-700'}">${escapeHTML(getCoilStatusLabel(status))}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-600 mt-1">${escapeHTML(record.locName || '-')} • ${escapeHTML(location)}</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Heat ${escapeHTML(record.heatNumber || '-')} • ${escapeHTML(record.weight || '-')} ${escapeHTML(record.weightUnit || 'kg')} • ${escapeHTML(record.supplier || '-')}</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Keluar: ${escapeHTML(record.exitedAt || record.updatedAt || '-')} • Tim/Shift: ${escapeHTML(record.picName || '-')} / ${escapeHTML(record.shift || '-')}</p>
+                    </div>`;
+            }).join('');
         }
 
         function getCoilSearchRecords() {
@@ -1929,6 +2028,19 @@
             if (!item) return;
             const normalizedStatus = normalizeCoilStatus(status);
             if (normalizedStatus === 'DIPAKAI_PRODUKSI' || normalizedStatus === 'HILANG') {
+                const pos = POSITIONS.find(p => p.id === posId);
+                const exitedItem = {
+                    ...item,
+                    status: normalizedStatus,
+                    updatedAt: new Date().toLocaleString('id-ID')
+                };
+                archiveCoilRecord(exitedItem, {
+                    locId: appState.activeLocationId,
+                    locName: appState.bayName,
+                    type: 'pyramid',
+                    position: pos ? pos.shortLabel : posId,
+                    layer: layerNum
+                });
                 delete appState.coils[key];
                 saveState();
                 renderAll();
@@ -2097,7 +2209,18 @@
                 'Tandai Koil DIPAKAI PRODUKSI?',
                 `Koil #${item?.nomor || idx + 1}${coilId} tidak akan dihapus. Status berubah menjadi DIPAKAI PRODUKSI dan seluruh berat dianggap habis dikonsumsi.`,
                 () => {
-                    if (appState.nonPyramidCoils[idx]) appState.nonPyramidCoils[idx].status = 'DIPAKAI_PRODUKSI';
+                    if (appState.nonPyramidCoils[idx]) {
+                        appState.nonPyramidCoils[idx].status = 'DIPAKAI_PRODUKSI';
+                        appState.nonPyramidCoils[idx].updatedAt = new Date().toLocaleString('id-ID');
+                        archiveCoilRecord(appState.nonPyramidCoils[idx], {
+                            locId: appState.activeLocationId,
+                            locName: appState.bayName,
+                            type: 'nonpyramid',
+                            position: 'Samping',
+                            layer: null,
+                            nomorUrut: appState.nonPyramidCoils[idx].nomor || (idx + 1)
+                        });
+                    }
                     if (editingNonPyramidIndex === idx) document.getElementById('np-status-input').value = 'DIPAKAI_PRODUKSI';
                     saveState();
                     renderAll();
@@ -2111,6 +2234,16 @@
             if (!item) return;
             item.status = normalizeCoilStatus(status);
             item.updatedAt = new Date().toLocaleString('id-ID');
+            if (item.status === 'DIPAKAI_PRODUKSI' || item.status === 'HILANG') {
+                archiveCoilRecord(item, {
+                    locId: appState.activeLocationId,
+                    locName: appState.bayName,
+                    type: 'nonpyramid',
+                    position: 'Samping',
+                    layer: null,
+                    nomorUrut: item.nomor || (idx + 1)
+                });
+            }
             saveState();
             renderAll();
             showToast(`Status coil diubah menjadi ${getCoilStatusLabel(item.status)}`, 'info');
@@ -2930,6 +3063,18 @@
                 allLines.push('');
                 allLines = allLines.concat(buildLocationReportLines(loc));
             });
+            if (appState.coilHistory && appState.coilHistory.length > 0) {
+                allLines.push('');
+                allLines.push(`==============================`);
+                allLines.push(`*RIWAYAT COIL KELUAR*`);
+                allLines.push(`==============================`);
+                appState.coilHistory.forEach(record => {
+                    const location = record.type === 'pyramid'
+                        ? `${record.position || '-'} | Layer:${record.layer || '-'}`
+                        : `Non-Piramid | No.Urut:${record.nomorUrut || record.nomor || '-'}`;
+                    allLines.push(`- Coil:${record.id} | Lokasi:${record.locName || '-'} | ${location} | Status:${getCoilStatusLabel(record.status)} | Heat:${record.heatNumber || '-'} | Berat:${record.weight || '-'} ${record.weightUnit || 'kg'} | Supplier:${record.supplier || '-'} | Keluar:${record.exitedAt || record.updatedAt || '-'}`);
+                });
+            }
             document.getElementById('export-text-preview').value = allLines.join('\n');
         }
 
@@ -2981,7 +3126,9 @@
             const headers = [
                 'Lokasi', 'PIC_Tim', 'Shift', 'Susunan', 'Layer', 'Posisi',
                 'Nomor', 'No_Coil', 'Diameter_mm', 'Grade', 'Heat_Number',
-                'Berat', 'Satuan_Berat', 'Supplier', 'Status', 'Waktu_Update'
+                'Berat', 'Satuan_Berat', 'Supplier', 'Status', 'Waktu_Update',
+                'Riwayat_Lokasi', 'Riwayat_Jenis', 'Riwayat_Posisi', 'Riwayat_Layer',
+                'Riwayat_Waktu_Keluar'
             ];
             const csvRows = [headers.join(',')];
 
@@ -3011,7 +3158,8 @@
                             csvEscape(item.id ? (item.weightUnit || 'kg') : ''),
                             csvEscape(item.supplier || ''),
                             csvEscape(getCoilStatusLabel(item.status)),
-                            csvEscape(item.updatedAt || '')
+                            csvEscape(item.updatedAt || ''),
+                            '', '', '', '', ''
                         ].join(','));
                     });
                 }
@@ -3035,9 +3183,36 @@
                         csvEscape(item.id ? (item.weightUnit || 'kg') : ''),
                         csvEscape(item.supplier || ''),
                         csvEscape(getCoilStatusLabel(item.status)),
-                        csvEscape(item.updatedAt || '')
+                        csvEscape(item.updatedAt || ''),
+                        '', '', '', '', ''
                     ].join(','));
                 });
+            });
+
+            (appState.coilHistory || []).forEach(record => {
+                csvRows.push([
+                    csvEscape(record.locName || ''),
+                    csvEscape(record.picName || ''),
+                    csvEscape(record.shift || ''),
+                    csvEscape(record.type === 'pyramid' ? 'PIRAMID' : 'NON-PIRAMID'),
+                    csvEscape(record.layer ?? ''),
+                    csvEscape(record.position || ''),
+                    csvEscape(record.nomor || record.nomorUrut || ''),
+                    csvEscape(record.id || ''),
+                    csvEscape(record.diameter || ''),
+                    csvEscape(record.grade || ''),
+                    csvEscape(record.heatNumber || ''),
+                    csvEscape(record.weight || ''),
+                    csvEscape(record.weightUnit || 'kg'),
+                    csvEscape(record.supplier || ''),
+                    csvEscape(getCoilStatusLabel(record.status)),
+                    csvEscape(record.updatedAt || ''),
+                    csvEscape(record.locName || ''),
+                    csvEscape(record.type === 'pyramid' ? 'Piramid' : 'Non-Piramid'),
+                    csvEscape(record.position || ''),
+                    csvEscape(record.layer ?? ''),
+                    csvEscape(record.exitedAt || '')
+                ].join(','));
             });
 
             const csvContent = '\uFEFF' + csvRows.join('\n');
