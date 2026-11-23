@@ -1,0 +1,157 @@
+<!-- ========================================================= -->
+        <!-- VIEW 1B: MODE NON-PIRAMID (KOIL SAMPING / LEPASAN 1-N)    -->
+        <!-- ========================================================= -->
+        <section id="view-nonpyramid" class="hidden flex-col gap-5 items-stretch">
+            <div class="w-full bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-sky-600 block">Area Samping Piramid</span>
+                        <h2 class="text-lg font-extrabold text-slate-900">Input Koil Non-Piramid</h2>
+                    </div>
+                    <span class="text-xs font-mono font-bold bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 rounded-lg">Urutan 1 - n</span>
+                </div>
+
+                <form id="nonpyramid-form" onsubmit="handleNonPyramidSubmit(event)" class="bg-slate-900 text-white p-4 rounded-2xl shadow-inner flex flex-col gap-3">
+                    <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-cubes-stacked"></i>
+                            <span id="np-form-mode-label">Tambah Koil Non-Piramid</span>
+                        </span>
+                        <button type="button" id="np-cancel-edit-btn" onclick="resetNonPyramidForm()" class="hidden text-[11px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-0.5 rounded-lg">
+                            Batal Edit
+                        </button>
+                    </div>
+
+                    <!-- Scan / Paste QR Label untuk Non-Piramid -->
+                    <div class="bg-slate-800/90 border border-sky-500/40 rounded-xl p-2.5 flex flex-col gap-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-1.5">
+                            <label for="np-qr-raw-input" class="text-[10px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-qrcode"></i>
+                                <span>Scan / Tempel QR Label</span>
+                            </label>
+                            <div class="flex items-center gap-1.5">
+                                <label class="inline-flex items-center gap-1 text-[10px] text-slate-300 cursor-pointer select-none mr-1" title="Simpan otomatis salinan foto label QR ke perangkat jika QR berhasil terbaca">
+                                    <input type="checkbox" id="np-save-photo-to-gallery" checked class="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-600">
+                                    <span>Simpan Foto</span>
+                                </label>
+                                <input type="file" id="np-qr-photo-input" accept="image/*" capture="environment" class="hidden" onchange="handleQrPhotoUpload(event, 'np')">
+                                <button type="button" onclick="document.getElementById('np-qr-photo-input').click()" class="text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
+                                    <i class="fa-solid fa-camera"></i>
+                                    <span>Foto QR</span>
+                                </button>
+                                <button type="button" onclick="openQrScannerModal('np')" class="text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
+                                    <i class="fa-solid fa-video"></i>
+                                    <span>Live Scan</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <textarea id="np-qr-raw-input" rows="1" placeholder="Tempel / scan QR (Shagang / Master Steel)..." autocomplete="off"
+                                oninput="handleQrRawInput(this.value, 'np')"
+                                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); parseAndFillQrString(this.value, true, 'np'); }"
+                                class="w-full bg-slate-900 border border-slate-600 focus:border-sky-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-emerald-300 placeholder-slate-500 focus:outline-none resize-none overflow-hidden"></textarea>
+                            <button type="button" onclick="pasteFromClipboardToQr('np')" title="Tempel dari clipboard HP" class="bg-slate-700 hover:bg-slate-600 text-sky-300 text-xs font-bold px-2.5 rounded-lg shrink-0 transition">
+                                Tempel
+                            </button>
+                            <button type="button" onclick="parseAndFillQrString(document.getElementById('np-qr-raw-input').value, true, 'np')" class="bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-bold px-3 rounded-lg shrink-0 transition">
+                                Isi
+                            </button>
+                        </div>
+                        <div id="qr-link-helper-np" class="hidden bg-sky-950/95 border border-sky-500/60 rounded-xl p-2.5 flex flex-col gap-2 text-[11px]">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sky-200 leading-tight">QR Link Master Steel terdeteksi. Buka link, <b>Salin Semua Teks</b>, lalu tempel di sini:</span>
+                                <a id="qr-link-anchor-np" href="#" target="_blank" rel="noopener noreferrer" onclick="markAwaitingExternalCopy('np')"
+                                    class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-2.5 py-1.5 rounded-lg shrink-0 flex items-center gap-1 shadow-sm">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>1. Buka Link</span>
+                                </a>
+                            </div>
+                            <div class="flex gap-1.5">
+                                <textarea id="ms-paste-box-np" rows="2" placeholder="2. Tempel (Paste) hasil salinan halaman Master Steel di sini..."
+                                    oninput="parseAndFillQrString(this.value, false, 'np')"
+                                    class="w-full bg-slate-900 border border-sky-500/40 focus:border-sky-400 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-sky-200 placeholder-slate-500 focus:outline-none"></textarea>
+                                <button type="button" onclick="pasteMasterSteelBox('np')"
+                                    class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 rounded-lg shrink-0 flex items-center gap-1 transition">
+                                    <i class="fa-regular fa-paste"></i>
+                                    <span>Paste</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nomor Urut (1-n) & No. Coil -->
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-4">
+                            <label for="np-nomor-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">No. Urut (1-n)</label>
+                            <input type="text" id="np-nomor-input" placeholder="1" autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-sky-300 placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                        <div class="col-span-8">
+                            <label for="np-id-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">No. Coil *</label>
+                            <input type="text" id="np-id-input" placeholder="Ketik / Scan No. Coil..." autocomplete="off"
+                                oninput="handleCoilIdSmartScan(this.value, 'np')"
+                                class="w-full bg-slate-800 border-2 border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Diameter, Grade, Berat -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label for="np-diameter-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Diameter (mm)</label>
+                            <input type="text" id="np-diameter-input" inputmode="decimal" placeholder="5.5" autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="np-grade-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Grade</label>
+                            <input type="text" id="np-grade-input" placeholder="SWRH52A" autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                        <div>
+                            <label for="np-weight-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Berat</label>
+                            <div class="flex bg-slate-800 border border-slate-600 focus-within:border-sky-400 rounded-xl overflow-hidden">
+                                <input type="text" id="np-weight-input" inputmode="decimal" placeholder="2150" autocomplete="off"
+                                    class="w-full min-w-0 bg-transparent px-2.5 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
+                                <select id="np-weight-unit" aria-label="Satuan Berat Non-Piramid"
+                                    class="bg-slate-700 text-sky-300 text-xs font-mono font-bold px-1.5 border-l border-slate-600 focus:outline-none cursor-pointer">
+                                    <option value="kg">kg</option>
+                                    <option value="mt">mt</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Heat Number & Supplier -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label for="np-heat-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Heat Number</label>
+                            <input type="text" id="np-heat-input" placeholder="Heat No..." autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                        <div>
+                            <label for="np-supplier-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Nama Supplier</label>
+                            <input type="text" id="np-supplier-input" placeholder="Nama Supplier..." autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="mt-1 w-full bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-extrabold py-3 px-5 rounded-xl transition flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-plus"></i>
+                        <span id="np-submit-btn-text">Simpan Koil Non-Piramid</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Daftar Koil Non-Piramid -->
+            <div class="w-full bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col gap-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Daftar Koil Non-Piramid</h3>
+                        <p class="text-xs text-slate-500">Koil lepas di samping susunan piramid</p>
+                    </div>
+                    <span id="np-total-badge" class="text-xs font-mono font-bold bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full">0 Coil</span>
+                </div>
+                <div id="nonpyramid-list-container" class="flex flex-col gap-2 max-h-[480px] overflow-y-auto pr-1">
+                    <!-- Dirender oleh JS -->
+                </div>
+            </div>
+        </section>

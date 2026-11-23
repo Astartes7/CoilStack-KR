@@ -1,0 +1,225 @@
+<!-- ========================================================= -->
+        <!-- VIEW 1: MODE MERANGKAK (PILIH POSISI PIRAMID -> ISI LAYER) -->
+        <!-- ========================================================= -->
+        <section id="view-crawl" class="flex flex-col gap-5 items-stretch">
+            
+            <!-- Kolom Kiri: Visual Piramid Interaktif -->
+            <div class="w-full bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">1. Pilih Posisi Coil</h2>
+                        <p class="text-xs text-slate-500">Ketuk lingkaran posisi tempat Anda berada</p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="openPositionFullscreen()" class="h-7 px-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold flex items-center gap-1" title="Buka tampilan posisi layar penuh">
+                            <i class="fa-solid fa-expand text-[10px]"></i>
+                            <span class="hidden sm:inline">Fullscreen</span>
+                        </button>
+                        <button type="button" id="pyramid-zoom-out" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center" title="Perkecil susunan">
+                            <i class="fa-solid fa-magnifying-glass-minus text-[11px]"></i>
+                        </button>
+                        <button type="button" id="pyramid-zoom-reset" class="h-7 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold" title="Reset zoom">100%</button>
+                        <button type="button" id="pyramid-zoom-in" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center" title="Perbesar susunan">
+                            <i class="fa-solid fa-magnifying-glass-plus text-[11px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Diagram Piramid Dinamis -->
+                <div id="dynamic-pyramid-grid" class="bg-slate-50 rounded-2xl p-3 sm:p-4 border border-slate-200/80 flex flex-col items-center justify-start gap-2.5 my-2 select-none overflow-auto max-h-[520px]" style="touch-action: pan-x pan-y; overscroll-behavior: contain;">
+                    <!-- Dirender dinamis oleh JS -->
+                </div>
+
+                <!-- Quick Navigation Posisi Selanjutnya -->
+                <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                    <button type="button" onclick="openSlotMap()" class="text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-table-cells"></i>
+                        <span>Peta Semua Slot</span>
+                    </button>
+                    <button type="button" onclick="nextPosition()" class="text-xs font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition">
+                        <span>Posisi Berikutnya</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Form Input Beruntun Layer 1 -> Layer N untuk Posisi Terpilih -->
+            <div class="w-full bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600 block">Posisi Aktif</span>
+                        <h2 id="active-pos-title" class="text-lg sm:text-xl font-extrabold text-slate-900">ATAS (PUNCAK)</h2>
+                        <select id="active-position-select" onchange="selectPosition(this.value)" class="mt-1 w-full max-w-[260px] bg-slate-50 border border-slate-300 text-slate-800 text-xs font-bold rounded-lg px-2 py-1.5 focus:outline-none focus:border-amber-500">
+                        </select>
+                    </div>
+                    <div class="text-right flex flex-col items-end">
+                        <span class="text-[11px] text-slate-500 block">Urutan Input (Ketuk untuk ubah)</span>
+                        <button type="button" onclick="toggleCrawlDirection()" title="Klik untuk membalik urutan input dari depan (L1) atau dari belakang"
+                            class="text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 mt-0.5 transition active:scale-95">
+                            <i class="fa-solid fa-arrow-down-up-across-line text-amber-600"></i>
+                            <span id="crawl-direction-label">Layer 1 &rarr; Layer 5</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Input Cepat -->
+                <form id="quick-input-form" onsubmit="handleQuickSubmit(event)" class="bg-slate-900 text-white p-4 rounded-2xl shadow-inner flex flex-col gap-3">
+                    <div class="flex items-center justify-between border-b border-slate-700/80 pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-barcode"></i>
+                                <span>Detail Data Coil</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="copyFromPreviousLayer()" title="Salin spesifikasi dari layer sebelumnya" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 px-2 py-1 rounded-lg transition flex items-center gap-1">
+                                <i class="fa-regular fa-clone text-amber-400"></i>
+                                <span class="hidden sm:inline">Salin L-1</span>
+                            </button>
+                            <select id="target-layer-select" onchange="onLayerSelectChange()" class="bg-slate-800 border border-slate-600 text-amber-300 font-mono font-bold text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-amber-400">
+                                <!-- Diisi dinamis oleh JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fitur Scan / Paste QR Label Otomatis -->
+                    <div class="bg-slate-800/90 border border-amber-500/40 rounded-xl p-2.5 flex flex-col gap-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-1.5">
+                            <label for="qr-raw-input" class="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-qrcode"></i>
+                                <span>Scan / Tempel QR Label</span>
+                            </label>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <label class="inline-flex items-center gap-1 text-[10px] text-slate-300 cursor-pointer select-none mr-1" title="Simpan otomatis salinan foto label QR ke perangkat jika QR berhasil terbaca">
+                                    <input type="checkbox" id="save-photo-to-gallery" checked class="rounded text-emerald-500 focus:ring-0 bg-slate-900 border-slate-600">
+                                    <span>Simpan Foto</span>
+                                </label>
+                                <input type="file" id="qr-photo-input" accept="image/*" capture="environment" class="hidden" onchange="handleQrPhotoUpload(event, 'pyramid')">
+                                <button type="button" onclick="document.getElementById('qr-photo-input').click()" class="text-[11px] font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
+                                    <i class="fa-solid fa-camera"></i>
+                                    <span>Foto QR</span>
+                                </button>
+                                <button type="button" onclick="openQrScannerModal('pyramid')" class="text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-lg flex items-center gap-1 transition">
+                                    <i class="fa-solid fa-video"></i>
+                                    <span>Live Scan</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <textarea id="qr-raw-input" rows="1" placeholder="Tempel / scan QR (Shagang / Master Steel)..." autocomplete="off"
+                                oninput="handleQrRawInput(this.value, 'pyramid')"
+                                onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); parseAndFillQrString(this.value, true, 'pyramid'); }"
+                                class="w-full bg-slate-900 border border-slate-600 focus:border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-emerald-300 placeholder-slate-500 focus:outline-none resize-none overflow-hidden"></textarea>
+                            <button type="button" onclick="pasteFromClipboardToQr('pyramid')" title="Tempel dari clipboard HP" class="bg-slate-700 hover:bg-slate-600 text-amber-300 text-xs font-bold px-2.5 rounded-lg shrink-0 transition">
+                                Tempel
+                            </button>
+                            <button type="button" onclick="parseAndFillQrString(document.getElementById('qr-raw-input').value, true, 'pyramid')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold px-3 rounded-lg shrink-0 transition">
+                                Isi
+                            </button>
+                        </div>
+                        <!-- Banner Bantuan Cepat jika QR berupa Link Supplier (mis. Master Steel) -->
+                        <div id="qr-link-helper-pyramid" class="hidden bg-sky-950/95 border border-sky-500/60 rounded-xl p-2.5 flex flex-col gap-2 text-[11px]">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sky-200 leading-tight">QR Link Master Steel terdeteksi. Buka link, <b>Salin Semua Teks</b>, lalu tempel di sini:</span>
+                                <a id="qr-link-anchor-pyramid" href="#" target="_blank" rel="noopener noreferrer" onclick="markAwaitingExternalCopy('pyramid')"
+                                    class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-2.5 py-1.5 rounded-lg shrink-0 flex items-center gap-1 shadow-sm">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    <span>1. Buka Link</span>
+                                </a>
+                            </div>
+                            <div class="flex gap-1.5">
+                                <textarea id="ms-paste-box-pyramid" rows="2" placeholder="2. Tempel (Paste) hasil salinan halaman Master Steel di sini..."
+                                    oninput="parseAndFillQrString(this.value, false, 'pyramid')"
+                                    class="w-full bg-slate-900 border border-sky-500/40 focus:border-sky-400 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-sky-200 placeholder-slate-500 focus:outline-none"></textarea>
+                                <button type="button" onclick="pasteMasterSteelBox('pyramid')"
+                                    class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 rounded-lg shrink-0 flex items-center gap-1 transition">
+                                    <i class="fa-regular fa-paste"></i>
+                                    <span>Paste</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Baris 1: Nomor & No. Coil -->
+                    <div class="grid grid-cols-12 gap-2">
+                        <div class="col-span-4">
+                            <label for="coil-nomor-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Nomor Urut</label>
+                            <input type="text" id="coil-nomor-input" placeholder="Auto" autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-amber-300 placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                        <div class="col-span-8">
+                            <label for="coil-id-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">No. Coil *</label>
+                            <input type="text" id="coil-id-input" placeholder="Ketik / Scan No. Coil..." autocomplete="off"
+                                oninput="handleCoilIdSmartScan(this.value, 'pyramid')"
+                                class="w-full bg-slate-800 border-2 border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Baris 2: Diameter, Grade, Berat -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label for="coil-diameter-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Diameter (mm)</label>
+                            <input type="text" id="coil-diameter-input" inputmode="decimal" placeholder="Mis: 5.5" autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label for="coil-grade-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Grade</label>
+                            <input type="text" id="coil-grade-input" placeholder="Mis: SWRM6" autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                        <div>
+                            <label for="coil-weight-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Berat</label>
+                            <div class="flex bg-slate-800 border border-slate-600 focus-within:border-amber-400 rounded-xl overflow-hidden">
+                                <input type="text" id="coil-weight-input" inputmode="decimal" placeholder="2150" autocomplete="off"
+                                    class="w-full min-w-0 bg-transparent px-2.5 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
+                                <select id="coil-weight-unit" aria-label="Satuan Berat"
+                                    class="bg-slate-700 text-amber-300 text-xs font-mono font-bold px-1.5 border-l border-slate-600 focus:outline-none cursor-pointer">
+                                    <option value="kg">kg</option>
+                                    <option value="mt">mt</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Baris 3: Heat Number & Nama Supplier -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label for="coil-heat-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Heat Number</label>
+                            <input type="text" id="coil-heat-input" placeholder="Heat No..." autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
+                        </div>
+                        <div>
+                            <label for="coil-supplier-input" class="block text-[10px] font-semibold uppercase text-slate-400 mb-1">Nama Supplier</label>
+                            <input type="text" id="coil-supplier-input" placeholder="Nama Supplier..." autocomplete="off"
+                                class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Tombol Submit -->
+                    <div class="mt-1 flex rounded-xl shadow-md overflow-hidden border border-amber-400/30">
+                        <button type="submit" class="flex-1 min-w-0 bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-slate-950 font-extrabold py-3 px-4 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Simpan</span>
+                        </button>
+                        <select id="quick-save-action" aria-label="Opsi lanjutan setelah menyimpan"
+                            title="Pilih tindakan setelah menyimpan"
+                            class="w-[78px] sm:w-[116px] bg-amber-600 hover:bg-amber-500 text-slate-950 border-l border-amber-400/60 px-2 text-xs font-bold focus:outline-none cursor-pointer">
+                            <option value="save">Simpan saja</option>
+                            <option value="next-position">Lanjut Posisi</option>
+                            <option value="next-layer">Lanjut Layer</option>
+                        </select>
+                    </div>
+                </form>
+
+                <!-- Daftar Layer pada Posisi Terpilih -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Daftar Layer pada Posisi Ini</h3>
+                        <span class="text-[11px] text-slate-400">Ketuk item untuk edit</span>
+                    </div>
+                    <div id="position-layer-list" class="flex flex-col gap-2 max-h-[380px] overflow-y-auto pr-1">
+                        <!-- Daftar kartu layer dirender di sini -->
+                    </div>
+                </div>
+            </div>
+        </section>

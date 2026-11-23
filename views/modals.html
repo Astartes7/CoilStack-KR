@@ -1,0 +1,363 @@
+<!-- Modal Ekspor & Rekap Data -->
+    <div id="export-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 max-h-[90vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <i class="fa-solid fa-table"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Rekap & Ekspor Data Coil</h3>
+                        <p class="text-xs text-slate-500">Siap salin ke WhatsApp atau unduh Excel (CSV)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeExportModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span class="font-bold text-slate-700">Cakupan Ekspor:</span>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                        <input type="radio" name="export-scope" value="all" checked onchange="updateExportPreview()" class="text-emerald-600">
+                        <span id="export-all-loc-label">Semua Lokasi (1)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-600">
+                        <input type="radio" name="export-scope" value="current" onchange="updateExportPreview()" class="text-emerald-600">
+                        <span>Lokasi Ini Saja</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label for="export-text-preview" class="text-xs font-bold text-slate-700">Pratinjau Laporan Teks:</label>
+                <textarea id="export-text-preview" readonly rows="8" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 font-mono text-xs text-slate-800 focus:outline-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+                <button type="button" onclick="copyReportText()" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Salin Teks Laporan</span>
+                </button>
+                <button type="button" onclick="downloadCSV()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition shadow-sm">
+                    <i class="fa-solid fa-file-csv"></i>
+                    <span>Unduh Excel (CSV)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Live Scan QR Kamera -->
+    <div id="qr-scanner-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <i class="fa-solid fa-qrcode"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900">Scan QR Label Coil</h3>
+                        <p class="text-[11px] text-slate-500">Arahkan kamera ke barcode / QR label coil</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeQrScannerModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-slate-950 min-h-[240px]"></div>
+            <p class="text-[11px] text-slate-500 text-center">Jika kamera diblokir di preview, gunakan tombol <b>Foto QR</b> atau <b>Tempel</b>.</p>
+        </div>
+    </div>
+    <div id="qr-file-reader-hidden" class="hidden"></div>
+
+    <!-- Modal Tambah / Ubah Nama Lokasi -->
+    <div id="location-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div>
+                        <h3 id="location-modal-title" class="font-bold text-slate-900">Tambah Lokasi Baru</h3>
+                        <p id="location-modal-subtitle" class="text-xs text-slate-500">Data lokasi sebelumnya tetap tersimpan aman</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeLocationModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label for="location-name-input" class="block text-xs font-bold text-slate-700 mb-1">Nama Lokasi / Bay / Timbangan:</label>
+                    <input type="text" id="location-name-input" placeholder="Mis: BAY-A02 / TIMBANGAN-2"
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveLocationModal(); }"
+                        class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-mono text-sm font-bold text-slate-900 uppercase focus:outline-none focus:border-amber-500">
+                </div>
+                <div id="location-pattern-row" class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label for="new-location-pattern" class="block text-xs font-bold text-slate-700 mb-1">Pola Susunan:</label>
+                        <select id="new-location-pattern" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500">
+                            <option value="3-2-1">3-2-1 (6 Coil)</option>
+                            <option value="4-3-2-1">4-3-2-1 (10 Coil)</option>
+                            <option value="5-4-3-2-1">5-4-3-2-1 (15 Coil)</option>
+                            <option value="2-1">2-1 (3 Coil)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-location-layers" class="block text-xs font-bold text-slate-700 mb-1">Total Layer:</label>
+                        <input type="number" id="new-location-layers" min="1" max="50" value="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 font-mono text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                <button type="button" onclick="confirmDeleteAllLocations()" id="modal-delete-all-btn" class="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline flex items-center gap-1 transition">
+                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                    <span>Hapus Semua Lokasi</span>
+                </button>
+                <div class="flex gap-2 ml-auto">
+                    <button type="button" onclick="closeLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Batal</button>
+                    <button type="button" onclick="saveLocationModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400">Simpan Lokasi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gabung Lokasi -->
+    <div id="merge-locations-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 max-h-[92vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                        <i class="fa-solid fa-code-merge"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Gabungkan Lokasi</h3>
+                        <p class="text-xs text-slate-500">Gabungkan data dari lokasi sumber ke tujuan</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeMergeLocationsModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label for="merge-source-location" class="block text-xs font-bold text-slate-700 mb-1">Lokasi sumber:</label>
+                    <select id="merge-source-location" onchange="updateMergeLocationPreview()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-500"></select>
+                </div>
+                <div>
+                    <label for="merge-target-location" class="block text-xs font-bold text-slate-700 mb-1">Lokasi tujuan:</label>
+                    <select id="merge-target-location" onchange="updateMergeLocationPreview()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-sky-500"></select>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-700">Jika slot sudah terisi:</span>
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input type="radio" name="location-merge-mode" value="fill_empty" checked onchange="updateMergeLocationPreview()" class="text-sky-600">
+                    <span><strong>Isi slot kosong saja</strong> - aman, data tujuan dipertahankan</span>
+                </label>
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input type="radio" name="location-merge-mode" value="overwrite" onchange="updateMergeLocationPreview()" class="text-sky-600">
+                    <span><strong>Timpa slot konflik</strong> - data sumber menjadi prioritas</span>
+                </label>
+            </div>
+            <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
+                <input type="checkbox" id="merge-delete-source" checked class="rounded text-red-600">
+                Hapus lokasi sumber setelah berhasil digabungkan
+            </label>
+            <div id="merge-location-preview" class="max-h-44 overflow-auto bg-sky-50/70 border border-sky-200 rounded-xl p-3 text-xs text-slate-700"></div>
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+                <button type="button" onclick="closeMergeLocationsModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold">Batal</button>
+                <button type="button" id="merge-locations-confirm" onclick="executeLocationMerge()" class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs sm:text-sm font-bold">Gabungkan Lokasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cari Data Coil -->
+    <div id="coil-search-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl p-4 sm:p-5 shadow-2xl border border-slate-200 flex flex-col gap-3 max-h-[92vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900">Cari Data Coil</h3>
+                    <p class="text-xs text-slate-500">Cari berdasarkan nomor coil, nomor urut, diameter, grade, heat number, supplier, PIC, atau shift</p>
+                </div>
+                <button type="button" onclick="closeCoilSearch()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-2">
+                <label class="sr-only" for="coil-search-input">Kata kunci pencarian coil</label>
+                <input id="coil-search-input" type="search" placeholder="Ketik data coil..." oninput="renderCoilSearch()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:border-sky-500">
+                <label class="sr-only" for="coil-search-scope">Cakupan pencarian</label>
+                <select id="coil-search-scope" onchange="renderCoilSearch()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700">
+                    <option value="current">Lokasi Ini</option>
+                    <option value="all">Semua Lokasi</option>
+                </select>
+            </div>
+            <div id="coil-search-count" class="text-[11px] font-bold text-slate-500">Masukkan kata kunci pencarian</div>
+            <div id="coil-search-results" class="overflow-auto max-h-[58vh] flex flex-col gap-2"></div>
+        </div>
+    </div>
+
+    <!-- Modal Ringkasan Data Coil -->
+    <div id="coil-summary-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-3xl p-4 sm:p-5 shadow-2xl border border-slate-200 flex flex-col gap-3 max-h-[92vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-bold text-slate-900">Ringkasan Data Coil</h3>
+                    <p class="text-xs text-slate-500">Rekap jumlah, berat, jenis susunan, dan lokasi</p>
+                </div>
+                <button type="button" onclick="closeCoilSummary()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="coil-summary-content" class="overflow-auto max-h-[68vh] flex flex-col gap-3"></div>
+        </div>
+    </div>
+
+    <!-- Modal Peta Slot Posisi x Layer -->
+    <div id="slot-map-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-5xl p-4 sm:p-5 shadow-2xl border border-slate-200 flex flex-col gap-3 max-h-[92vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-3">
+                <div class="min-w-0">
+                    <h3 class="font-bold text-slate-900">Peta Semua Slot Coil</h3>
+                    <p class="text-xs text-slate-500">Ketuk satu kotak untuk langsung memilih posisi dan layer</p>
+                </div>
+                <button type="button" onclick="closeSlotMap()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <label for="slot-map-search" class="sr-only">Cari posisi</label>
+                <input id="slot-map-search" type="search" placeholder="Cari nomor atau nama posisi..." oninput="renderSlotMap()" class="flex-1 min-w-[180px] bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                <select id="slot-map-status" onchange="renderSlotMap()" class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs font-bold text-slate-700">
+                    <option value="all">Semua Slot</option>
+                    <option value="empty">Slot Kosong</option>
+                    <option value="filled">Sudah Terisi</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-3 text-[10px] font-bold text-slate-500">
+                <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300"></i>Kosong</span>
+                <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-emerald-500"></i>Terisi</span>
+                <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-amber-400 border border-amber-600"></i>Aktif</span>
+            </div>
+            <div id="slot-map-container" class="overflow-auto border border-slate-200 rounded-xl bg-slate-50 min-h-[300px] max-h-[68vh]"></div>
+        </div>
+    </div>
+
+    <!-- Tampilan Layar Penuh Posisi Coil -->
+    <div id="position-fullscreen-modal" class="fixed inset-0 bg-slate-950 z-[60] hidden flex-col">
+        <div class="h-14 shrink-0 px-3 sm:px-5 flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900">
+            <div class="min-w-0">
+                <h3 class="text-sm sm:text-base font-bold text-white">Pilih Posisi Coil</h3>
+                <p id="position-fullscreen-summary" class="text-[10px] sm:text-xs text-slate-400 truncate">Tampilan landscape - pinch untuk memperbesar</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <select id="position-fullscreen-select" onchange="selectPosition(this.value); renderPositionFullscreen();" class="max-w-[180px] sm:max-w-[260px] bg-slate-800 border border-slate-600 text-amber-300 text-xs font-bold rounded-lg px-2 py-2"></select>
+                <button type="button" onclick="setPositionFullscreenZoom(positionFullscreenZoom - 0.25)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200" title="Perkecil">
+                    <i class="fa-solid fa-magnifying-glass-minus text-xs"></i>
+                </button>
+                <button type="button" id="position-fullscreen-zoom-reset" onclick="setPositionFullscreenZoom(1)" class="h-9 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold">100%</button>
+                <button type="button" onclick="setPositionFullscreenZoom(positionFullscreenZoom + 0.25)" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200" title="Perbesar">
+                    <i class="fa-solid fa-magnifying-glass-plus text-xs"></i>
+                </button>
+                <button type="button" onclick="closePositionFullscreen()" class="w-9 h-9 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30" title="Tutup layar penuh">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+        <div id="position-fullscreen-grid" class="relative flex-1 min-h-0 overflow-auto bg-slate-800 p-3 sm:p-5 select-none" style="touch-action: pan-x pan-y; overscroll-behavior: contain;">
+        </div>
+    </div>
+
+    <!-- Modal Custom Pola Piramid -->
+    <div id="custom-pattern-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Atur Susunan Custom</h3>
+                        <p class="text-xs text-slate-500">Jumlah coil dari baris bawah ke atas</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCustomPatternModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label for="custom-pattern-input" class="text-xs font-bold text-slate-700">Pola Baris (pisahkan dengan tanda strip `-`):</label>
+                <input type="text" id="custom-pattern-input" placeholder="Contoh: 4-3-2-1 atau 5-4-3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-mono text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); applyCustomPattern(); }">
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Contoh: <code class="bg-slate-100 px-1 rounded">3-2-1</code> artinya 3 coil di baris paling bawah, 2 di tengah, dan 1 di puncak atas.
+                </p>
+            </div>
+            <div class="flex gap-2 justify-end pt-1">
+                <button type="button" onclick="closeCustomPatternModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200">Batal</button>
+                <button type="button" onclick="applyCustomPattern()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-950 bg-amber-500 hover:bg-amber-400">Terapkan Susunan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Impor & Sinkronisasi Rekapan Multi-User -->
+    <div id="import-sync-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 max-h-[90vh]">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+                        <i class="fa-solid fa-code-merge"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900">Impor & Sinkronisasi Rekapan</h3>
+                        <p class="text-xs text-slate-500">Unggah file .CSV atau tempel teks laporan WhatsApp</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportSyncModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                    <label for="import-text-area" class="text-xs font-bold text-slate-700">Unggah File CSV atau Tempel Teks:</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="file" id="import-csv-file" accept=".csv,text/csv" class="hidden" onchange="handleImportCsvFile(event)">
+                        <button type="button" onclick="document.getElementById('import-csv-file').click()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            <i class="fa-solid fa-file-csv"></i>
+                            <span>Pilih File .CSV</span>
+                        </button>
+                        <button type="button" onclick="pasteToImportArea()" class="text-xs font-bold text-sky-600 hover:text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-lg">
+                            <i class="fa-regular fa-paste mr-1"></i>Tempel
+                        </button>
+                    </div>
+                </div>
+                <textarea id="import-text-area" rows="7" placeholder="Pilih file .CSV di atas atau tempel teks laporan WhatsApp / CSV di sini...&#10;&#10;Contoh Teks Laporan:&#10;*LOKASI / BAY: BAY-A01*&#10;*LAYER 1:*&#10;- Atas: No:1 | Coil:008 | Ø5.5 | Gr:SWRH52A | Heat:T690004803 | 2.344 mt | Supp:SHAGANG" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 focus:outline-none focus:border-sky-500"></textarea>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-700">Mode Penggabungan Data:</span>
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input type="radio" name="merge-mode" value="fill_empty" checked class="text-sky-600">
+                    <span><strong>Isi Slot Kosong Saja</strong> (Aman, tidak menimpa data yang sudah ada)</span>
+                </label>
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input type="radio" name="merge-mode" value="overwrite" class="text-sky-600">
+                    <span><strong>Timpa / Perbarui Semua</strong> (Ganti data lama dengan hasil tempelan)</span>
+                </label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+                <button type="button" onclick="closeImportSyncModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold transition">
+                    Batal
+                </button>
+                <button type="button" onclick="processImportSync()" class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition shadow-sm">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Sinkronkan Sekarang</span>
+                </button>
+            </div>
+        </div>
+    </div>
