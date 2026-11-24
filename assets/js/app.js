@@ -289,6 +289,34 @@
             return firstCoilDuplicate;
         }
 
+        function removeActiveCoilByIdentity(id, heatNumber) {
+            const targetId = normalizeDuplicateValue(id);
+            const targetHeat = normalizeDuplicateValue(heatNumber);
+            if (!targetId || !targetHeat) return false;
+            let removed = false;
+
+            Object.values(appState.locations || {}).forEach(loc => {
+                if (!loc) return;
+                Object.entries(loc.coils || {}).forEach(([key, item]) => {
+                    if (normalizeCoilStatus(item?.status) !== 'AKTIF') return;
+                    if (normalizeDuplicateValue(item.id) !== targetId ||
+                        normalizeDuplicateValue(item.heatNumber) !== targetHeat) return;
+                    delete loc.coils[key];
+                    removed = true;
+                });
+                if (Array.isArray(loc.nonPyramidCoils)) {
+                    const before = loc.nonPyramidCoils.length;
+                    loc.nonPyramidCoils = loc.nonPyramidCoils.filter(item =>
+                        normalizeCoilStatus(item?.status) !== 'AKTIF' ||
+                        normalizeDuplicateValue(item.id) !== targetId ||
+                        normalizeDuplicateValue(item.heatNumber) !== targetHeat
+                    );
+                    removed = removed || before !== loc.nonPyramidCoils.length;
+                }
+            });
+            return removed;
+        }
+
         function describeDuplicate(dup) {
             if (!dup) return '';
             if (dup.type === 'pyramid') {
@@ -763,18 +791,25 @@
             }
 
             const overwrite = document.querySelector('input[name="location-merge-mode"]:checked')?.value === 'overwrite';
+            const newLayer = document.querySelector('input[name="location-merge-mode"]:checked')?.value === 'new_layer';
+            const mappingPattern = document.getElementById('merge-position-pattern')?.value || 'target';
             const sourcePositions = generatePositionsList(source.stackPattern || '3-2-1').positions;
             const targetPositions = generatePositionsList(target.stackPattern || '3-2-1').positions;
+            const getMappedTargetPosition = (sourcePos, index) =>
+                mappingPattern === 'source'
+                    ? (targetPositions.find(pos => pos.id === sourcePos.id) || targetPositions[index])
+                    : targetPositions[index];
             let added = 0;
             let conflicts = 0;
 
             sourcePositions.forEach((sourcePos, index) => {
-                const targetPos = targetPositions[index];
+                const targetPos = getMappedTargetPosition(sourcePos, index);
                 if (!targetPos) return;
                 for (let layer = 1; layer <= (source.totalLayers || 1); layer++) {
                     const sourceItem = (source.coils || {})[`${sourcePos.id}_${layer}`];
                     if (!sourceItem?.id) continue;
-                    const targetItem = (target.coils || {})[`${targetPos.id}_${layer}`];
+                    const targetLayer = newLayer ? (target.totalLayers || 1) + layer : layer;
+                    const targetItem = (target.coils || {})[`${targetPos.id}_${targetLayer}`];
                     if (targetItem?.id) conflicts++;
                     else added++;
                 }
@@ -801,7 +836,7 @@
                 }
             });
 
-            return { valid: true, overwrite, added, conflicts, duplicateIds, npAdded, npConflicts };
+            return { valid: true, overwrite, newLayer, mappingPattern, added, conflicts, duplicateIds, npAdded, npConflicts };
         }
 
         function updateMergeLocationPreview() {
@@ -823,12 +858,18 @@
 
             confirmButton.disabled = false;
             confirmButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            const newLayerOptions = document.getElementById('merge-new-layer-options');
+            if (newLayerOptions) newLayerOptions.classList.toggle('hidden', !result.newLayer);
             const patternWarning = source.stackPattern !== target.stackPattern
                 ? '<strong class="text-amber-700 mt-1">Pola susunan berbeda. Posisi dipetakan berdasarkan urutan slot.</strong>'
+                : '';
+            const layerDescription = result.newLayer
+                ? `<span>Layer sumber akan ditempatkan pada layer ${target.totalLayers + 1} sampai ${target.totalLayers + (source.totalLayers || 1)}</span>`
                 : '';
             preview.innerHTML = `
                 <div class="flex flex-col gap-1">
                     <strong>${escapeHTML(source.name)} → ${escapeHTML(target.name)}</strong>
+                    ${layerDescription}
                     <span>Slot piramid baru: ${result.added}</span>
                     <span>Slot piramid konflik: ${result.conflicts}</span>
                     <span>Koil non-piramid baru: ${result.npAdded}</span>
@@ -854,26 +895,34 @@
 
             showConfirmModal(
                 'Gabungkan Lokasi?',
-                `${overwrite ? 'Slot konflik dan nomor coil duplikat akan ditimpa oleh data sumber.' : 'Hanya slot kosong yang akan diisi; data tujuan dipertahankan.'} Lokasi sumber ${document.getElementById('merge-delete-source')?.checked ? 'akan dihapus' : 'akan tetap disimpan'}.`,
+                `${result.newLayer ? 'Data sumber akan dibuat sebagai layer baru.' : (overwrite ? 'Slot konflik dan nomor coil duplikat akan ditimpa oleh data sumber.' : 'Hanya slot kosong yang akan diisi; data tujuan dipertahankan.')} Lokasi sumber ${document.getElementById('merge-delete-source')?.checked ? 'akan dihapus' : 'akan tetap disimpan'}.`,
                 () => {
                     syncActiveStateToLocation();
 
                     const sourcePositions = generatePositionsList(source.stackPattern || '3-2-1').positions;
                     const targetPositions = generatePositionsList(target.stackPattern || '3-2-1').positions;
+                    const getMappedTargetPosition = (sourcePos, index) =>
+                        result.mappingPattern === 'source'
+                            ? (targetPositions.find(pos => pos.id === sourcePos.id) || targetPositions[index])
+                            : targetPositions[index];
                     let added = 0;
                     let replaced = 0;
 
                     if (!target.coils) target.coils = {};
-                    target.totalLayers = Math.max(target.totalLayers || 1, source.totalLayers || 1);
+                    const targetLayerCountBeforeMerge = target.totalLayers || 1;
+                    target.totalLayers = result.newLayer
+                        ? targetLayerCountBeforeMerge + (source.totalLayers || 1)
+                        : Math.max(targetLayerCountBeforeMerge, source.totalLayers || 1);
 
                     let hardDuplicateCount = 0;
                     sourcePositions.forEach((sourcePos, index) => {
-                        const targetPos = targetPositions[index];
+                        const targetPos = getMappedTargetPosition(sourcePos, index);
                         if (!targetPos) return;
                         for (let layer = 1; layer <= (source.totalLayers || 1); layer++) {
                             const sourceItem = (source.coils || {})[`${sourcePos.id}_${layer}`];
                             if (!sourceItem?.id) continue;
-                            const key = `${targetPos.id}_${layer}`;
+                            const targetLayer = result.newLayer ? targetLayerCountBeforeMerge + layer : layer;
+                            const key = `${targetPos.id}_${targetLayer}`;
                             const duplicate = findDuplicateCoil(sourceItem.id, {
                                 heatNumber: sourceItem.heatNumber,
                                 locationId: sourceId,
@@ -883,7 +932,7 @@
                                 hardDuplicateCount++;
                                 continue;
                             }
-                            if ((target.coils[key]?.id) && !overwrite) continue;
+                            if ((target.coils[key]?.id) && !overwrite && !result.newLayer) continue;
                             if (target.coils[key]?.id) replaced++;
                             else added++;
                             target.coils[key] = { ...sourceItem };
@@ -3476,7 +3525,7 @@
 
         function importFromCsvText(rawCsv, overwrite) {
             let text = String(rawCsv || '').replace(/^\uFEFF/, '');
-            const tracker = { importedCount: 0, skippedCount: 0, hardDuplicateCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
+            const tracker = { importedCount: 0, skippedCount: 0, hardDuplicateCount: 0, relocatedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
             const locMaxLayers = {};
 
             const firstPhysicalLine = text.split(/\r?\n/)[0] || '';
@@ -3558,9 +3607,13 @@
                         nonPyramidIndex: dupIdx >= 0 ? dupIdx : undefined
                     });
                     if (duplicate?.sameCoilHeat) {
-                        tracker.skippedCount++;
-                        tracker.hardDuplicateCount++;
-                        continue;
+                        if (removeActiveCoilByIdentity(id || nomor, heatNumber)) {
+                            tracker.relocatedCount++;
+                        } else {
+                            tracker.skippedCount++;
+                            tracker.hardDuplicateCount++;
+                            continue;
+                        }
                     }
                     const itemObj = {
                         nomor: nomor || getNextNpNomorInLocation(targetLoc, dupIdx),
@@ -3617,9 +3670,13 @@
                     pyramidKey: key
                 });
                 if (duplicate?.sameCoilHeat) {
-                    tracker.skippedCount++;
-                    tracker.hardDuplicateCount++;
-                    continue;
+                    if (removeActiveCoilByIdentity(id || nomor, heatNumber)) {
+                        tracker.relocatedCount++;
+                    } else {
+                        tracker.skippedCount++;
+                        tracker.hardDuplicateCount++;
+                        continue;
+                    }
                 }
                 if (targetLoc.coils[key] && targetLoc.coils[key].id && !overwrite) {
                     tracker.skippedCount++;
@@ -3678,7 +3735,7 @@
                 closeImportSyncModal();
                 renderAll();
                 const locNames = Array.from(res.touchedLocIds).map(id => appState.locations[id]?.name).filter(Boolean).join(', ');
-                showToast(`CSV Sinkron (${res.touchedLocIds.size} lokasi: ${locNames || '-'}): ${res.importedCount} coil masuk, ${res.createdLocCount} lokasi baru${res.hardDuplicateCount ? `, ${res.hardDuplicateCount} duplikasi coil+heat ditolak` : ''}.`);
+                showToast(`CSV Sinkron (${res.touchedLocIds.size} lokasi: ${locNames || '-'}): ${res.importedCount} coil masuk${res.relocatedCount ? `, ${res.relocatedCount} coil dipindahkan mengikuti lokasi terbaru` : ''}, ${res.createdLocCount} lokasi baru${res.hardDuplicateCount ? `, ${res.hardDuplicateCount} duplikasi coil+heat ditolak` : ''}.`);
                 return;
             }
 
@@ -3692,7 +3749,7 @@
             let blockShift = '';
             let currentLayer = null;
             let isNonPyramidSection = false;
-            const tracker = { importedCount: 0, skippedCount: 0, hardDuplicateCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
+            const tracker = { importedCount: 0, skippedCount: 0, hardDuplicateCount: 0, relocatedCount: 0, createdLocCount: 0, touchedLocIds: new Set() };
             const locMaxLayers = {};
             const locExplicitLayers = new Set();
 
@@ -3813,9 +3870,13 @@
                             nonPyramidIndex: duplicateIdx >= 0 ? duplicateIdx : undefined
                         });
                         if (duplicate?.sameCoilHeat) {
-                            tracker.skippedCount++;
-                            tracker.hardDuplicateCount++;
-                            return;
+                            if (removeActiveCoilByIdentity(id || nomor, heatNumber)) {
+                                tracker.relocatedCount++;
+                            } else {
+                                tracker.skippedCount++;
+                                tracker.hardDuplicateCount++;
+                                return;
+                            }
                         }
                         const newItem = {
                             nomor: nomor || getNextNpNomorInLocation(targetLoc, duplicateIdx),
@@ -3868,9 +3929,13 @@
                         pyramidKey: key
                     });
                     if (duplicate?.sameCoilHeat) {
-                        tracker.skippedCount++;
-                        tracker.hardDuplicateCount++;
-                        return;
+                        if (removeActiveCoilByIdentity(id || nomor, heatNumber)) {
+                            tracker.relocatedCount++;
+                        } else {
+                            tracker.skippedCount++;
+                            tracker.hardDuplicateCount++;
+                            return;
+                        }
                     }
                     if (targetLoc.coils[key] && targetLoc.coils[key].id && !overwrite) {
                         tracker.skippedCount++;
@@ -3910,7 +3975,7 @@
             saveState();
             closeImportSyncModal();
             renderAll();
-            showToast(`Sinkronisasi selesai: ${tracker.importedCount} coil masuk, ${tracker.createdLocCount} lokasi baru dibuat${tracker.hardDuplicateCount ? `, ${tracker.hardDuplicateCount} duplikasi coil+heat ditolak` : ''}.`);
+            showToast(`Sinkronisasi selesai: ${tracker.importedCount} coil masuk${tracker.relocatedCount ? `, ${tracker.relocatedCount} coil dipindahkan mengikuti lokasi terbaru` : ''}, ${tracker.createdLocCount} lokasi baru dibuat${tracker.hardDuplicateCount ? `, ${tracker.hardDuplicateCount} duplikasi coil+heat ditolak` : ''}.`);
         }
 
         // ==========================================

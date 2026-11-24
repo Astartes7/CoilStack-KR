@@ -161,6 +161,18 @@
                     <input type="radio" name="location-merge-mode" value="overwrite" onchange="updateMergeLocationPreview()" class="text-sky-600">
                     <span><strong>Timpa slot konflik</strong> - data sumber menjadi prioritas</span>
                 </label>
+                <label class="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                    <input type="radio" name="location-merge-mode" value="new_layer" onchange="updateMergeLocationPreview()" class="text-sky-600">
+                    <span><strong>Buat layer baru</strong> - data sumber ditempatkan di atas layer tujuan</span>
+                </label>
+                <div id="merge-new-layer-options" class="hidden ml-6 mt-1 flex flex-col gap-2 border-l-2 border-sky-200 pl-3">
+                    <label class="text-[11px] font-bold text-slate-600" for="merge-position-pattern">Pola untuk memetakan barisan coil:</label>
+                    <select id="merge-position-pattern" onchange="updateMergeLocationPreview()" class="bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-mono font-bold">
+                        <option value="target">Susunan tujuan (Plant 2)</option>
+                        <option value="source">Susunan asal (F13/F9), dipetakan ke slot tujuan</option>
+                    </select>
+                    <p class="text-[10px] text-slate-500">Layer baru mengikuti susunan lokasi tujuan. Pilihan ini menentukan urutan barisan sumber saat dipetakan ke slot tujuan.</p>
+                </div>
             </div>
             <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
                 <input type="checkbox" id="merge-delete-source" checked class="rounded text-red-600">
