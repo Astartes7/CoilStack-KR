@@ -156,6 +156,60 @@
             if (!alreadyArchived) appState.coilHistory.unshift(archiveRecord);
         }
 
+        function syncImportedTerminalStatus(loc, id, heatNumber, status, context = {}) {
+            if (!loc || !['DIPAKAI_PRODUKSI', 'HILANG'].includes(status)) return false;
+            const targetId = normalizeDuplicateValue(id);
+            const targetHeat = normalizeDuplicateValue(heatNumber);
+            if (!targetId || !targetHeat) return false;
+
+            const matches = (item) => item &&
+                normalizeDuplicateValue(item.id) === targetId &&
+                normalizeDuplicateValue(item.heatNumber) === targetHeat;
+
+            for (const [key, item] of Object.entries(loc.coils || {})) {
+                if (!matches(item)) continue;
+                const parts = key.split('_');
+                const layer = parseInt(parts.pop(), 10);
+                const posId = parts.join('_');
+                const position = generatePositionsList(loc.stackPattern || '3-2-1').positions
+                    .find(pos => pos.id === posId);
+                archiveCoilRecord({
+                    ...item,
+                    status,
+                    updatedAt: context.updatedAt || item.updatedAt
+                }, {
+                    locId: loc.id,
+                    locName: loc.name,
+                    type: 'pyramid',
+                    position: position ? position.shortLabel : posId,
+                    layer: isNaN(layer) ? null : layer
+                });
+                delete loc.coils[key];
+                return true;
+            }
+
+            const nonPyramidIndex = (loc.nonPyramidCoils || []).findIndex(matches);
+            if (nonPyramidIndex >= 0) {
+                const item = loc.nonPyramidCoils[nonPyramidIndex];
+                archiveCoilRecord({
+                    ...item,
+                    status,
+                    updatedAt: context.updatedAt || item.updatedAt
+                }, {
+                    locId: loc.id,
+                    locName: loc.name,
+                    type: 'nonpyramid',
+                    position: 'Samping',
+                    layer: null,
+                    nomorUrut: item.nomor || nonPyramidIndex + 1
+                });
+                loc.nonPyramidCoils.splice(nonPyramidIndex, 1);
+                return true;
+            }
+
+            return false;
+        }
+
         function freePyramidSlotsForUsedCoils(coils, context = {}) {
             if (!coils || typeof coils !== 'object') return;
             Object.entries(coils).forEach(([key, item]) => {
@@ -3493,6 +3547,11 @@
                 if (isNonPyramid) {
                     if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
                     const dupIdx = targetLoc.nonPyramidCoils.findIndex(c => c.id && c.id === id);
+                    if (syncImportedTerminalStatus(targetLoc, id, heatNumber, status, { updatedAt })) {
+                        tracker.importedCount++;
+                        tracker.touchedLocIds.add(targetLoc.id);
+                        continue;
+                    }
                     const duplicate = findDuplicateCoil(id || nomor, {
                         heatNumber: heatNumber,
                         locationId: targetLoc.id,
@@ -3547,6 +3606,11 @@
 
                 const key = `${posObj.id}_${layerNum}`;
                 if (!targetLoc.coils) targetLoc.coils = {};
+                if (syncImportedTerminalStatus(targetLoc, id, heatNumber, status, { updatedAt })) {
+                    tracker.importedCount++;
+                    tracker.touchedLocIds.add(targetLoc.id);
+                    continue;
+                }
                 const duplicate = findDuplicateCoil(id || nomor, {
                     heatNumber: heatNumber,
                     locationId: targetLoc.id,
@@ -3738,6 +3802,11 @@
                     if (isNonPyramidSection) {
                         if (!Array.isArray(targetLoc.nonPyramidCoils)) targetLoc.nonPyramidCoils = [];
                         const duplicateIdx = targetLoc.nonPyramidCoils.findIndex(c => c.id && c.id === id);
+                        if (syncImportedTerminalStatus(targetLoc, id, heatNumber, status)) {
+                            tracker.importedCount++;
+                            tracker.touchedLocIds.add(targetLoc.id);
+                            return;
+                        }
                         const duplicate = findDuplicateCoil(id || nomor, {
                             heatNumber,
                             locationId: targetLoc.id,
@@ -3788,6 +3857,11 @@
 
                     const key = `${posObj.id}_${currentLayer}`;
                     if (!targetLoc.coils) targetLoc.coils = {};
+                    if (syncImportedTerminalStatus(targetLoc, id, heatNumber, status)) {
+                        tracker.importedCount++;
+                        tracker.touchedLocIds.add(targetLoc.id);
+                        return;
+                    }
                     const duplicate = findDuplicateCoil(id || nomor, {
                         heatNumber,
                         locationId: targetLoc.id,
