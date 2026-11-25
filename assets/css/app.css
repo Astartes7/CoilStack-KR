@@ -3,6 +3,28 @@
             height: 6px;
 }
 
+/* Field workflows use local styles without adding another UI dependency. */
+.field-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; }
+.field-label { display: flex; flex-direction: column; gap: .35rem; font-size: .875rem; font-weight: 600; }
+.field-input { width: 100%; min-width: 0; min-height: 44px; border: 1px solid #cbd5e1; border-radius: .75rem; padding: .65rem .75rem; color: #0f172a; background: #f8fafc; font-size: .875rem; }
+.field-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: .6rem .9rem; border: 1px solid #cbd5e1; border-radius: .75rem; background: #f1f5f9; color: #334155; font-weight: 700; font-size: .875rem; }
+.field-button:hover { background: #e2e8f0; }
+.field-button:disabled { opacity: .5; cursor: not-allowed; }
+.field-primary { background: #f59e0b; color: #0f172a; border-color: #f59e0b; }
+.field-primary:hover { background: #fbbf24; }
+.field-danger { background: #fef2f2; color: #b91c1c; border-color: #fca5a5; }
+.field-danger:hover:not(:disabled) { background: #fee2e2; }
+.field-badge { display: inline-block; font-size: .75rem; font-weight: 700; padding: .35rem .6rem; border-radius: .5rem; background: #e2e8f0; }
+.field-list { max-height: 420px; overflow: auto; display: flex; flex-direction: column; gap: .5rem; }
+.field-row { border: 1px solid #e2e8f0; background: #f8fafc; border-radius: .75rem; padding: .75rem; font-size: .875rem; overflow-wrap: anywhere; }
+.field-matched { background: #ecfdf5; border-color: #6ee7b7; }
+.field-warning { background: #fffbeb; border-color: #fcd34d; }
+.field-error { background: #fef2f2; border-color: #fca5a5; }
+.field-slot { min-height: 65px; min-width: 95px; text-align: center; }
+.field-slot-target { border: 3px solid #f59e0b; background: #fef3c7; }
+/* Hidden view fragments should not leave empty flex gaps above the active view. */
+#main-content > [id$="-container"] { display: contents; }
+
 /* Shared interaction and readability defaults */
 * {
     -webkit-tap-highlight-color: transparent;

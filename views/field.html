@@ -1,0 +1,90 @@
+<!-- Field tools deliberately separate observation from inventory edits. -->
+<section id="view-field" role="tabpanel" aria-labelledby="tab-field" class="hidden flex-col gap-4">
+    <div class="field-card">
+        <div class="flex flex-wrap justify-between items-start gap-3">
+            <div><h2 class="font-extrabold text-lg text-slate-900">Cari, Cek &amp; Pindahkan Coil</h2><p class="text-sm text-slate-600 mt-1">Identitas = No. Coil + Heat Number. Layer 1 di depan, layer berikutnya ke belakang; kiri/kanan dilihat dari depan bay.</p></div>
+            <span class="field-badge">Data lokal perangkat ini</span>
+        </div>
+        <form id="field-find-form" onsubmit="event.preventDefault(); findFieldCoil()" class="mt-4 flex flex-col gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <label for="field-raw" class="font-bold text-sm flex-1">Scan / tempel label coil</label>
+                <button type="button" class="field-button" onclick="openQrScannerModal('field')"><i class="fa-solid fa-video"></i> Live Scan</button>
+                <button type="button" class="field-button" onclick="document.getElementById('field-photo').click()"><i class="fa-solid fa-camera"></i> Foto QR</button>
+                <input id="field-photo" type="file" accept="image/*" capture="environment" class="hidden" onchange="handleFieldPhoto(event)">
+            </div>
+            <textarea id="field-raw" class="field-input font-mono" rows="2" placeholder="SHAGANG-SWRH52A-T690004803-008-2.344-5.5-20260906" oninput="clearFieldObservation()"></textarea>
+            <div class="flex flex-wrap gap-2"><button type="button" class="field-button" onclick="pasteFieldLabel()">Tempel Clipboard</button><button type="button" class="field-button" onclick="decodeFieldLabel()">Baca Label</button></div>
+            <div id="field-link-helper" class="hidden rounded-xl bg-sky-50 p-3 text-sm">Label berisi tautan Master Steel. <a id="field-external-link" target="_blank" rel="noopener noreferrer" class="font-bold underline">Buka halaman supplier</a>, salin teks halaman, lalu tempel dan baca label di atas.</div>
+            <div class="grid sm:grid-cols-2 gap-3">
+                <label class="field-label">No. Coil<input id="field-coil-id" required class="field-input font-mono uppercase" oninput="clearFieldResult()" autocomplete="off"></label>
+                <label class="field-label">Heat Number<input id="field-heat" class="field-input font-mono uppercase" oninput="clearFieldResult()" autocomplete="off"></label>
+            </div>
+            <details><summary class="cursor-pointer text-sm font-semibold min-h-8">Spesifikasi yang diamati (opsional untuk cek selisih)</summary>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+                    <label class="field-label">Diameter (mm)<input id="field-diameter" class="field-input" inputmode="decimal"></label>
+                    <label class="field-label">Grade<input id="field-grade" class="field-input uppercase"></label>
+                    <label class="field-label">Supplier<input id="field-supplier" class="field-input"></label>
+                    <label class="field-label">Berat<input id="field-weight" class="field-input" inputmode="decimal"></label>
+                    <label class="field-label">Satuan<select id="field-unit" class="field-input"><option value="kg">kg</option><option value="mt">mt</option></select></label>
+                </div>
+            </details>
+            <button class="field-button field-primary self-start" type="submit"><i class="fa-solid fa-magnifying-glass-location"></i> Cari di Semua Lokasi</button>
+        </form>
+        <div id="field-find-result" class="mt-4" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="field-card">
+        <div class="flex flex-wrap justify-between items-center gap-3"><h3 class="font-extrabold text-slate-900">Cek Lapangan</h3><label class="field-label">Sesi / riwayat<select id="field-session-select" class="field-input" onchange="selectFieldSession(this.value)"></select></label></div>
+        <div id="field-start-panel" class="grid sm:grid-cols-3 gap-3 mt-4">
+            <label class="field-label">Lokasi sesi<select id="field-session-location" class="field-input"></select></label>
+            <label class="field-label">Nama pemeriksa<input id="field-operator" class="field-input" placeholder="PIC / Tim"></label>
+            <label class="field-label">Shift<select id="field-shift" class="field-input"><option>Shift 1</option><option>Shift 2</option><option>Shift 3</option><option>Non-Shift</option></select></label>
+            <button type="button" class="field-button field-primary self-end" onclick="startFieldSession()">Mulai Sesi Cek</button>
+        </div>
+        <div id="field-session-summary" class="mt-4" aria-live="polite"></div>
+        <form id="field-check-form" class="hidden mt-4 flex-col gap-3" onsubmit="event.preventDefault(); recordFieldCheck()">
+            <p class="text-sm text-slate-600">Gunakan identitas dan spesifikasi pada form pencarian di atas. Pilih slot yang benar-benar terlihat, bukan otomatis mengikuti catatan.</p>
+            <div id="field-actual-address" class="grid sm:grid-cols-3 gap-3">
+                <label class="field-label">Jenis susunan<select id="field-actual-type" class="field-input" onchange="updateFieldAddress('actual')"><option value="pyramid">Piramid</option><option value="nonpyramid">Non-Piramid</option></select></label>
+                <label class="field-label" id="field-actual-position-wrap">Posisi / alamat terlihat<select id="field-actual-position" class="field-input" onchange="updateFieldActualSelection()"></select></label>
+                <label class="field-label" id="field-actual-layer-wrap">Layer (depan → belakang)<select id="field-actual-layer" class="field-input" onchange="clearFieldConfirmation()"></select></label>
+                <label class="field-label hidden" id="field-actual-floor-wrap">Alamat lantai terlihat<input id="field-actual-floor" class="field-input uppercase" placeholder="ZONA-A / 03" oninput="clearFieldConfirmation()"></label>
+            </div>
+            <label class="field-label">Catatan / selisih<input id="field-check-note" class="field-input" placeholder="Contoh: label sulit dibaca, coil ditemukan di slot lain"></label>
+            <label class="text-sm flex items-start gap-2"><input id="field-check-confirm" type="checkbox" class="mt-1">Saya sudah melihat label, lokasi sesi, dan slot/alamat fisik coil ini.</label>
+            <button type="submit" class="field-button field-primary self-start">Catat Hasil Cek</button>
+        </form>
+        <div id="field-check-feedback" role="status" aria-live="polite" class="mt-3"></div>
+        <div class="flex flex-wrap gap-2 mt-4"><button id="field-finish" type="button" class="field-button" onclick="finishFieldSession()">Selesaikan Sesi</button><button id="field-report-copy" type="button" class="field-button" onclick="copyFieldReport()">Salin Laporan</button><button id="field-report-csv" type="button" class="field-button" onclick="downloadFieldReport()">Unduh CSV Cek</button><button id="field-delete-session" type="button" class="field-button field-danger" onclick="deleteFieldSession()">Hapus Sesi Terpilih</button><button id="field-clear-sessions" type="button" class="field-button field-danger" onclick="clearFieldSessions()">Hapus Semua Sesi</button></div>
+        <p class="text-xs text-slate-500 mt-2">Penghapusan permanen. Unduh laporan yang masih diperlukan sebelum menghapus sesi uji/demo. Stok tidak dihapus; verifikasi dari sesi yang dihapus ikut dibersihkan.</p>
+        <div id="field-session-rows" class="field-list mt-4"></div>
+    </div>
+
+    <div id="field-move-panel" class="field-card hidden">
+        <h3 class="font-extrabold text-slate-900">Pindahkan Coil</h3>
+        <p id="field-move-source" class="text-sm mt-2"></p>
+        <form class="flex flex-col gap-3 mt-4" onsubmit="event.preventDefault(); confirmFieldMove()">
+            <div class="grid sm:grid-cols-3 gap-3">
+                <label class="field-label">Lokasi tujuan<select id="field-move-location" class="field-input" onchange="updateFieldAddress('move')"></select></label>
+                <label class="field-label">Jenis tujuan<select id="field-move-type" class="field-input" onchange="updateFieldAddress('move')"><option value="pyramid">Piramid</option><option value="nonpyramid">Non-Piramid</option></select></label>
+                <label class="field-label" id="field-move-position-wrap">Posisi tujuan<select id="field-move-position" class="field-input" onchange="clearFieldMoveConfirmation()"></select></label>
+                <label class="field-label" id="field-move-layer-wrap">Layer tujuan<select id="field-move-layer" class="field-input" onchange="clearFieldMoveConfirmation()"></select></label>
+                <label class="field-label hidden" id="field-move-floor-wrap">Alamat lantai tujuan<input id="field-move-floor" class="field-input uppercase" placeholder="ZONA-B / 02" oninput="clearFieldMoveConfirmation()"></label>
+                <label class="field-label">PIC perpindahan<input id="field-move-operator" class="field-input" required></label>
+                <label class="field-label">Shift<select id="field-move-shift" class="field-input"><option>Shift 1</option><option>Shift 2</option><option>Shift 3</option><option>Non-Shift</option></select></label>
+            </div>
+            <label class="field-label">Alasan perpindahan<input id="field-move-reason" class="field-input" required placeholder="Contoh: penataan ulang bay"></label>
+            <label class="text-sm flex items-start gap-2"><input id="field-move-confirm" type="checkbox" class="mt-1">Coil + heat, lokasi asal, dan tujuan fisik sudah dikonfirmasi. Ini mencatat perpindahan, bukan izin pengangkatan.</label>
+            <button type="submit" class="field-button field-primary self-start">Tinjau &amp; Catat Perpindahan</button>
+        </form>
+    </div>
+
+    <div class="field-card"><div class="flex flex-wrap justify-between items-center gap-2"><h3 class="font-extrabold text-slate-900">Riwayat Perpindahan</h3><div class="flex flex-wrap gap-2"><button type="button" class="field-button" onclick="downloadFieldMovements()">Unduh CSV Perpindahan</button><button id="field-clear-movements" type="button" class="field-button field-danger" onclick="clearFieldMovements()">Hapus Semua Riwayat</button></div></div><p class="text-xs text-slate-500 mt-2">Hapus hanya catatan riwayat, bukan coil. Lokasi stok saat ini tetap; perpindahan tidak dibatalkan. Unduh CSV terlebih dahulu bila diperlukan.</p><div id="field-movement-list" class="field-list mt-3"></div></div>
+</section>
+
+<div id="field-location-modal" role="dialog" aria-modal="true" aria-labelledby="field-location-title" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl w-full max-w-3xl p-4 sm:p-5 max-h-[90vh] overflow-auto">
+        <div class="flex justify-between items-center gap-3"><h3 id="field-location-title" class="font-extrabold">Lokasi Coil</h3><button type="button" aria-label="Tutup lokasi coil" class="field-button" onclick="hideModalEl('field-location-modal')">Tutup</button></div>
+        <div id="field-location-content" class="mt-4"></div>
+    </div>
+</div>

@@ -582,8 +582,11 @@
             });
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+                return true;
             } catch (e) {
                 console.warn('Gagal menyimpan ke localStorage:', e);
+                showToast('Data tidak tersimpan. Penyimpanan perangkat penuh atau diblokir; ekspor cadangan sebelum menutup aplikasi.', 'error');
+                return false;
             }
         }
 
@@ -1172,13 +1175,15 @@
                 crawl: document.getElementById('view-crawl'),
                 nonpyramid: document.getElementById('view-nonpyramid'),
                 layer: document.getElementById('view-layer'),
-                production: document.getElementById('view-production')
+                production: document.getElementById('view-production'),
+                field: document.getElementById('view-field')
             };
             const tabs = {
                 crawl: document.getElementById('tab-crawl'),
                 nonpyramid: document.getElementById('tab-nonpyramid'),
                 layer: document.getElementById('tab-layer'),
-                production: document.getElementById('tab-production')
+                production: document.getElementById('tab-production'),
+                field: document.getElementById('tab-field')
             };
 
             Object.keys(views).forEach(k => {
@@ -1209,6 +1214,8 @@
                 prepareNonPyramidFormDefaults();
             } else if (mode === 'production') {
                 renderProductionUsageList();
+            } else if (mode === 'field') {
+                renderFieldWorkflows();
             } else {
                 renderCrawlView();
             }
@@ -2092,6 +2099,7 @@
             }
 
             appState.coils[key] = {
+                ...CoilField.editBase(existing, { id: idVal, heatNumber: document.getElementById('coil-heat-input').value }),
                 nomor: nomorVal,
                 id: idVal,
                 diameter: document.getElementById('coil-diameter-input').value.trim(),
@@ -2372,6 +2380,7 @@
             appState.shift = activeShift;
 
             const record = {
+                ...CoilField.editBase(prevNp, { id: idVal, heatNumber: heatVal }),
                 nomor: document.getElementById('np-nomor-input').value.trim().toUpperCase() || getNextNonPyramidNomor(editingIdx),
                 id: idVal,
                 diameter: document.getElementById('np-diameter-input').value.trim(),
@@ -3238,6 +3247,11 @@
                     { facingMode: 'environment' },
                     { fps: 10, qrbox: { width: 220, height: 220 } },
                     (decodedText) => {
+                        if (activeQrTarget === 'field') {
+                            handleFieldQrDecoded(decodedText);
+                            closeQrScannerModal();
+                            return;
+                        }
                         if (activeQrTarget === 'production') {
                             handleProductionQrDecoded(decodedText);
                             closeQrScannerModal();
@@ -3262,10 +3276,11 @@
         function closeQrScannerModal() {
             hideModalEl('qr-scanner-modal');
             if (html5QrScanner) {
-                try {
-                    html5QrScanner.stop().then(() => html5QrScanner.clear()).catch(() => {});
-                } catch (e) {}
+                const scanner = html5QrScanner;
                 html5QrScanner = null;
+                try {
+                    scanner.stop().then(() => scanner.clear()).catch(() => {});
+                } catch (e) {}
             }
         }
 
@@ -4157,6 +4172,8 @@
                 prepareNonPyramidFormDefaults();
             } else if (currentMode === 'production') {
                 renderProductionUsageList(document.getElementById('production-search-input')?.value || '');
+            } else if (currentMode === 'field') {
+                renderFieldWorkflows();
             } else {
                 renderCrawlView();
             }
@@ -4223,6 +4240,7 @@
             }
 
             loadLocationIntoActiveState(appState.activeLocationId);
+            initFieldWorkflows();
             saveState();
             renderAll();
 

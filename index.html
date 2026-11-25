@@ -201,7 +201,7 @@
     <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 lg:p-5 flex flex-col gap-4 sm:gap-5">
 
         <!-- Mode Switcher Tabs -->
-        <div role="tablist" aria-label="Mode kerja" class="grid grid-cols-2 sm:grid-cols-4 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
+        <div role="tablist" aria-label="Mode kerja" class="grid grid-cols-2 sm:grid-cols-5 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
             <button type="button" role="tab" aria-selected="true" id="tab-crawl" onclick="switchMode('crawl')" class="min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm">
                 <i class="fa-solid fa-person-crawling text-amber-500"></i>
                 <span>Piramid (Merangkak)</span>
@@ -218,12 +218,15 @@
                 <i class="fa-solid fa-industry text-rose-500"></i>
                 <span>Dipakai Produksi</span>
             </button>
+            <button type="button" role="tab" aria-selected="false" id="tab-field" onclick="switchMode('field')" class="min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+                <i class="fa-solid fa-clipboard-check text-emerald-600"></i><span>Cek / Cari Lapangan</span>
+            </button>
         </div>
-
         <div id="view-crawl-container"></div>
         <div id="view-non-pyramid-container"></div>
         <div id="view-layer-review-container"></div>
         <div id="view-production-container"></div>
+        <div id="view-field-container"></div>
     </main>
 
     <div id="app-modals-container"></div>
@@ -235,16 +238,23 @@
                 ['view-non-pyramid-container', 'views/non-pyramid.html'],
                 ['view-layer-review-container', 'views/layer-review.html'],
                 ['view-production-container', 'views/production.html'],
-                ['app-modals-container', 'views/modals.html']
+                ['app-modals-container', 'views/modals.html'],
+                ['view-field-container', 'views/field.html']
             ];
             await Promise.all(fragments.map(async ([containerId, url]) => {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Gagal memuat ${url}`);
                 document.getElementById(containerId).innerHTML = await response.text();
             }));
-            const appScript = document.createElement('script');
-            appScript.src = 'assets/js/app.js';
-            document.body.appendChild(appScript);
+            for (const src of ['assets/js/field-core.js', 'assets/js/field.js', 'assets/js/app.js']) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error(`Gagal memuat ${src}`));
+                    document.body.appendChild(script);
+                });
+            }
         })().catch(error => {
             document.body.innerHTML = `<main class="min-h-screen flex items-center justify-center p-6 text-center"><div><h1 class="text-lg font-bold text-red-700">Aplikasi gagal dimuat</h1><p class="mt-2 text-sm text-slate-600">${error.message}</p></div></main>`;
         });
