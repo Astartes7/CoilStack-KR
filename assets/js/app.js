@@ -418,7 +418,8 @@
                 ? 'fa-circle-exclamation'
                 : (type === 'info' ? 'fa-circle-info' : 'fa-circle-check');
 
-            toast.className = `${bgClass} border px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-semibold flex items-center gap-2.5 pointer-events-auto transition-all duration-300`;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            toast.className = `${bgClass} border px-4 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2.5 pointer-events-auto transition-all duration-300`;
             toast.innerHTML = `<i class="fa-solid ${iconClass} shrink-0"></i><span>${escapeHTML(message)}</span>`;
             container.appendChild(toast);
 
@@ -426,14 +427,33 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-6px)';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, Math.max(4000, Math.min(8000, 2500 + String(message).length * 35)));
         }
+
+        let modalReturnFocus = null;
 
         function showModalEl(id) {
             const el = document.getElementById(id);
             if (!el) return;
+            if (!document.querySelector('.fixed[role="dialog"]:not(.hidden)')) {
+                modalReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            }
+            const heading = el.querySelector('h1, h2, h3, h4');
+            if (heading) {
+                if (!heading.id) heading.id = `${id}-heading`;
+                el.setAttribute('aria-labelledby', heading.id);
+            } else {
+                el.setAttribute('aria-label', 'Dialog');
+            }
+            el.setAttribute('role', 'dialog');
+            el.setAttribute('aria-modal', 'true');
             el.classList.remove('hidden');
             el.classList.add('flex');
+            document.body.classList.add('modal-open');
+            requestAnimationFrame(() => {
+                const initialFocus = el.querySelector('[autofocus], input:not([type="hidden"]), textarea, select, button, a[href], [tabindex]:not([tabindex="-1"])');
+                initialFocus?.focus({ preventScroll: true });
+            });
         }
 
         function hideModalEl(id) {
@@ -441,7 +461,44 @@
             if (!el) return;
             el.classList.add('hidden');
             el.classList.remove('flex');
+            el.removeAttribute('aria-modal');
+            if (!document.querySelector('.fixed[role="dialog"]:not(.hidden)')) {
+                document.body.classList.remove('modal-open');
+                if (modalReturnFocus?.isConnected) modalReturnFocus.focus({ preventScroll: true });
+                modalReturnFocus = null;
+            }
         }
+
+        document.addEventListener('keydown', event => {
+            const dialogs = Array.from(document.querySelectorAll('.fixed[role="dialog"]:not(.hidden)'));
+            const dialog = dialogs[dialogs.length - 1];
+            if (!dialog) return;
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                const closeButton = dialog.querySelector('#modal-cancel, button[onclick*="close"]');
+                closeButton?.click();
+                return;
+            }
+
+            if (event.key !== 'Tab') return;
+            const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'))
+                .filter(node => node.offsetParent !== null);
+            if (!focusable.length) {
+                event.preventDefault();
+                dialog.focus();
+                return;
+            }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+                event.preventDefault();
+                first.focus();
+            }
+        });
 
         function showConfirmModal(title, message, onConfirm, onCancel) {
             document.getElementById('modal-title').textContent = title;
@@ -1137,10 +1194,11 @@
 
             Object.keys(tabs).forEach(k => {
                 if (!tabs[k]) return;
+                tabs[k].setAttribute('aria-selected', k === mode ? 'true' : 'false');
                 if (k === mode) {
-                    tabs[k].className = 'py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm';
+                    tabs[k].className = 'min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm';
                 } else {
-                    tabs[k].className = 'py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900';
+                    tabs[k].className = 'min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900';
                 }
             });
 
@@ -1812,6 +1870,8 @@
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.onclick = () => selectPosition(pos.id);
+                    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    btn.setAttribute('aria-label', `Posisi ${pos.seq}, ${pos.shortLabel}. ${filledCount} dari ${appState.totalLayers} layer terisi${isActive ? '. Posisi aktif' : ''}`);
 
                     let nodeColorClass = 'bg-white border-slate-300 text-slate-700 hover:border-amber-400';
                     if (isActive) {
@@ -1827,9 +1887,9 @@
                         : `w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 flex flex-col items-center justify-center p-1.5 transition cursor-pointer shrink-0 ${nodeColorClass}`;
                     btn.innerHTML = `
                         <span class="text-[10px] font-mono font-extrabold opacity-75">#${pos.seq}</span>
-                        <span class="text-[11px] sm:text-xs font-extrabold leading-tight text-center line-clamp-2">${escapeHTML(pos.shortLabel)}</span>
-                        <span class="mt-0.5 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${isActive ? 'bg-slate-900 text-amber-300' : 'bg-slate-200/80 text-slate-700'}">
-                            ${filledCount}/${appState.totalLayers}
+                        <span class="text-xs font-extrabold leading-tight text-center line-clamp-2">${escapeHTML(pos.shortLabel)}</span>
+                        <span class="mt-0.5 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-slate-900 text-amber-300' : isComplete ? 'bg-emerald-600 text-white' : 'bg-slate-200/80 text-slate-700'}">
+                            ${isComplete && !isActive ? '<i class="fa-solid fa-check mr-0.5"></i>' : ''}${filledCount}/${appState.totalLayers}
                         </span>
                     `;
                     rowDiv.appendChild(btn);
@@ -1881,6 +1941,11 @@
                 if (l === appState.selectedLayer) opt.selected = true;
                 layerSelect.appendChild(opt);
             });
+
+            const mobileSaveContext = document.getElementById('mobile-save-context');
+            if (mobileSaveContext) {
+                mobileSaveContext.textContent = `#${posObj.seq} ${posObj.shortLabel} • Layer ${appState.selectedLayer}`;
+            }
 
             populateFormForCurrentSlot();
             renderPositionLayerList();
@@ -1938,6 +2003,22 @@
             showToast(`Spesifikasi disalin dari Layer ${prevLayer}`, 'info');
         }
 
+        function setQuickSaveAction(action = 'next') {
+            const actionInput = document.getElementById('quick-save-action');
+            if (actionInput) actionInput.value = action;
+        }
+
+        function submitQuickForm(action = 'save') {
+            const form = document.getElementById('quick-input-form');
+            if (!form) return;
+            setQuickSaveAction(action);
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            }
+        }
+
         function handleQuickSubmit(e) {
             e.preventDefault();
             const idVal = document.getElementById('coil-id-input').value.trim().toUpperCase();
@@ -1968,7 +2049,7 @@
             }
 
             const key = `${appState.activePosition}_${appState.selectedLayer}`;
-            const saveAction = document.getElementById('quick-save-action')?.value || 'save';
+            const saveAction = document.getElementById('quick-save-action')?.value || 'next';
             const dup = findDuplicateCoil(idVal, {
                 heatNumber: heatVal,
                 locationId: appState.activeLocationId,
@@ -2026,7 +2107,21 @@
             };
 
             const savedLayer = appState.selectedLayer;
-            if (saveAction === 'next-position') {
+            if (saveAction === 'next') {
+                const nextLayer = appState.crawlDirection === 'desc'
+                    ? appState.selectedLayer - 1
+                    : appState.selectedLayer + 1;
+                if (nextLayer >= 1 && nextLayer <= appState.totalLayers) {
+                    appState.selectedLayer = nextLayer;
+                } else {
+                    const posIndex = POSITIONS.findIndex(pos => pos.id === appState.activePosition);
+                    if (posIndex >= 0) {
+                        const nextPosition = POSITIONS[(posIndex + 1) % POSITIONS.length];
+                        appState.activePosition = nextPosition.id;
+                        appState.selectedLayer = getFirstEmptyLayerForPosition(nextPosition.id);
+                    }
+                }
+            } else if (saveAction === 'next-position') {
                 // Posisi berikutnya: pindah ke posisi piramid berikutnya.
                 const posIndex = POSITIONS.findIndex(pos => pos.id === appState.activePosition);
                 if (posIndex >= 0) {
@@ -2052,6 +2147,7 @@
             }
 
             saveState();
+            setQuickSaveAction('next');
             renderAll();
             showToast(`Tersimpan di Layer ${savedLayer} (${idVal})`);
             document.getElementById('coil-id-input').focus();
@@ -2145,11 +2241,20 @@
             );
         }
 
-        function markLayerCoilStatus(posId, layerNum, status) {
+        function markLayerCoilStatus(posId, layerNum, status, confirmed = false) {
             const key = `${posId}_${layerNum}`;
             const item = appState.coils[key];
             if (!item) return;
             const normalizedStatus = normalizeCoilStatus(status);
+            if ((normalizedStatus === 'DIPAKAI_PRODUKSI' || normalizedStatus === 'HILANG') && !confirmed) {
+                showConfirmModal(
+                    normalizedStatus === 'HILANG' ? 'Tandai Coil Hilang?' : 'Tandai Coil Dipakai Produksi?',
+                    `Coil ${item.id || '-'} akan dipindahkan dari slot aktif ke riwayat. Slot ini akan menjadi kosong.`,
+                    () => markLayerCoilStatus(posId, layerNum, normalizedStatus, true),
+                    () => renderAll()
+                );
+                return;
+            }
             if (normalizedStatus === 'DIHAPUS') {
                 showConfirmModal(
                     'Hapus Data Coil Permanen?',
@@ -2375,10 +2480,19 @@
             );
         }
 
-        function markNonPyramidCoilStatus(idx, status) {
+        function markNonPyramidCoilStatus(idx, status, confirmed = false) {
             const item = appState.nonPyramidCoils[idx];
             if (!item) return;
             const normalizedStatus = normalizeCoilStatus(status);
+            if ((normalizedStatus === 'DIPAKAI_PRODUKSI' || normalizedStatus === 'HILANG') && !confirmed) {
+                showConfirmModal(
+                    normalizedStatus === 'HILANG' ? 'Tandai Coil Hilang?' : 'Tandai Coil Dipakai Produksi?',
+                    `Coil ${item.id || '-'} akan dipindahkan dari daftar aktif ke riwayat.`,
+                    () => markNonPyramidCoilStatus(idx, normalizedStatus, true),
+                    () => renderAll()
+                );
+                return;
+            }
             if (normalizedStatus === 'DIHAPUS') {
                 showConfirmModal(
                     'Hapus Data Coil Permanen?',
@@ -2696,7 +2810,30 @@
         function renderMatrixTable() {
             const tbody = document.getElementById('matrix-table-body');
             if (!tbody) return;
+            const mobileList = document.getElementById('matrix-mobile-list');
             tbody.innerHTML = '';
+            if (mobileList) mobileList.innerHTML = '';
+
+            const appendMobileCard = (item, position, layer, onClick) => {
+                if (!mobileList) return;
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'w-full min-h-16 p-3 bg-white hover:bg-amber-50/60 text-left flex items-start justify-between gap-3';
+                card.onclick = onClick;
+                card.innerHTML = `
+                    <span class="min-w-0">
+                        <span class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            <span class="text-[11px] font-bold uppercase text-amber-700">${escapeHTML(layer)}</span>
+                            <span class="text-xs font-semibold text-slate-600">${escapeHTML(position)}</span>
+                        </span>
+                        <span class="block mt-1 text-sm font-mono font-extrabold text-slate-900 break-all">${escapeHTML(item.id || '-')}</span>
+                        <span class="block mt-1 text-xs text-slate-600">Heat ${escapeHTML(item.heatNumber || '-')} · ${item.weight ? `${escapeHTML(item.weight)} ${escapeHTML(item.weightUnit || 'kg')}` : 'Berat -'}</span>
+                        <span class="block mt-1 text-xs text-slate-500 break-words">${escapeHTML(item.grade || '-')} · ${escapeHTML(item.supplier || '-')}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right mt-1 text-xs text-slate-400 shrink-0"></i>
+                `;
+                mobileList.appendChild(card);
+            };
 
             let rowCount = 0;
             for (let l = 1; l <= appState.totalLayers; l++) {
@@ -2721,6 +2858,7 @@
                         <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || appState.shift || '-')}</td>
                     `;
                     tbody.appendChild(tr);
+                    appendMobileCard(item, pos.shortLabel, `Layer ${l}`, () => editLayerItem(pos.id, l));
                 });
             }
 
@@ -2743,9 +2881,11 @@
                     <td class="p-2.5 font-mono text-sky-700 font-bold">${escapeHTML(item.shift || appState.shift || '-')}</td>
                 `;
                 tbody.appendChild(tr);
+                appendMobileCard(item, 'Samping', `Non-Piramid · #${item.nomor || (idx + 1)}`, () => { switchMode('nonpyramid'); editNonPyramidItem(idx); });
             });
             if (rowCount === 0) {
                 tbody.innerHTML = '<tr><td colspan="11" class="p-6 text-center font-sans text-slate-400 italic">Belum ada data coil yang diinput pada lokasi ini.</td></tr>';
+                if (mobileList) mobileList.innerHTML = '<div class="p-6 text-center text-sm text-slate-500">Belum ada data coil yang diinput pada lokasi ini.</div>';
             }
         }
 
@@ -3992,9 +4132,13 @@
             }
             const npCount = (appState.nonPyramidCoils || []).length;
             const badge = document.getElementById('progress-badge');
-            if (badge) badge.textContent = npCount > 0
-                ? `${filled} / ${totalSlots} (+${npCount} NP)`
-                : `${filled} / ${totalSlots}`;
+            if (badge) badge.textContent = `${filled} / ${totalSlots}${npCount > 0 ? ` • +${npCount} NP` : ''}`;
+
+            const meter = document.getElementById('progress-meter');
+            if (meter) meter.style.width = `${totalSlots ? Math.min(100, (filled / totalSlots) * 100) : 0}%`;
+
+            const context = document.getElementById('progress-context');
+            if (context) context.textContent = `${POSITIONS.length} slot/layer × ${appState.totalLayers || 1} layer`;
 
             const layerDisp = document.getElementById('total-layers-display');
             if (layerDisp) layerDisp.textContent = appState.totalLayers;
@@ -4018,7 +4162,16 @@
             }
         }
 
+        function observeStickyHeaderHeight() {
+            const header = document.getElementById('app-header');
+            if (!header || typeof ResizeObserver === 'undefined') return;
+            const updateOffset = () => document.documentElement.style.setProperty('--app-header-height', `${header.getBoundingClientRect().height}px`);
+            new ResizeObserver(updateOffset).observe(header);
+            updateOffset();
+        }
+
         function initApp() {
+            observeStickyHeaderHeight();
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {

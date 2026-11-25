@@ -41,10 +41,10 @@
 <body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
 
     <!-- Toast Notification Container (Pengganti alert()) -->
-    <div id="toast-container" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-80 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" role="status" aria-live="polite" aria-atomic="false" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-[70] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Custom Confirmation Modal (Pengganti confirm()) -->
-    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-message" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 transform transition-all">
             <div class="flex items-center gap-3 text-amber-600 mb-3">
                 <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
@@ -61,132 +61,160 @@
     </div>
 
     <!-- Header & Status Bar -->
-    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold text-lg shadow-inner shrink-0" id="header-pattern-badge">
+    <header id="app-header" class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold text-base shadow-inner shrink-0" id="header-pattern-badge" aria-label="Pola susunan aktif">
                     321
                 </div>
-                <div>
-                    <h1 class="font-bold text-base sm:text-lg leading-tight tracking-tight">CoilStack <span class="text-amber-400">by Han</span></h1>
-                    <p class="text-[11px] sm:text-xs text-slate-400 italic">Lahir dari pikiran manusia, Dibangun dengan AI</p>
+                <div class="min-w-0">
+                    <h1 class="font-bold text-base sm:text-lg leading-tight tracking-tight whitespace-nowrap">CoilStack <span class="text-amber-400">by Han</span></h1>
+                    <p class="hidden lg:block text-xs text-slate-400">Pencatatan susunan coil</p>
                 </div>
             </div>
-            <div class="flex items-center gap-1.5 sm:gap-2">
-                <button type="button" onclick="openCoilSearch()" title="Cari data coil" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs sm:text-sm font-semibold px-2.5 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+            <nav aria-label="Aksi utama" class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <button type="button" onclick="openCoilSearch()" title="Cari data coil" aria-label="Cari data coil" class="ui-icon-button bg-slate-800 hover:bg-slate-700 active:scale-95 text-white rounded-xl flex items-center justify-center transition border border-slate-700">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <span class="hidden sm:inline">Cari</span>
                 </button>
-                <button type="button" onclick="openCoilSummary()" title="Buka ringkasan semua coil" class="bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs sm:text-sm font-semibold px-2.5 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                <button type="button" onclick="openCoilSummary()" title="Buka ringkasan semua coil" aria-label="Buka ringkasan semua coil" class="ui-icon-button bg-slate-800 hover:bg-slate-700 active:scale-95 text-white rounded-xl flex items-center justify-center transition border border-slate-700">
                     <i class="fa-solid fa-list-check"></i>
-                    <span class="hidden sm:inline">Ringkasan</span>
                 </button>
-                <button type="button" onclick="openCoilHistory()" title="Lihat riwayat coil yang dipakai produksi atau hilang" class="bg-slate-700 hover:bg-slate-600 active:scale-95 text-white text-xs sm:text-sm font-semibold px-2.5 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span class="hidden sm:inline">Riwayat</span>
-                </button>
-                <button type="button" onclick="openImportSyncModal()" title="Impor & gabungkan rekapan CSV atau WhatsApp" class="bg-sky-600 hover:bg-sky-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
-                    <i class="fa-solid fa-file-import"></i>
-                    <span class="hidden sm:inline">Impor / Gabung</span>
-                    <span class="sm:hidden">Impor</span>
-                </button>
-                <button type="button" onclick="openExportModal()" class="bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                <details class="relative group">
+                    <summary title="Aksi lainnya" aria-label="Buka aksi lainnya" class="ui-icon-button list-none cursor-pointer bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center transition border border-slate-700">
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </summary>
+                    <div class="absolute right-0 top-[calc(100%+0.5rem)] w-56 bg-white text-slate-800 rounded-xl border border-slate-200 shadow-2xl p-1.5 flex flex-col gap-1 z-50">
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); openCoilHistory()" class="min-h-11 px-3 rounded-lg hover:bg-slate-100 text-sm font-semibold flex items-center gap-3 text-left">
+                            <i class="fa-solid fa-clock-rotate-left w-4 text-slate-500"></i>
+                            <span>Riwayat Coil</span>
+                        </button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open'); openImportSyncModal()" class="min-h-11 px-3 rounded-lg hover:bg-sky-50 text-sm font-semibold flex items-center gap-3 text-left">
+                            <i class="fa-solid fa-file-import w-4 text-sky-600"></i>
+                            <span>Impor / Gabungkan</span>
+                        </button>
+                    </div>
+                </details>
+                <button type="button" onclick="openExportModal()" class="min-h-10 sm:min-h-11 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 rounded-xl flex items-center gap-2 transition shadow-sm whitespace-nowrap" title="Ekspor dan rekap data">
                     <i class="fa-solid fa-file-export"></i>
                     <span class="hidden sm:inline">Ekspor / Rekap</span>
                     <span class="sm:hidden">Rekap</span>
                 </button>
-            </div>
+            </nav>
         </div>
 
-        <!-- Bar Informasi Lokasi, PIC/Shift, Pola Susunan & Total Layer -->
-        <div class="bg-slate-800 border-t border-slate-700/80 px-4 py-2.5">
-            <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-slate-400 font-medium">Lokasi:</span>
-                    <select id="location-select" onchange="switchLocation(this.value)"
-                        class="bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-white font-mono font-bold max-w-[140px] sm:max-w-[180px] focus:outline-none focus:border-amber-400">
-                    </select>
-                    <button type="button" onclick="openNewLocationModal()" title="Tambah lokasi / bay baru tanpa hapus data lama"
-                        class="bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition shadow-sm">
-                        <i class="fa-solid fa-plus"></i>
-                        <span>Lokasi Baru</span>
-                    </button>
-                    <button type="button" onclick="openRenameLocationModal()" title="Ubah nama lokasi aktif"
-                        class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 py-1 rounded-lg transition">
-                        <i class="fa-solid fa-pen text-[11px]"></i>
-                    </button>
-                    <button type="button" onclick="openMergeLocationsModal()" title="Gabungkan lokasi"
-                        class="bg-sky-950/70 hover:bg-sky-800 text-sky-200 border border-sky-700/60 px-2 py-1 rounded-lg transition">
-                        <i class="fa-solid fa-code-merge text-[11px]"></i>
-                        <span class="hidden sm:inline ml-1">Gabung Lokasi</span>
-                    </button>
-                    <button type="button" id="delete-location-btn" onclick="confirmDeleteCurrentLocation()" title="Hapus lokasi ini"
-                        class="bg-red-950/70 hover:bg-red-800 text-red-300 border border-red-800/60 px-2 py-1 rounded-lg transition">
-                        <i class="fa-solid fa-trash-can text-[11px]"></i>
-                    </button>
-                </div>
+        <!-- Lokasi aktif, progres, dan pengaturan yang dapat dilipat -->
+        <div class="bg-slate-800 border-t border-slate-700/80">
+            <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex flex-col gap-2.5 text-xs">
+                <div class="flex flex-wrap lg:flex-nowrap items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                        <label for="location-select" class="text-slate-400 font-semibold shrink-0">Lokasi</label>
+                        <select id="location-select" onchange="switchLocation(this.value)"
+                            class="min-h-10 bg-slate-900/90 border border-slate-600 rounded-xl px-3 text-white font-mono font-bold min-w-0 max-w-[170px] sm:max-w-[230px] focus:outline-none focus:border-amber-400">
+                        </select>
+                        <button type="button" onclick="openNewLocationModal()" title="Tambah lokasi / bay baru tanpa hapus data lama"
+                            class="min-h-10 bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold px-3 rounded-xl flex items-center gap-1.5 transition shadow-sm whitespace-nowrap">
+                            <i class="fa-solid fa-plus"></i>
+                            <span class="hidden min-[420px]:inline">Lokasi Baru</span>
+                        </button>
+                        <details class="relative group shrink-0">
+                            <summary title="Kelola lokasi" aria-label="Kelola lokasi aktif" class="ui-icon-button list-none cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl flex items-center justify-center border border-slate-600 transition">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </summary>
+                            <div class="absolute left-0 sm:left-auto sm:right-0 top-[calc(100%+0.5rem)] w-56 bg-white text-slate-800 rounded-xl border border-slate-200 shadow-2xl p-1.5 flex flex-col gap-1 z-50">
+                                <button type="button" onclick="this.closest('details').removeAttribute('open'); openRenameLocationModal()" class="min-h-10 px-3 rounded-lg hover:bg-slate-100 text-sm font-semibold flex items-center gap-3 text-left">
+                                    <i class="fa-solid fa-pen w-4 text-slate-500"></i><span>Ubah Nama Lokasi</span>
+                                </button>
+                                <button type="button" onclick="this.closest('details').removeAttribute('open'); openMergeLocationsModal()" class="min-h-10 px-3 rounded-lg hover:bg-sky-50 text-sm font-semibold flex items-center gap-3 text-left">
+                                    <i class="fa-solid fa-code-merge w-4 text-sky-600"></i><span>Gabungkan Lokasi</span>
+                                </button>
+                                <button type="button" id="delete-location-btn" onclick="this.closest('details').removeAttribute('open'); confirmDeleteCurrentLocation()" class="min-h-10 px-3 rounded-lg hover:bg-red-50 text-sm font-semibold text-red-700 flex items-center gap-3 text-left">
+                                    <i class="fa-solid fa-trash-can w-4"></i><span>Hapus Lokasi</span>
+                                </button>
+                            </div>
+                        </details>
+                    </div>
 
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="text-slate-400 font-medium">PIC / Tim:</span>
-                    <input type="text" id="pic-name-input" placeholder="Nama PIC / Tim..." oninput="onPicShiftChange()"
-                        class="bg-slate-900/90 border border-slate-600 rounded-lg px-2.5 py-1 text-white font-semibold w-[125px] sm:w-[150px] placeholder-slate-500 focus:outline-none focus:border-amber-400">
-                    <span class="text-slate-400 font-medium ml-1">Shift:</span>
-                    <select id="shift-select" onchange="onPicShiftChange()"
-                        class="bg-slate-900/90 border border-slate-600 rounded-lg px-2 py-1 text-sky-300 font-mono font-bold focus:outline-none focus:border-amber-400">
-                        <option value="Shift 1">Shift 1 (07:30-15:30)</option>
-                        <option value="Shift 2">Shift 2 (15:30-23:30)</option>
-                        <option value="Shift 3">Shift 3 (23:30-07:30)</option>
-                        <option value="Non-Shift">Non-Shift</option>
-                    </select>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-400 font-medium">Susunan:</span>
-                    <select id="stack-pattern-select" onchange="onStackPatternChange(this.value)"
-                        class="bg-slate-900/80 border border-slate-600 rounded-lg px-2 py-1 text-amber-300 font-mono font-bold focus:outline-none focus:border-amber-400">
-                        <option value="3-2-1">3-2-1 (6 Coil)</option>
-                        <option value="4-3-2-1">4-3-2-1 (10 Coil)</option>
-                        <option value="5-4-3-2-1">5-4-3-2-1 (15 Coil)</option>
-                        <option value="2-1">2-1 (3 Coil)</option>
-                        <option value="CUSTOM">Custom...</option>
-                    </select>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-400 font-medium">Total Layer:</span>
-                    <div class="flex items-center bg-slate-900 rounded-lg border border-slate-600 overflow-hidden">
-                        <button type="button" onclick="changeLayerCount(-1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">-</button>
-                        <span id="total-layers-display" class="px-3 py-1 font-mono font-bold text-amber-400">2</span>
-                        <button type="button" onclick="changeLayerCount(1)" class="px-2.5 py-1 hover:bg-slate-700 text-slate-300 font-bold active:bg-slate-600">+</button>
+                    <div class="w-full lg:w-[360px] flex items-center gap-3" aria-label="Progres pengisian lokasi">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                                <span class="text-slate-400 font-semibold">Slot terisi</span>
+                                <span id="progress-badge" class="text-amber-300 font-mono font-bold">0 / 12</span>
+                            </div>
+                            <div class="h-1.5 bg-slate-950/70 rounded-full overflow-hidden">
+                                <div id="progress-meter" class="h-full bg-amber-400 rounded-full transition-[width] duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <span id="progress-context" class="hidden sm:inline text-[11px] leading-tight text-slate-400 max-w-[128px]">6 slot/layer × 2 layer</span>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 ml-auto sm:ml-0">
-                    <span class="text-slate-400">Terisi:</span>
-                    <span id="progress-badge" class="bg-slate-700 text-amber-300 font-mono font-bold px-2.5 py-0.5 rounded-full">0 / 12</span>
-                </div>
+                <details id="location-settings" class="group border-t border-slate-700/70 pt-2">
+                    <summary class="list-none cursor-pointer flex items-center gap-2 text-slate-300 hover:text-white font-semibold w-fit min-h-8 rounded-lg focus:outline-none">
+                        <i class="fa-solid fa-sliders text-amber-400"></i>
+                        <span>Pengaturan Lokasi</span>
+                        <span class="text-slate-500 font-normal hidden sm:inline">PIC, shift, susunan & layer</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 transition-transform group-open:rotate-180"></i>
+                    </summary>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_minmax(250px,1fr)_auto] gap-3 pt-2.5 pb-1">
+                        <div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
+                            <label for="pic-name-input" class="text-slate-400 font-semibold">PIC / Tim</label>
+                            <input type="text" id="pic-name-input" placeholder="Nama PIC / Tim..." oninput="onPicShiftChange()"
+                                class="min-h-10 bg-slate-900/90 border border-slate-600 rounded-xl px-3 text-white font-semibold placeholder-slate-400 focus:outline-none focus:border-amber-400">
+                            <label for="shift-select" class="text-slate-400 font-semibold">Shift</label>
+                            <select id="shift-select" onchange="onPicShiftChange()"
+                                class="min-h-10 min-w-0 bg-slate-900/90 border border-slate-600 rounded-xl px-3 text-sky-300 font-mono font-bold focus:outline-none focus:border-amber-400">
+                                <option value="Shift 1">Shift 1 (07:30-15:30)</option>
+                                <option value="Shift 2">Shift 2 (15:30-23:30)</option>
+                                <option value="Shift 3">Shift 3 (23:30-07:30)</option>
+                                <option value="Non-Shift">Non-Shift</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2">
+                            <label for="stack-pattern-select" class="text-slate-400 font-semibold">Susunan</label>
+                            <select id="stack-pattern-select" onchange="onStackPatternChange(this.value)"
+                                class="min-h-10 min-w-0 bg-slate-900/90 border border-slate-600 rounded-xl px-3 text-amber-300 font-mono font-bold focus:outline-none focus:border-amber-400">
+                                <option value="3-2-1">3-2-1 (6 Coil)</option>
+                                <option value="4-3-2-1">4-3-2-1 (10 Coil)</option>
+                                <option value="5-4-3-2-1">5-4-3-2-1 (15 Coil)</option>
+                                <option value="2-1">2-1 (3 Coil)</option>
+                                <option value="CUSTOM">Kustom...</option>
+                            </select>
+                            <span class="text-slate-400 font-semibold">Total Layer</span>
+                            <div class="flex items-center bg-slate-900 rounded-xl border border-slate-600 overflow-hidden w-fit">
+                                <button type="button" onclick="changeLayerCount(-1)" aria-label="Kurangi total layer" class="w-10 h-10 hover:bg-slate-700 text-slate-200 font-bold active:bg-slate-600">−</button>
+                                <span id="total-layers-display" class="min-w-10 px-2 text-center font-mono font-bold text-amber-400">2</span>
+                                <button type="button" onclick="changeLayerCount(1)" aria-label="Tambah total layer" class="w-10 h-10 hover:bg-slate-700 text-slate-200 font-bold active:bg-slate-600">+</button>
+                            </div>
+                        </div>
+
+                        <div class="hidden xl:flex items-start justify-end text-right text-slate-400 leading-relaxed max-w-xs">
+                            Perubahan susunan dan layer hanya berlaku untuk lokasi aktif.
+                        </div>
+                    </div>
+                </details>
             </div>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main id="main-content" class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col gap-5">
+    <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 lg:p-5 flex flex-col gap-4 sm:gap-5">
 
         <!-- Mode Switcher Tabs -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
-            <button type="button" id="tab-crawl" onclick="switchMode('crawl')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm">
+        <div role="tablist" aria-label="Mode kerja" class="grid grid-cols-2 sm:grid-cols-4 bg-slate-200/90 p-1 rounded-2xl border border-slate-300/60 gap-1">
+            <button type="button" role="tab" aria-selected="true" id="tab-crawl" onclick="switchMode('crawl')" class="min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition bg-white text-slate-900 shadow-sm">
                 <i class="fa-solid fa-person-crawling text-amber-500"></i>
                 <span>Piramid (Merangkak)</span>
             </button>
-            <button type="button" id="tab-nonpyramid" onclick="switchMode('nonpyramid')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+            <button type="button" role="tab" aria-selected="false" id="tab-nonpyramid" onclick="switchMode('nonpyramid')" class="min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
                 <i class="fa-solid fa-cubes-stacked text-sky-500"></i>
                 <span>Non-Piramid (<span id="nonpyramid-tab-count">0</span>)</span>
             </button>
-            <button type="button" id="tab-layer" onclick="switchMode('layer')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+            <button type="button" role="tab" aria-selected="false" id="tab-layer" onclick="switchMode('layer')" class="min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
                 <i class="fa-solid fa-layer-group text-slate-400"></i>
                 <span>Lihat Per Layer</span>
             </button>
-            <button type="button" id="tab-production" onclick="switchMode('production')" class="py-2.5 px-2 sm:px-3 rounded-xl text-[11px] sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
+            <button type="button" role="tab" aria-selected="false" id="tab-production" onclick="switchMode('production')" class="min-h-11 py-2 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition text-slate-600 hover:text-slate-900">
                 <i class="fa-solid fa-industry text-rose-500"></i>
                 <span>Dipakai Produksi</span>
             </button>
@@ -209,11 +237,11 @@
                 ['view-production-container', 'views/production.html'],
                 ['app-modals-container', 'views/modals.html']
             ];
-            for (const [containerId, url] of fragments) {
+            await Promise.all(fragments.map(async ([containerId, url]) => {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Gagal memuat ${url}`);
                 document.getElementById(containerId).innerHTML = await response.text();
-            }
+            }));
             const appScript = document.createElement('script');
             appScript.src = 'assets/js/app.js';
             document.body.appendChild(appScript);
@@ -221,5 +249,10 @@
             document.body.innerHTML = `<main class="min-h-screen flex items-center justify-center p-6 text-center"><div><h1 class="text-lg font-bold text-red-700">Aplikasi gagal dimuat</h1><p class="mt-2 text-sm text-slate-600">${error.message}</p></div></main>`;
         });
     </script>
+    <noscript>
+        <div class="fixed inset-x-3 bottom-3 z-[100] rounded-xl bg-red-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-xl">
+            Aktifkan JavaScript untuk menggunakan CoilStack.
+        </div>
+    </noscript>
 </body>
 </html>
