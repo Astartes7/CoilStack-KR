@@ -62,8 +62,8 @@
         }
 
         function getAutoSequenceNumber(posId) {
-            const currentKey = `${posId}_${appState.selectedLayer}`;
-            return getNextCoilNomorInLocation(appState, currentKey);
+            const position = POSITIONS.find(pos => pos.id === posId);
+            return position ? String(position.seq) : '';
         }
 
         function getNextNonPyramidNomor(excludeIndex) {
