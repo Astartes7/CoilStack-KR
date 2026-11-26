@@ -22,8 +22,17 @@
                         </button>
                     </div>
 
+                    <!-- Mode coil tanpa label: identitas memakai referensi internal unik. -->
+                    <div class="rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 py-2.5 flex flex-col gap-1.5">
+                        <label class="flex items-start gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="np-no-label" onchange="setNoLabelMode('np', this.checked)" class="mt-0.5 rounded text-sky-400 focus:ring-0 bg-slate-900 border-slate-500">
+                            <span class="text-xs font-bold text-sky-200 leading-tight">Coil tidak memiliki label — simpan sebagai <span class="font-mono">NO LABEL</span></span>
+                        </label>
+                        <p id="np-no-label-note" class="hidden text-[11px] leading-snug text-sky-100/90">Sistem membuat referensi unik untuk coil ini. Berat dan supplier boleh dikosongkan jika belum diketahui.</p>
+                    </div>
+
                     <!-- Scan / Paste QR Label untuk Non-Piramid -->
-                    <div class="bg-slate-800/90 border border-sky-500/40 rounded-xl p-2.5 flex flex-col gap-1.5">
+                    <div id="np-qr-block" class="bg-slate-800/90 border border-sky-500/40 rounded-xl p-2.5 flex flex-col gap-1.5">
                         <div class="flex flex-wrap items-center justify-between gap-1.5">
                             <label for="np-qr-raw-input" class="text-[10px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
                                 <i class="fa-solid fa-qrcode"></i>
@@ -87,7 +96,7 @@
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-sky-300 placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div class="col-span-8">
-                            <label for="np-id-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">No. Coil *</label>
+                            <label for="np-id-input" class="label-required block text-[10px] font-semibold uppercase text-sky-400 mb-1">No. Coil</label>
                             <input type="text" id="np-id-input" required placeholder="Ketik / Scan No. Coil..." autocomplete="off"
                                 oninput="handleCoilIdSmartScan(this.value, 'np')"
                                 class="w-full bg-slate-800 border-2 border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
@@ -107,7 +116,7 @@
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="np-weight-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">Berat *</label>
+                            <label for="np-weight-input" class="label-required block text-[10px] font-semibold uppercase text-sky-400 mb-1">Berat</label>
                             <div class="flex bg-slate-800 border border-slate-600 focus-within:border-sky-400 rounded-xl overflow-hidden">
                                 <input type="text" id="np-weight-input" required inputmode="decimal" placeholder="2150" autocomplete="off"
                                     class="w-full min-w-0 bg-transparent px-2.5 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
@@ -123,12 +132,12 @@
                     <!-- Heat Number & Supplier -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <label for="np-heat-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">Heat Number *</label>
+                            <label for="np-heat-input" class="label-required block text-[10px] font-semibold uppercase text-sky-400 mb-1">Heat Number</label>
                             <input type="text" id="np-heat-input" required placeholder="Heat No..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="np-supplier-input" class="block text-[10px] font-semibold uppercase text-sky-400 mb-1">Nama Supplier *</label>
+                            <label for="np-supplier-input" class="label-required block text-[10px] font-semibold uppercase text-sky-400 mb-1">Nama Supplier</label>
                             <input type="text" id="np-supplier-input" required placeholder="Nama Supplier..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-sky-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none">
                         </div>

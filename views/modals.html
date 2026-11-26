@@ -16,18 +16,24 @@
                 </button>
             </div>
 
-            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span class="font-bold text-slate-700">Cakupan Ekspor:</span>
-                <div class="flex items-center gap-3">
-                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
-                        <input type="radio" name="export-scope" value="all" checked onchange="updateExportPreview()" class="text-emerald-600">
-                        <span id="export-all-loc-label">Semua Lokasi (1)</span>
-                    </label>
-                    <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-600">
-                        <input type="radio" name="export-scope" value="current" onchange="updateExportPreview()" class="text-emerald-600">
-                        <span>Lokasi Ini Saja</span>
-                    </label>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex flex-col gap-2 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-bold text-slate-700">Cakupan Ekspor:</span>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-800">
+                            <input type="radio" name="export-scope" value="all" checked onchange="updateExportPreview()" class="text-emerald-600">
+                            <span id="export-all-loc-label">Semua Lokasi (1)</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-600">
+                            <input type="radio" name="export-scope" value="current" onchange="updateExportPreview()" class="text-emerald-600">
+                            <span>Lokasi Ini Saja</span>
+                        </label>
+                    </div>
                 </div>
+                <label class="flex items-start gap-2 cursor-pointer select-none border-t border-slate-200 pt-2">
+                    <input type="checkbox" id="export-include-history" class="mt-0.5 rounded text-emerald-600">
+                    <span class="text-slate-700 leading-snug"><b>Sertakan riwayat coil keluar di CSV</b><br><span class="text-[11px] text-slate-500">DIPAKAI PRODUKSI / HILANG, mengikuti cakupan lokasi di atas. Tanpa centang, CSV hanya berisi stok aktif.</span></span>
+                </label>
             </div>
 
             <div class="flex flex-col gap-1.5">
@@ -179,6 +185,7 @@
                 Hapus lokasi sumber setelah berhasil digabungkan
             </label>
             <div id="merge-location-preview" class="max-h-44 overflow-auto bg-sky-50/70 border border-sky-200 rounded-xl p-3 text-xs text-slate-700"></div>
+            <p class="text-xs text-slate-600">Coil NO LABEL yang berhasil digabungkan berpindah ke lokasi tujuan dengan referensi yang sama, walaupun lokasi sumber disimpan.</p>
             <div class="grid grid-cols-2 gap-2.5 pt-1">
                 <button type="button" onclick="closeMergeLocationsModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold">Batal</button>
                 <button type="button" id="merge-locations-confirm" onclick="executeLocationMerge()" class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs sm:text-sm font-bold">Gabungkan Lokasi</button>
@@ -270,17 +277,29 @@
                 <input id="slot-map-search" type="search" placeholder="Cari nomor atau nama posisi..." oninput="renderSlotMap()" class="flex-1 min-w-[180px] bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
                 <select id="slot-map-status" onchange="renderSlotMap()" class="bg-slate-50 border border-slate-300 rounded-lg px-2 py-2 text-xs font-bold text-slate-700">
                     <option value="all">Semua Slot</option>
-                    <option value="empty">Slot Kosong</option>
+                    <option value="empty">Belum diisi</option>
+                    <option value="no-coil">Tidak ada Coil</option>
                     <option value="filled">Sudah Terisi</option>
                 </select>
             </div>
-            <div class="flex items-center gap-3 text-[10px] font-bold text-slate-500">
-                <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300"></i>Kosong</span>
+            <div class="flex flex-wrap items-center gap-3 text-[10px] font-bold text-slate-500">
+                <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300"></i>Belum diisi</span>
+                <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-sky-100 border border-sky-400"></i>Tidak ada Coil</span>
                 <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-emerald-500"></i>Terisi</span>
                 <span class="inline-flex items-center gap-1"><i class="w-3 h-3 rounded-sm bg-amber-400 border border-amber-600"></i>Aktif</span>
             </div>
             <div id="slot-map-container" class="overflow-auto border border-slate-200 rounded-xl bg-slate-50 min-h-[300px] max-h-[68vh]"></div>
         </div>
+    </div>
+
+    <!-- Dedicated map viewer: the controls, diagram and detail are shared with the inline map. -->
+    <div id="field-map-fullscreen" class="fixed inset-0 z-[60] hidden" tabindex="-1">
+        <div class="field-map-fullscreen-header flex items-center justify-between flex-wrap gap-2">
+            <h3 class="font-extrabold text-slate-900">Peta Coil</h3>
+            <button id="field-map-close" type="button" class="field-button" onclick="closeFieldMapFullscreen()"><i class="fa-solid fa-compress" aria-hidden="true"></i> Keluar Layar Penuh</button>
+        </div>
+        <p class="field-map-rotate-hint text-xs font-semibold text-slate-600">Putar ponsel ke posisi mendatar untuk melihat peta lebih luas.</p>
+        <div id="field-map-fullscreen-body"></div>
     </div>
 
     <!-- Tampilan Layar Penuh Posisi Coil -->

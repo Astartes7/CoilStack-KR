@@ -31,6 +31,27 @@ test('compound identity preserves leading zeros and separates heat numbers', () 
     assert.equal(core.lookup(all, { id: '8', heatNumber: 'H1' }).kind, 'unregistered');
 });
 
+test('unlabeled coils occupy distinct slots and move by reference without supplier-label verification', () => {
+    const state = fixture();
+    const item = { noLabel: true, inventoryRef: 'NL-ABCDEF0123456789', id: '', heatNumber: '' };
+    const second = { ...item, inventoryRef: 'NL-0000000000000002' };
+    state.locations.a.coils.ATAS_1 = item;
+    state.locations.a.nonPyramidCoils.push(second);
+    const current = session(state);
+    const all = core.records(state, positions);
+    const from = core.lookupReference(all, item.inventoryRef.toLowerCase()).matches[0];
+    assert.notEqual(core.identity(item), core.identity(second));
+    assert.equal(core.lookup(all, { id: 'NO LABEL', heatNumber: '0' }).kind, 'unregistered');
+    assert.throws(() => observe(state, current, item), /NO LABEL/);
+    assert.equal(core.progress(current, all).filter(row => row.outcome === 'no_label').length, 2);
+    assert.throws(() => move(state, all[1], actual()), /terisi/);
+    const event = move(state, from);
+    assert.equal(event.inventoryRef, item.inventoryRef);
+    assert.equal(state.locations.b.coils.R2_C1_2.inventoryRef, item.inventoryRef);
+    assert.equal(state.locations.a.nonPyramidCoils[0].inventoryRef, second.inventoryRef);
+    assert.equal(core.progress(current, core.records(state, positions))[0].outcome, 'changed');
+});
+
 test('editing the same identity retains field metadata but a replacement does not inherit it', () => {
     const previous = { ...coil(), fieldVerification: { at: now }, lastMovedAt: now, floorAddress: 'A / 01' };
     assert.ok(core.editBase(previous, { id: ' 008 ', heatNumber: 'h1' }).fieldVerification);

@@ -7,8 +7,20 @@
     'use strict';
     const normalize = value => String(value ?? '').trim().toUpperCase();
     const clone = value => JSON.parse(JSON.stringify(value));
-    const identity = item => JSON.stringify([normalize(item.id), normalize(item.heatNumber)]);
+    const isNoLabel = item => item?.noLabel === true;
+    const normalizeRef = value => {
+        const ref = normalize(value);
+        return /^NL-[0-9A-F]{16}$/.test(ref) ? ref : '';
+    };
+    const isNoCoil = item => item?.noCoil === true;
+    const hasCoil = item => !isNoCoil(item) && (isNoLabel(item) ? !!normalizeRef(item.inventoryRef) : !!item?.id);
+    const hasSlotData = item => hasCoil(item) || isNoCoil(item);
+    const displayCoil = item => isNoLabel(item) ? `NO LABEL · ${item.inventoryRef}` : (item?.id || '—');
+    const identity = item => JSON.stringify(isNoLabel(item)
+        ? ['NO_LABEL', normalizeRef(item.inventoryRef), null]
+        : [normalize(item?.id), normalize(item?.heatNumber)]);
     const active = item => item && (!item.status || normalize(item.status) === 'AKTIF');
+    const hasActiveCoil = item => hasCoil(item) && active(item);
     const number = value => Number(String(value ?? '').trim().replace(',', '.'));
     const weightKg = item => number(item.weight) * (normalize(item.weightUnit) === 'MT' ? 1000 : 1);
 
@@ -34,6 +46,7 @@
     }
 
     function editBase(previous, nextIdentity) {
+        if (isNoCoil(previous)) return {};
         const result = { ...previous };
         if (identity(previous) !== identity(nextIdentity)) {
             delete result.fieldVerification;
@@ -47,7 +60,7 @@
         Object.values(state.locations || {}).forEach(loc => {
             const positions = positionsForPattern(loc.stackPattern || '3-2-1');
             Object.entries(loc.coils || {}).forEach(([key, item]) => {
-                if (!item?.id || !active(item)) return;
+                if (!hasActiveCoil(item)) return;
                 const split = key.lastIndexOf('_');
                 const posId = key.slice(0, split);
                 const layer = Number(key.slice(split + 1));
@@ -56,12 +69,48 @@
                     position: position?.shortLabel || posId, layer, item });
             });
             (loc.nonPyramidCoils || []).forEach((item, index) => {
-                if (!item?.id || !active(item)) return;
+                if (!hasActiveCoil(item)) return;
                 result.push({ locId: loc.id, locName: loc.name, type: 'nonpyramid', index,
                     position: item.floorAddress || `Non-Piramid #${item.nomor || index + 1}`, layer: null, item });
             });
         });
         return result;
+    }
+
+    function pyramidRows(positions) {
+        const rows = new Map();
+        positions.forEach(pos => {
+            if (!rows.has(pos.visualRowFromTop)) rows.set(pos.visualRowFromTop, []);
+            rows.get(pos.visualRowFromTop).push(pos);
+        });
+        return [...rows.keys()].sort((a, b) => a - b).map(row => rows.get(row));
+    }
+
+    function overheadGeometry(rows) {
+        const width = Math.max(1, ...rows.map(row => row.length));
+        // Each coil is two half-width cells; centering the rows reproduces the front diagram.
+        return { columns: width * 2, positions: rows.flatMap(row => row.map((pos, index) => ({
+            pos, start: width - row.length + index * 2
+        }))) };
+    }
+
+    function overheadHiddenPositions(rows, count) {
+        return new Set(rows.slice(0, count).flatMap(row => row.map(pos => pos.id)));
+    }
+
+    function projectOverheadLayer(geometry, layer, coils, hiddenPositions) {
+        const covered = new Set();
+        const result = [];
+        geometry.positions.forEach(({ pos, start }) => {
+            const item = coils?.[`${pos.id}_${layer}`];
+            if (!hasActiveCoil(item) || hiddenPositions.has(pos.id)) return;
+            const left = !covered.has(start);
+            const right = !covered.has(start + 1);
+            if (left || right) result.push({ pos, item, start: left ? start : start + 1, width: Number(left) + Number(right), offset: Number(!left) });
+            covered.add(start);
+            covered.add(start + 1);
+        });
+        return result.sort((a, b) => a.start - b.start);
     }
 
     function parseLabel(raw) {
@@ -114,10 +163,18 @@
 
     function lookup(all, observed) {
         if (!normalize(observed.id)) return { kind: 'incomplete', matches: [] };
+        const labeled = all.filter(record => !isNoLabel(record.item));
         if (!normalize(observed.heatNumber)) {
-            return { kind: 'incomplete', matches: all.filter(record => normalize(record.item.id) === normalize(observed.id)) };
+            return { kind: 'incomplete', matches: labeled.filter(record => normalize(record.item.id) === normalize(observed.id)) };
         }
-        const matches = all.filter(record => identity(record.item) === identity(observed));
+        const matches = labeled.filter(record => identity(record.item) === identity(observed));
+        return { kind: matches.length > 1 ? 'ambiguous' : matches.length ? 'found' : 'unregistered', matches };
+    }
+
+    function lookupReference(all, value) {
+        const ref = normalizeRef(value);
+        if (!ref) return { kind: 'incomplete', matches: [] };
+        const matches = all.filter(record => isNoLabel(record.item) && normalizeRef(record.item.inventoryRef) === ref);
         return { kind: matches.length > 1 ? 'ambiguous' : matches.length ? 'found' : 'unregistered', matches };
     }
 
@@ -150,6 +207,7 @@
 
     function check(state, session, observed, actual, confirmed, note, positionsForPattern, now = new Date().toISOString()) {
         if (!session || session.status !== 'active') throw new Error('Mulai sesi cek lapangan terlebih dahulu.');
+        if (isNoLabel(observed)) throw new Error('Referensi NO LABEL tidak dapat dipakai untuk verifikasi label supplier.');
         if (!normalize(observed.id) || !normalize(observed.heatNumber)) throw new Error('No. Coil dan Heat Number wajib diisi.');
         if (!confirmed) throw new Error('Konfirmasi lokasi dan slot yang terlihat di lapangan.');
         if (actual.locId !== session.locId || !state.locations[actual.locId]) throw new Error('Lokasi pengamatan harus sama dengan lokasi sesi.');
@@ -184,7 +242,7 @@
             const latest = [...session.checks].reverse().find(event => event.identity === expected.identity);
             const current = all.filter(record => identity(record.item) === expected.identity);
             const unchanged = current.length === 1 && fingerprint(current[0]) === expected.fingerprint;
-            const outcome = !unchanged ? 'changed' : !latest ? 'unchecked'
+            const outcome = !unchanged ? 'changed' : isNoLabel(expected.item) ? 'no_label' : !latest ? 'unchecked'
                 : latest.fingerprint !== expected.fingerprint ? 'changed' : latest.outcome;
             return { expected, latest, outcome };
         });
@@ -249,7 +307,7 @@
         if (!normalize(operator) || !normalize(reason)) throw new Error('PIC dan alasan perpindahan wajib diisi.');
         if (!confirmed) throw new Error('Konfirmasi coil, lokasi asal, dan tujuan fisik sebelum mencatat perpindahan.');
         const all = records(state, positionsForPattern);
-        const found = lookup(all, source.item);
+        const found = isNoLabel(source.item) ? lookupReference(all, source.item.inventoryRef) : lookup(all, source.item);
         if (found.kind !== 'found') throw new Error('Coil tidak aktif atau identitas ganda. Cari ulang sebelum memindahkan.');
         const current = found.matches[0];
         if (fingerprint(current) !== fingerprint(source)) throw new Error('Data asal berubah. Cari ulang sebelum memindahkan.');
@@ -259,7 +317,7 @@
         const targetRecord = { ...destination, item: { floorAddress: destination.floorAddress } };
         if (addressKey(current) === addressKey(targetRecord)) throw new Error('Tujuan sama dengan lokasi asal.');
         const key = `${destination.posId}_${destination.layer}`;
-        if (destination.type === 'pyramid' && loc.coils?.[key]?.id) throw new Error('Slot tujuan terisi. Tidak ada coil yang ditimpa.');
+        if (destination.type === 'pyramid' && hasCoil(loc.coils?.[key])) throw new Error('Slot tujuan terisi. Tidak ada coil yang ditimpa.');
         if (destination.type === 'nonpyramid' && all.some(record => record !== current && record.type === 'nonpyramid' &&
             record.locId === destination.locId && normalize(record.item.floorAddress) === normalize(destination.floorAddress))) {
             throw new Error('Alamat lantai tujuan terisi. Pilih alamat lain.');
@@ -284,14 +342,15 @@
         const to = address({ ...destination, locName: loc.name,
             position: destination.type === 'pyramid' ? positionsForPattern(loc.stackPattern || '3-2-1').find(pos => pos.id === destination.posId).shortLabel : item.floorAddress, item });
         const event = { id: `move_${now}_${(state.coilMovements || []).length}`, identity: identity(item),
-            coilId: item.id, heatNumber: item.heatNumber, from, to, operator: operator.trim(), shift,
+            coilId: item.id, heatNumber: item.heatNumber, ...(item.inventoryRef ? { inventoryRef: item.inventoryRef } : {}),
+            ...(isNoLabel(item) ? { noLabel: true } : {}), from, to, operator: operator.trim(), shift,
             reason: reason.trim(), at: now };
         (state.coilMovements ||= []).unshift(event);
         return event;
     }
 
-    const verified = record => !!record.item.fieldVerification && !record.item.fieldVerification.invalidatedAt &&
+    const verified = record => !isNoLabel(record.item) && !!record.item.fieldVerification && !record.item.fieldVerification.invalidatedAt &&
         record.item.fieldVerification.fingerprint === fingerprint(record);
-    return { normalize, identity, address, addressKey, fingerprint, editBase, records, parseLabel, lookup, differences,
+    return { normalize, normalizeRef, isNoLabel, isNoCoil, hasCoil, hasActiveCoil, hasSlotData, displayCoil, identity, address, addressKey, fingerprint, editBase, records, pyramidRows, overheadGeometry, overheadHiddenPositions, projectOverheadLayer, parseLabel, lookup, lookupReference, differences,
         startSession, check, progress, finishSession, removeSessions, removeMovements, move, verified, clone };
 });

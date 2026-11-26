@@ -31,9 +31,9 @@
                 </div>
 
                 <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-500" aria-label="Keterangan status posisi">
-                    <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-white border border-slate-300"></i>Kosong</span>
-                    <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-100 border border-amber-400"></i>Sebagian</span>
-                    <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-100 border border-emerald-500"></i>Penuh</span>
+                    <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-white border border-slate-300"></i>Belum diisi</span>
+                    <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-100 border border-amber-400"></i>Sebagian tercatat</span>
+                    <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-emerald-100 border border-emerald-500"></i>Semua tercatat</span>
                     <span class="inline-flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-500 border border-amber-600"></i>Aktif</span>
                 </div>
 
@@ -79,7 +79,7 @@
                             </span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button type="button" onclick="copyFromPreviousLayer()" title="Salin spesifikasi dari layer sebelumnya" class="min-h-9 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 px-2.5 rounded-lg transition flex items-center gap-1.5">
+                            <button type="button" id="coil-copy-previous" onclick="copyFromPreviousLayer()" title="Salin spesifikasi dari layer sebelumnya" class="min-h-9 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 px-2.5 rounded-lg transition flex items-center gap-1.5 disabled:opacity-50">
                                 <i class="fa-regular fa-clone text-amber-400"></i>
                                 <span class="hidden sm:inline">Salin L-1</span>
                             </button>
@@ -89,8 +89,33 @@
                         </div>
                     </div>
 
+                    <div id="coil-paste-bar" class="hidden" role="group" aria-label="Salinan data coil">
+                        <button type="button" id="coil-paste-data" onclick="pastePyramidCoilData()" class="min-h-11 px-3 rounded-lg border border-slate-600 bg-slate-800 text-amber-300 text-xs font-bold disabled:opacity-50">
+                            <i class="fa-solid fa-paste mr-1" aria-hidden="true"></i> Tempel Data
+                        </button>
+                        <span id="coil-paste-source" class="block mt-1 text-xs text-slate-300 break-words" role="status"></span>
+                    </div>
+
+                    <div class="rounded-xl border border-sky-500/40 bg-sky-500/10 px-3 py-2.5">
+                        <label class="flex items-start gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="coil-no-coil" onchange="setNoCoilMode(this.checked)" aria-describedby="coil-no-coil-note" class="mt-0.5 rounded text-sky-500 disabled:opacity-50">
+                            <span class="text-xs font-bold text-sky-200">Tidak ada Coil</span>
+                        </label>
+                        <p id="coil-no-coil-note" class="text-[11px] leading-snug text-sky-100/90 mt-1">Untuk slot yang sejak awal tidak berisi coil. Simpan untuk membedakannya dari slot yang belum diisi.</p>
+                    </div>
+
+                    <fieldset id="coil-details-fields" class="flex min-w-0 flex-col gap-3">
+                    <!-- Mode coil tanpa label: identitas memakai referensi internal unik. -->
+                    <div class="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
+                        <label class="flex items-start gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="coil-no-label" onchange="setNoLabelMode('pyramid', this.checked)" class="mt-0.5 rounded text-amber-500 focus:ring-0 bg-slate-900 border-slate-500">
+                            <span class="text-xs font-bold text-amber-200 leading-tight">Coil tidak memiliki label — simpan sebagai <span class="font-mono">NO LABEL</span></span>
+                        </label>
+                        <p id="coil-no-label-note" class="hidden text-[11px] leading-snug text-amber-100/90">Sistem membuat referensi unik untuk coil ini. Berat dan supplier boleh dikosongkan jika belum diketahui.</p>
+                    </div>
+
                     <!-- Fitur Scan / Paste QR Label Otomatis -->
-                    <div class="bg-slate-800/90 border border-amber-500/40 rounded-xl p-2.5 flex flex-col gap-1.5">
+                    <div id="coil-qr-block" class="bg-slate-800/90 border border-amber-500/40 rounded-xl p-2.5 flex flex-col gap-1.5">
                         <div class="flex flex-wrap items-center justify-between gap-1.5">
                             <label for="qr-raw-input" class="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
                                 <i class="fa-solid fa-qrcode"></i>
@@ -155,7 +180,7 @@
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-amber-300 placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div class="col-span-8">
-                            <label for="coil-id-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">No. Coil *</label>
+                            <label for="coil-id-input" class="label-required block text-[10px] font-semibold uppercase text-amber-400 mb-1">No. Coil</label>
                             <input type="text" id="coil-id-input" required placeholder="Ketik / Scan No. Coil..." autocomplete="off"
                                 oninput="handleCoilIdSmartScan(this.value, 'pyramid')"
                                 class="w-full bg-slate-800 border-2 border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-sm font-mono font-bold text-white placeholder-slate-500 focus:outline-none uppercase">
@@ -175,7 +200,7 @@
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="coil-weight-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">Berat *</label>
+                            <label for="coil-weight-input" class="label-required block text-[10px] font-semibold uppercase text-amber-400 mb-1">Berat</label>
                             <div class="flex bg-slate-800 border border-slate-600 focus-within:border-amber-400 rounded-xl overflow-hidden">
                                 <input type="text" id="coil-weight-input" required inputmode="decimal" placeholder="2150" autocomplete="off"
                                     class="w-full min-w-0 bg-transparent px-2.5 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none">
@@ -191,18 +216,19 @@
                     <!-- Baris 3: Heat Number & Nama Supplier -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                            <label for="coil-heat-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">Heat Number *</label>
+                            <label for="coil-heat-input" class="label-required block text-[10px] font-semibold uppercase text-amber-400 mb-1">Heat Number</label>
                             <input type="text" id="coil-heat-input" required placeholder="Heat No..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none uppercase">
                         </div>
                         <div>
-                            <label for="coil-supplier-input" class="block text-[10px] font-semibold uppercase text-amber-400 mb-1">Nama Supplier *</label>
+                            <label for="coil-supplier-input" class="label-required block text-[10px] font-semibold uppercase text-amber-400 mb-1">Nama Supplier</label>
                             <input type="text" id="coil-supplier-input" required placeholder="Nama Supplier..." autocomplete="off"
                                 class="w-full bg-slate-800 border border-slate-600 focus:border-amber-400 rounded-xl px-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none">
                         </div>
                     </div>
                     <!-- Coil baru selalu aktif. Perubahan status dilakukan dari kartu coil agar tidak tersentuh saat input. -->
                     <input type="hidden" id="coil-status-input" value="AKTIF">
+                    </fieldset>
 
                     <!-- Tombol Submit -->
                     <input type="hidden" id="quick-save-action" value="next">

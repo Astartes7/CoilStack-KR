@@ -20,8 +20,92 @@
 .field-matched { background: #ecfdf5; border-color: #6ee7b7; }
 .field-warning { background: #fffbeb; border-color: #fcd34d; }
 .field-error { background: #fef2f2; border-color: #fca5a5; }
-.field-slot { min-height: 65px; min-width: 95px; text-align: center; }
-.field-slot-target { border: 3px solid #f59e0b; background: #fef3c7; }
+.field-map-layout { display: grid; gap: 1rem; }
+@media (min-width: 64rem) {
+    .field-map-layout { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+#field-map-panel { scroll-margin-top: calc(var(--app-header-height, 180px) + .75rem); }
+:is(#field-map-panel, #field-map-fullscreen) button[aria-pressed="true"] { border-color: #d97706; background: #fef3c7; color: #78350f; }
+.field-map-diagram { overflow: auto; max-height: 25rem; padding: .75rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: .75rem; }
+.field-map-front { display: flex; flex-direction: column; align-items: center; gap: .5rem; width: max-content; min-width: 100%; }
+.field-map-front-row { display: flex; justify-content: center; gap: .5rem; }
+.field-map-front-node { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; width: 5.5rem; height: 5.5rem; border: 2px solid; border-radius: 50%; padding: .4rem; font-size: .75rem; line-height: 1rem; overflow: hidden; }
+.field-map-front-node > * { max-width: 100%; }
+.field-map-front-node > span { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.field-map-front-node.field-map-no-coil > span, .field-map-front-node.field-map-blank > span { white-space: normal; }
+.field-map-front-node > strong { text-align: center; }
+.field-map-coil { background: #ecfdf5; border-color: #6ee7b7; color: #064e3b; }
+.field-map-no-coil { background: #f0f9ff; border-color: #7dd3fc; color: #075985; }
+.field-map-blank { background: #fff; border-color: #cbd5e1; border-style: dashed; color: #475569; }
+.field-map-list-row { text-align: left; min-height: 44px; }
+.field-map-list-row span { display: block; }
+.field-map-overhead { display: grid; grid-template-columns: 3.25rem minmax(0, 1fr); }
+.field-map-overhead-front { grid-column: 1 / -1; }
+.field-map-overhead-scroll { min-width: 0; overflow-x: auto; }
+.field-map-depth { box-sizing: border-box; height: 4.875rem; margin-bottom: .25rem; padding: .25rem; border: 1px solid #e2e8f0; background: #f1f5f9; }
+.field-map-selected-depth { background: #fffbeb; border-color: #f59e0b; }
+.field-map-depth-gutter { display: grid; place-items: center; padding-inline: .1875rem; border-inline-end: 0; border-radius: .5rem 0 0 .5rem; }
+.field-map-depth-label { width: 2.75rem; min-height: 2.75rem; border: 1px solid #cbd5e1; border-radius: .5rem; background: #fff; font-size: .75rem; font-weight: 700; }
+.field-map-strip { display: grid; align-items: center; grid-template-columns: repeat(var(--map-columns), clamp(4.5rem, 8.5vw, 5rem)); column-gap: .375rem; width: max-content; min-width: 100%; border-radius: 0 .5rem .5rem 0; }
+.field-map-overhead-node {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 4rem;
+    min-width: 0;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 12px;
+    padding: .125rem .5rem;
+    text-align: center;
+    font-size: .75rem;
+    line-height: .875rem;
+}
+.field-map-overhead-node.field-map-coil { border-color: #329077; }
+.field-map-overhead-node--partial { padding-inline: .25rem; }
+.field-map-overhead-node > strong { font-size: .875rem; line-height: 1rem; }
+.field-map-overhead-node > span { max-width: 100%; overflow-wrap: anywhere; }
+.field-map-overhead-node:focus-visible { outline-offset: -1px; }
+
+#field-map-fullscreen {
+    flex-direction: column;
+    gap: .5rem;
+    padding: max(.5rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-right))
+        max(.5rem, env(safe-area-inset-bottom)) max(.75rem, env(safe-area-inset-left));
+    background: #fff;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+#field-map-fullscreen > :not(#field-map-fullscreen-body) { flex: none; }
+.field-map-fullscreen-header { position: sticky; top: 0; z-index: 1; background: #fff; }
+#field-map-fullscreen #field-map-controls, #field-map-fullscreen #field-map-top-actions { margin-top: 0; gap: .4rem .25rem; }
+#field-map-fullscreen .field-label { min-width: 0; gap: .15rem; font-size: .75rem; }
+#field-map-fullscreen .field-input { max-width: min(14rem, 100%); padding: .35rem .5rem; }
+#field-map-fullscreen #field-map-bay { max-width: 8rem; }
+#field-map-fullscreen .field-button { padding: .35rem .65rem; }
+#field-map-fullscreen #field-map-controls .field-button { padding-inline: .5rem; font-size: .75rem; }
+.field-map-rotate-hint { display: none; }
+#field-map-fullscreen-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, min(30%, 22rem));
+    grid-template-rows: minmax(0, 1fr);
+    gap: .65rem;
+    min-height: 8rem;
+}
+#field-map-fullscreen #field-map-diagram-column { display: flex; flex-direction: column; min-height: 0; }
+#field-map-fullscreen .field-map-diagram { flex: 1; min-height: 0; max-height: none; }
+#field-map-fullscreen #field-map-detail { align-self: start; max-height: 100%; overflow: auto; padding: .5rem .75rem; }
+@media (orientation: portrait) and (max-width: 48rem) {
+    .field-map-rotate-hint { display: block; }
+}
+@media (max-width: 34rem) {
+    #field-map-fullscreen-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(8rem, 1fr); }
+    #field-map-fullscreen #field-map-detail { grid-row: 1; justify-self: end; width: min(100%, 22rem); max-height: min(25dvh, 10rem); }
+    #field-map-fullscreen #field-map-diagram-column { grid-row: 2; }
+}
 /* Hidden view fragments should not leave empty flex gaps above the active view. */
 #main-content > [id$="-container"] { display: contents; }
 
@@ -47,6 +131,12 @@ input[type="radio"] {
     width: 2.75rem;
     height: 2.75rem;
     flex: 0 0 auto;
+}
+
+@media (max-width: 30rem) {
+    #app-header nav { width: 100%; position: relative; }
+    #app-header nav details { position: static; }
+    #app-header nav details > div { max-width: 100%; }
 }
 
 /* Tiny text was difficult to read on phones used on the warehouse floor. */
@@ -155,3 +245,6 @@ body.modal-open {
                 padding: 0.75rem;
             }
         }
+form:not(.no-label-mode) .label-required::after { content: ' *'; }
+#coil-details-fields[hidden] { display: none; }
+.no-label-mode input:disabled { opacity: .5; }

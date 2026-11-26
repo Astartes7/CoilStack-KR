@@ -16,7 +16,7 @@
             <div class="flex flex-wrap gap-2"><button type="button" class="field-button" onclick="pasteFieldLabel()">Tempel Clipboard</button><button type="button" class="field-button" onclick="decodeFieldLabel()">Baca Label</button></div>
             <div id="field-link-helper" class="hidden rounded-xl bg-sky-50 p-3 text-sm">Label berisi tautan Master Steel. <a id="field-external-link" target="_blank" rel="noopener noreferrer" class="font-bold underline">Buka halaman supplier</a>, salin teks halaman, lalu tempel dan baca label di atas.</div>
             <div class="grid sm:grid-cols-2 gap-3">
-                <label class="field-label">No. Coil<input id="field-coil-id" required class="field-input font-mono uppercase" oninput="clearFieldResult()" autocomplete="off"></label>
+                <label class="field-label">No. Coil atau referensi NO LABEL<input id="field-coil-id" required class="field-input font-mono uppercase" oninput="clearFieldResult()" autocomplete="off"></label>
                 <label class="field-label">Heat Number<input id="field-heat" class="field-input font-mono uppercase" oninput="clearFieldResult()" autocomplete="off"></label>
             </div>
             <details><summary class="cursor-pointer text-sm font-semibold min-h-8">Spesifikasi yang diamati (opsional untuk cek selisih)</summary>
@@ -32,6 +32,38 @@
         </form>
         <div id="field-find-result" class="mt-4" role="status" aria-live="polite"></div>
     </div>
+
+    <section id="field-map-panel" class="field-card" aria-labelledby="field-map-title">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+            <h3 id="field-map-title" class="font-extrabold text-slate-900" tabindex="-1">Peta Coil</h3>
+            <button id="field-map-expand" type="button" class="field-button" aria-haspopup="dialog" aria-controls="field-map-fullscreen" onclick="openFieldMapFullscreen()"><i class="fa-solid fa-expand" aria-hidden="true"></i> Layar Penuh</button>
+        </div>
+        <p class="text-sm text-slate-600 mt-1">Peta skematis stok tercatat, bukan hasil cek fisik. Layer 1 di depan; kiri dan kanan dilihat dari depan bay.</p>
+        <div id="field-map-controls" class="flex flex-wrap items-end gap-3 mt-4">
+            <label class="field-label">Bay / Lokasi<select id="field-map-bay" class="field-input" onchange="setFieldMapBay(this.value)"></select></label>
+            <label class="field-label">Layer (depan → belakang)<select id="field-map-layer" class="field-input" onchange="setFieldMapLayer(Number(this.value))"></select></label>
+            <div class="flex flex-wrap gap-2" role="group" aria-label="Sudut pandang peta">
+                <button id="field-map-front" type="button" class="field-button" aria-pressed="true" onclick="setFieldMapView('front')">Tampak Depan</button>
+                <button id="field-map-top" type="button" class="field-button" aria-pressed="false" onclick="setFieldMapView('top')">Tampak Atas</button>
+            </div>
+            <div id="field-map-top-actions" class="hidden items-end gap-2 flex-wrap">
+                <label class="field-label">Sembunyikan baris atas (semua layer)<select id="field-map-hidden-rows" class="field-input" onchange="setFieldMapHiddenRows(Number(this.value))"></select></label>
+                <button id="field-map-reset" type="button" class="field-button" onclick="restoreFieldMapCoils()">Tampilkan Semua</button>
+            </div>
+        </div>
+        <p id="field-map-help" class="text-sm text-slate-600 mt-3"></p>
+        <div id="field-map-layout" class="field-map-layout mt-3">
+            <div id="field-map-diagram-column" class="min-w-0">
+                <div class="flex justify-between text-xs font-bold text-slate-600 px-1 pb-1"><span>Kiri bay</span><span>Kanan bay</span></div>
+                <div id="field-map-diagram" class="field-map-diagram" role="region" aria-label="Diagram lokasi coil" tabindex="0"></div>
+            </div>
+            <div class="min-w-0">
+                <p id="field-map-detail" class="field-row" role="status">Pilih posisi untuk melihat detail.</p>
+                <h4 id="field-map-list-title" class="font-bold text-sm text-slate-900 mt-3 mb-2">Daftar Slot</h4>
+                <div id="field-map-list" class="field-list" aria-labelledby="field-map-list-title" role="group"></div>
+            </div>
+        </div>
+    </section>
 
     <div class="field-card">
         <div class="flex flex-wrap justify-between items-center gap-3"><h3 class="font-extrabold text-slate-900">Cek Lapangan</h3><label class="field-label">Sesi / riwayat<select id="field-session-select" class="field-input" onchange="selectFieldSession(this.value)"></select></label></div>
