@@ -463,6 +463,7 @@
         let editingNonPyramidIndex = -1;
         let locationModalMode = 'new';
         let html5QrScanner = null;
+        let qrTorchEnabled = false;
         let activeQrTarget = 'pyramid';
         let awaitingExternalCopyTarget = null;
         let saveStateTimer = null;
@@ -3622,10 +3623,17 @@
                 return;
             }
             showModalEl('qr-scanner-modal');
+            qrTorchEnabled = false;
+            updateQrTorchButton(false);
+            const torchButton = document.getElementById('qr-torch-toggle');
+            const torchHelp = document.getElementById('qr-torch-help');
+            if (torchButton) torchButton.classList.add('hidden');
+            if (torchHelp) torchHelp.textContent = 'Memeriksa dukungan senter...';
 
             try {
-                html5QrScanner = new Html5Qrcode('qr-reader');
-                html5QrScanner.start(
+                const scanner = new Html5Qrcode('qr-reader');
+                html5QrScanner = scanner;
+                scanner.start(
                     { facingMode: 'environment' },
                     { fps: 10, qrbox: { width: 220, height: 220 } },
                     (decodedText) => {
@@ -3645,7 +3653,22 @@
                         closeQrScannerModal();
                     },
                     () => {}
-                ).catch(() => {
+                ).then(() => {
+                    if (html5QrScanner !== scanner) return;
+                    let capabilities;
+                    try {
+                        capabilities = scanner.getRunningTrackCapabilities?.();
+                    } catch (error) {
+                        capabilities = null;
+                    }
+                    const torchSupported = !!capabilities?.torch;
+                    if (torchButton) torchButton.classList.toggle('hidden', !torchSupported);
+                    if (torchHelp) {
+                        torchHelp.textContent = torchSupported
+                            ? 'Gunakan tombol Senter untuk menyalakan atau mematikan lampu kamera.'
+                            : 'Senter tidak didukung oleh kamera atau browser pada perangkat ini.';
+                    }
+                }).catch(() => {
                     closeQrScannerModal();
                     showToast('Akses kamera live diblokir browser. Gunakan tombol "Foto QR" di sebelahnya!', 'error');
                 });
@@ -3655,11 +3678,41 @@
             }
         }
 
+        function updateQrTorchButton(enabled) {
+            const button = document.getElementById('qr-torch-toggle');
+            if (!button) return;
+            button.setAttribute('aria-pressed', String(enabled));
+            button.setAttribute('aria-label', enabled ? 'Matikan senter' : 'Nyalakan senter');
+            button.innerHTML = `<i class="fa-solid fa-lightbulb" aria-hidden="true"></i> Senter ${enabled ? 'Nyala' : 'Mati'}`;
+        }
+
+        async function toggleQrScannerTorch() {
+            const scanner = html5QrScanner;
+            const button = document.getElementById('qr-torch-toggle');
+            if (!scanner || !button || button.disabled) return;
+
+            const nextEnabled = !qrTorchEnabled;
+            button.disabled = true;
+            try {
+                await scanner.applyVideoConstraints({ advanced: [{ torch: nextEnabled }] });
+                qrTorchEnabled = nextEnabled;
+                updateQrTorchButton(qrTorchEnabled);
+            } catch (error) {
+                showToast('Tidak dapat mengubah senter. Pastikan kamera mendukung senter dan coba lagi.', 'error');
+            } finally {
+                if (scanner === html5QrScanner) button.disabled = false;
+            }
+        }
+
         function closeQrScannerModal() {
             hideModalEl('qr-scanner-modal');
             if (html5QrScanner) {
                 const scanner = html5QrScanner;
                 html5QrScanner = null;
+                qrTorchEnabled = false;
+                updateQrTorchButton(false);
+                const torchButton = document.getElementById('qr-torch-toggle');
+                if (torchButton) torchButton.classList.add('hidden');
                 try {
                     scanner.stop().then(() => scanner.clear()).catch(() => {});
                 } catch (e) {}
