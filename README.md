@@ -1,6 +1,6 @@
 # CoilStack-KR
 
-Browser-based coil inventory and warehouse field tools. Serve this directory over HTTP; opening `index.html` directly as a file cannot load the view fragments. Live camera scanning requires HTTPS (or localhost) and camera permission.
+Browser-based coil inventory and warehouse field tools. Serve this directory over HTTP; opening `index.html` directly as a file cannot load the view fragments. Live camera scanning requires HTTPS (or localhost) and camera permission. During live scan, use **Senter** to toggle the camera torch on supported devices and browsers; the device's separate flashlight control may be unavailable while the camera is active.
 
 ## Inventory entry and CSV export
 
